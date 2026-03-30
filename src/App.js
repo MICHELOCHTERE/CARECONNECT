@@ -7,12 +7,16 @@ const steps = [
   { id: 2, label: "Experience", icon: "💼" },
   { id: 3, label: "Right to Work", icon: "📋" },
   { id: 4, label: "DBS Check", icon: "🔒" },
-  { id: 5, label: "References", icon: "⭐" },
+  { id: 5, label: "Availability", icon: "📅" },
+  { id: 6, label: "References", icon: "⭐" },
 ];
+
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const SHIFTS = ["Morning (7am–2pm)", "Afternoon (2pm–7pm)", "Evening (7pm–11pm)", "Night (11pm–7am)"];
 
 const s = {
   app: { minHeight: "100vh", background: "#f8f5ff", color: "#1a1a2e", fontFamily: "'DM Sans', sans-serif" },
-  header: { borderBottom: "1px solid #e8e0f5", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  header: { borderBottom: "1px solid #e8e0f5", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ffffff" },
   logo: { display: "flex", alignItems: "center", gap: 10 },
   logoIcon: { width: 40, height: 40, borderRadius: 10, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "white", fontFamily: "serif" },
   logoText: { color: "#6C3FC5", fontSize: 20, fontFamily: "'DM Serif Display', serif" },
@@ -20,7 +24,7 @@ const s = {
   container: { maxWidth: 560, margin: "0 auto", padding: "32px 16px 120px" },
   stepRow: { display: "flex", justifyContent: "space-between", marginBottom: 12 },
   stepBtn: { display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer" },
-  stepCircleActive: { width: 36, height: 36, borderRadius: "50%", background: "#6C3FC5", border: "2px solid #6C3FC5", color: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: "bold" },
+  stepCircleActive: { width: 36, height: 36, borderRadius: "50%", background: "#6C3FC5", border: "2px solid #6C3FC5", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: "bold" },
   stepCircleDone: { width: 36, height: 36, borderRadius: "50%", background: "transparent", border: "2px solid #6C3FC5", color: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 },
   stepCircleInactive: { width: 36, height: 36, borderRadius: "50%", background: "transparent", border: "2px solid #c5b3e8", color: "#9b7fd4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 },
   progressBar: { height: 4, background: "#e8e0f5", borderRadius: 4, overflow: "hidden", marginBottom: 32 },
@@ -34,23 +38,28 @@ const s = {
   select: { width: "100%", background: "#f8f5ff", border: "1px solid #c5b3e8", borderRadius: 8, padding: "12px 16px", color: "#1a1a2e", fontSize: 14, outline: "none", boxSizing: "border-box" },
   grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 },
   pillRow: { display: "flex", flexWrap: "wrap", gap: 10 },
-  pillActive: { padding: "8px 16px", borderRadius: 999, border: "1px solid #6C3FC5", background: "#6C3FC5", color: "#f8f5ff", fontSize: 13, fontWeight: 500, cursor: "pointer" },
+  pillActive: { padding: "8px 16px", borderRadius: 999, border: "1px solid #6C3FC5", background: "#6C3FC5", color: "white", fontSize: 13, fontWeight: 500, cursor: "pointer" },
   pillInactive: { padding: "8px 16px", borderRadius: 999, border: "1px solid #c5b3e8", background: "transparent", color: "#6C3FC5", fontSize: 13, cursor: "pointer" },
   infoBox: { background: "#f0ebff", border: "1px solid #c5b3e8", borderRadius: 12, padding: 16, fontSize: 13, color: "#6C3FC5", lineHeight: 1.6 },
   infoTitle: { color: "#6C3FC5", fontWeight: 600, marginBottom: 4 },
-  refBox: { border: "1px solid #c5b3e8", borderRadius: 12, padding: 16, marginBottom: 16 },
+  refBox: { border: "1px solid #e8e0f5", borderRadius: 12, padding: 16, marginBottom: 16 },
   refLabel: { color: "#6C3FC5", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 },
   navRow: { display: "flex", justifyContent: "space-between", marginTop: 8 },
-  btnBack: { padding: "12px 24px", border: "1px solid #c5b3e8", borderRadius: 999, color: "#6C3FC5", background: "none", fontSize: 14, cursor: "pointer" },
-  btnNext: { padding: "12px 32px", background: "#6C3FC5", border: "none", borderRadius: 999, color: "#f8f5ff", fontSize: 14, fontWeight: 600, cursor: "pointer" },
+  btnBack: { padding: "12px 24px", border: "1px solid #c5b3e8", borderRadius: 999, color: "#9b7fd4", background: "none", fontSize: 14, cursor: "pointer" },
+  btnNext: { padding: "12px 32px", background: "#6C3FC5", border: "none", borderRadius: 999, color: "white", fontSize: 14, fontWeight: 600, cursor: "pointer" },
   successWrap: { minHeight: "100vh", background: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 },
   successInner: { textAlign: "center", maxWidth: 400 },
   successIcon: { fontSize: 64, marginBottom: 24 },
   successTitle: { fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#6C3FC5", marginBottom: 16 },
-  successText: { color: "#6C3FC5", lineHeight: 1.7, marginBottom: 32 },
+  successText: { color: "#9b7fd4", lineHeight: 1.7, marginBottom: 32 },
   successGrid: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 32 },
-  successCard: { background: "#ffffff", border: "1px solid #c5b3e8", borderRadius: 12, padding: 12, fontSize: 11, color: "#6C3FC5", fontWeight: 600, textTransform: "uppercase" },
-  resetBtn: { padding: "10px 24px", border: "1px solid #c5b3e8", borderRadius: 999, color: "#6C3FC5", background: "none", fontSize: 13, cursor: "pointer" },
+  successCard: { background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 12, padding: 12, fontSize: 11, color: "#6C3FC5", fontWeight: 600, textTransform: "uppercase" },
+  resetBtn: { padding: "10px 24px", border: "1px solid #c5b3e8", borderRadius: 999, color: "#9b7fd4", background: "none", fontSize: 13, cursor: "pointer" },
+  availGrid: { display: "grid", gridTemplateColumns: "auto 1fr 1fr 1fr 1fr", gap: 6, fontSize: 12 },
+  availHeader: { padding: "6px 4px", color: "#6C3FC5", fontWeight: 600, fontSize: 11, textAlign: "center" },
+  availDay: { padding: "8px 4px", color: "#1a1a2e", fontWeight: 500, display: "flex", alignItems: "center" },
+  availCell: (checked) => ({ width: "100%", padding: "8px 4px", borderRadius: 6, border: `1px solid ${checked ? "#6C3FC5" : "#e8e0f5"}`, background: checked ? "#6C3FC5" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }),
+  uploadBox: { border: "2px dashed #c5b3e8", borderRadius: 12, padding: 24, textAlign: "center", cursor: "pointer", background: "#f8f5ff" },
 };
 
 function RadioGroup({ options, value, onChange }) {
@@ -88,7 +97,48 @@ function Step1({ data, set }) {
       <div style={s.field}><label style={s.label}>Phone Number</label><input style={s.input} type="tel" placeholder="07700 900000" value={data.phone} onChange={e => set({ ...data, phone: e.target.value })} /></div>
       <div style={s.field}><label style={s.label}>Date of Birth</label><input style={s.input} type="date" value={data.dob} onChange={e => set({ ...data, dob: e.target.value })} /></div>
       <div style={s.field}><label style={s.label}>Postcode</label><input style={s.input} placeholder="SW1A 1AA" value={data.postcode} onChange={e => set({ ...data, postcode: e.target.value })} /></div>
+      <div style={s.field}><label style={s.label}>National Insurance Number</label><input style={s.input} placeholder="AB 12 34 56 C" value={data.niNumber} onChange={e => set({ ...data, niNumber: e.target.value })} /></div>
       <div style={s.field}><label style={s.label}>Do you hold a valid driving licence?</label><RadioGroup options={["Yes", "No"]} value={data.driving} onChange={v => set({ ...data, driving: v })} /></div>
+      
+      <div style={s.grid2}>
+        <div style={s.field}>
+          <label style={s.label}>Gender</label>
+          <select style={s.select} value={data.gender} onChange={e => set({ ...data, gender: e.target.value })}>
+            <option value="">Select...</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Non-binary</option>
+            <option>Prefer not to say</option>
+          </select>
+        </div>
+        <div style={s.field}>
+          <label style={s.label}>Nationality</label>
+          <input style={s.input} placeholder="e.g. British" value={data.nationality} onChange={e => set({ ...data, nationality: e.target.value })} />
+        </div>
+      </div>
+      <div style={s.field}>
+        <label style={s.label}>Religion (optional)</label>
+        <select style={s.select} value={data.religion} onChange={e => set({ ...data, religion: e.target.value })}>
+          <option value="">Prefer not to say</option>
+          <option>Christian</option>
+          <option>Muslim</option>
+          <option>Hindu</option>
+          <option>Sikh</option>
+          <option>Jewish</option>
+          <option>Buddhist</option>
+          <option>No religion</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div style={s.field}><label style={s.label}>Languages Spoken</label><CheckboxGroup options={["English", "Welsh", "Punjabi", "Urdu", "Polish", "Romanian", "Arabic", "Other"]} values={data.languages} onChange={v => set({ ...data, languages: v })} /></div>
+      <div style={{ ...s.field, borderTop: "1px solid #e8e0f5", paddingTop: 20, marginTop: 4 }}>
+        <div style={{ color: "#6C3FC5", fontWeight: 600, fontSize: 14, marginBottom: 12 }}>Emergency Contact</div>
+        <div style={s.grid2}>
+          <div style={s.field}><label style={s.label}>Full Name</label><input style={s.input} placeholder="John Smith" value={data.emergencyName} onChange={e => set({ ...data, emergencyName: e.target.value })} /></div>
+          <div style={s.field}><label style={s.label}>Relationship</label><input style={s.input} placeholder="Spouse, Parent..." value={data.emergencyRelation} onChange={e => set({ ...data, emergencyRelation: e.target.value })} /></div>
+        </div>
+        <div style={s.field}><label style={s.label}>Phone Number</label><input style={s.input} type="tel" placeholder="07700 900000" value={data.emergencyPhone} onChange={e => set({ ...data, emergencyPhone: e.target.value })} /></div>
+      </div>
     </div>
   );
 }
@@ -110,12 +160,15 @@ function Step2({ data, set }) {
       <div style={s.field}><label style={s.label}>Care Settings</label><CheckboxGroup options={["Domiciliary / Home Care", "Residential Care Home", "Supported Living", "Live-in Care", "NHS / Hospital"]} values={data.settings} onChange={v => set({ ...data, settings: v })} /></div>
       <div style={s.field}><label style={s.label}>Client Groups</label><CheckboxGroup options={["Elderly", "Dementia / Alzheimer's", "Physical Disabilities", "Learning Disabilities", "Mental Health", "End of Life"]} values={data.clients} onChange={v => set({ ...data, clients: v })} /></div>
       <div style={s.field}><label style={s.label}>Qualifications</label><CheckboxGroup options={["No formal qualifications", "Care Certificate", "NVQ Level 2", "NVQ Level 3", "First Aid", "Manual Handling"]} values={data.quals} onChange={v => set({ ...data, quals: v })} /></div>
-      <div style={s.field}><label style={s.label}>Preferred Hours</label><CheckboxGroup options={["Days", "Evenings", "Nights", "Weekends", "Flexible"]} values={data.hours} onChange={v => set({ ...data, hours: v })} /></div>
     </div>
   );
 }
 
 function Step3({ data, set }) {
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (file) set({ ...data, cvFileName: file.name });
+  };
   return (
     <div>
       <div style={s.field}><label style={s.label}>Do you have the right to work in the UK?</label><RadioGroup options={["Yes", "No", "Not sure"]} value={data.rightToWork} onChange={v => set({ ...data, rightToWork: v })} /></div>
@@ -133,6 +186,51 @@ function Step3({ data, set }) {
         </div>
       )}
       <div style={s.field}><label style={s.label}>Documents you can provide</label><CheckboxGroup options={["Passport", "Birth Certificate", "National ID Card", "Biometric Residence Permit", "Share Code"]} values={data.docs} onChange={v => set({ ...data, docs: v })} /></div>
+      <div style={s.field}>
+        <label style={s.label}>Upload CV (optional)</label>
+        <div style={s.uploadBox} onClick={() => document.getElementById('cv-upload').click()}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>📄</div>
+          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>{data.cvFileName || "Click to upload your CV"}</div>
+          <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>PDF, DOC or DOCX — max 5MB</div>
+          <input id="cv-upload" type="file" accept=".pdf,.doc,.docx" style={{ display: "none" }} onChange={handleFile} />
+        </div>
+      </div>
+
+      <div style={s.field}>
+        <label style={s.label}>Proof of Address — Document 1</label>
+        <select style={s.select} value={data.proofAddress1} onChange={e => set({ ...data, proofAddress1: e.target.value })}>
+          <option value="">Select document type...</option>
+          <option>Bank Statement (last 3 months)</option>
+          <option>Utility Bill (last 3 months)</option>
+          <option>Council Tax Letter</option>
+          <option>HMRC Letter</option>
+          <option>GP Letter</option>
+        </select>
+      </div>
+      <div style={s.field}>
+        <label style={s.label}>Proof of Address — Document 2</label>
+        <select style={s.select} value={data.proofAddress2} onChange={e => set({ ...data, proofAddress2: e.target.value })}>
+          <option value="">Select document type...</option>
+          <option>Bank Statement (last 3 months)</option>
+          <option>Utility Bill (last 3 months)</option>
+          <option>Council Tax Letter</option>
+          <option>HMRC Letter</option>
+          <option>GP Letter</option>
+        </select>
+      </div>
+      <div style={s.field}>
+        <label style={s.label}>Employment Continuity Check</label>
+        <p style={{ color: "#9b7fd4", fontSize: 12, marginBottom: 10 }}>Please account for any gaps in employment over the last 5 years</p>
+        <RadioGroup options={["No gaps", "I have gaps to explain"]} value={data.employmentGaps} onChange={v => set({ ...data, employmentGaps: v })} />
+        {data.employmentGaps === "I have gaps to explain" && (
+          <textarea
+            style={{ ...s.input, marginTop: 10, minHeight: 80, resize: "vertical" }}
+            placeholder="Please explain any gaps in your employment history..."
+            value={data.gapsExplanation}
+            onChange={e => set({ ...data, gapsExplanation: e.target.value })}
+          />
+        )}
+      </div>
       <div style={s.infoBox}><div style={s.infoTitle}>📌 Right to Work Check</div>We are legally required to verify your right to work in the UK before you begin employment.</div>
     </div>
   );
@@ -155,6 +253,58 @@ function Step4({ data, set }) {
 }
 
 function Step5({ data, set }) {
+  const toggleShift = (day, shift) => {
+    const key = `${day}__${shift}`;
+    const current = data.availability || [];
+    if (current.includes(key)) set({ ...data, availability: current.filter(k => k !== key) });
+    else set({ ...data, availability: [...current, key] });
+  };
+  const isChecked = (day, shift) => (data.availability || []).includes(`${day}__${shift}`);
+
+  return (
+    <div>
+      <div style={s.field}>
+        <label style={s.label}>Weekly Availability</label>
+        <p style={{ color: "#9b7fd4", fontSize: 12, marginBottom: 12 }}>Tap the shifts you are available to work</p>
+        <div style={{ overflowX: "auto" }}>
+          <div style={s.availGrid}>
+            <div style={s.availHeader}></div>
+            {["AM", "PM", "Eve", "Night"].map(h => <div key={h} style={s.availHeader}>{h}</div>)}
+            {DAYS.map(day => (
+              <React.Fragment key={day}>
+                <div style={s.availDay}>{day.slice(0, 3)}</div>
+                {SHIFTS.map(shift => (
+                  <div key={shift} style={{ padding: "3px" }}>
+                    <div style={s.availCell(isChecked(day, shift))} onClick={() => toggleShift(day, shift)}>
+                      {isChecked(day, shift) && <span style={{ color: "white", fontSize: 14 }}>✓</span>}
+                    </div>
+                  </div>
+                ))}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ borderTop: "1px solid #e8e0f5", paddingTop: 20, marginTop: 4 }}>
+        <div style={{ color: "#6C3FC5", fontWeight: 600, fontSize: 14, marginBottom: 16 }}>Bank Details for Payroll</div>
+        <div style={s.infoBox} >
+          <div style={s.infoTitle}>🔒 Secure & Confidential</div>
+          Your bank details are stored securely and only used for payroll purposes.
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <div style={s.field}><label style={s.label}>Account Holder Name</label><input style={s.input} placeholder="Jane Smith" value={data.bankName} onChange={e => set({ ...data, bankName: e.target.value })} /></div>
+          <div style={s.grid2}>
+            <div style={s.field}><label style={s.label}>Sort Code</label><input style={s.input} placeholder="00-00-00" value={data.sortCode} onChange={e => set({ ...data, sortCode: e.target.value })} /></div>
+            <div style={s.field}><label style={s.label}>Account Number</label><input style={s.input} placeholder="12345678" value={data.accountNumber} onChange={e => set({ ...data, accountNumber: e.target.value })} /></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Step6({ data, set }) {
   const updateRef = (idx, field, value) => {
     const refs = [...data.refs];
     refs[idx] = { ...refs[idx], [field]: value };
@@ -162,7 +312,7 @@ function Step5({ data, set }) {
   };
   return (
     <div>
-      <p style={{ color: "#6C3FC5", fontSize: 13, marginBottom: 20 }}>We require two professional references. At least one must be from a care or health setting.</p>
+      <p style={{ color: "#9b7fd4", fontSize: 13, marginBottom: 20 }}>We require two professional references. At least one must be from a care or health setting.</p>
       {[0, 1].map((i) => (
         <div key={i} style={s.refBox}>
           <div style={s.refLabel}>Reference {i + 1}</div>
@@ -197,14 +347,14 @@ export default function App() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState([]);
-  const [p1, setP1] = useState({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", driving: "" });
-  const [p2, setP2] = useState({ years: "", settings: [], clients: [], quals: [], hours: [] });
-  const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [] });
+  const [p1, setP1] = useState({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
+  const [p2, setP2] = useState({ years: "", settings: [], clients: [], quals: [] });
+  const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [], cvFileName: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
   const [p4, setP4] = useState({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
-  const [p5, setP5] = useState({ refs: [{}, {}] });
+  const [p5, setP5] = useState({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
+  const [p6, setP6] = useState({ refs: [{}, {}] });
 
   const progress = ((current - 1) / (steps.length - 1)) * 100;
-
 
   const validate = (step) => {
     const errs = [];
@@ -215,28 +365,42 @@ export default function App() {
       if (!p1.phone.trim()) errs.push("Phone number is required");
       if (!p1.dob) errs.push("Date of birth is required");
       if (!p1.postcode.trim()) errs.push("Postcode is required");
+      if (!p1.niNumber.trim()) errs.push("National Insurance number is required");
       if (!p1.driving) errs.push("Please confirm if you hold a driving licence");
+      if (p1.languages.length === 0) errs.push("Please select at least one language");
+      if (!p1.emergencyName.trim()) errs.push("Emergency contact name is required");
+      if (!p1.emergencyPhone.trim()) errs.push("Emergency contact phone is required");
+      if (!p1.gender) errs.push("Please select your gender");
+      if (!p1.nationality.trim()) errs.push("Nationality is required");
     }
     if (step === 2) {
       if (!p2.years) errs.push("Please select your years of experience");
       if (p2.settings.length === 0) errs.push("Please select at least one care setting");
       if (p2.clients.length === 0) errs.push("Please select at least one client group");
       if (p2.quals.length === 0) errs.push("Please select your qualifications");
-      if (p2.hours.length === 0) errs.push("Please select your preferred hours");
     }
     if (step === 3) {
       if (!p3.rightToWork) errs.push("Please confirm your right to work status");
       if (p3.docs.length === 0) errs.push("Please select at least one document you can provide");
+      if (!p3.proofAddress1) errs.push("Please select your first proof of address document");
+      if (!p3.proofAddress2) errs.push("Please select your second proof of address document");
+      if (!p3.employmentGaps) errs.push("Please complete the employment continuity check");
     }
     if (step === 4) {
       if (!p4.hasDbs) errs.push("Please confirm your DBS certificate status");
       if (!p4.conviction) errs.push("Please answer the convictions question");
     }
     if (step === 5) {
-      if (!p5.refs[0]?.name?.trim()) errs.push("Reference 1: Full name is required");
-      if (!p5.refs[0]?.email?.trim()) errs.push("Reference 1: Email is required");
-      if (!p5.refs[1]?.name?.trim()) errs.push("Reference 2: Full name is required");
-      if (!p5.refs[1]?.email?.trim()) errs.push("Reference 2: Email is required");
+      if ((p5.availability || []).length === 0) errs.push("Please select at least one available shift");
+      if (!p5.bankName.trim()) errs.push("Account holder name is required");
+      if (!p5.sortCode.trim()) errs.push("Sort code is required");
+      if (!p5.accountNumber.trim()) errs.push("Account number is required");
+    }
+    if (step === 6) {
+      if (!p6.refs[0]?.name?.trim()) errs.push("Reference 1: Full name is required");
+      if (!p6.refs[0]?.email?.trim()) errs.push("Reference 1: Email is required");
+      if (!p6.refs[1]?.name?.trim()) errs.push("Reference 2: Full name is required");
+      if (!p6.refs[1]?.email?.trim()) errs.push("Reference 2: Email is required");
     }
     return errs;
   };
@@ -257,8 +421,8 @@ export default function App() {
     setSubmitting(true);
     try {
       await addDoc(collection(db, "applications"), {
-        ...p1, ...p2, ...p3, ...p4,
-        refs: p5.refs,
+        ...p1, ...p2, ...p3, ...p4, ...p5,
+        refs: p6.refs,
         status: "pending",
         appliedAt: new Date().toISOString().split("T")[0],
         createdAt: serverTimestamp()
@@ -276,7 +440,7 @@ export default function App() {
       <div style={s.successWrap}>
         <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
         <div style={s.successInner}>
-          <div style={s.successIcon}>Q</div>
+          <div style={s.successIcon}>🎉</div>
           <h1 style={s.successTitle}>Application Received</h1>
           <p style={s.successText}>Thank you, {p1.firstName || "there"}! We've received your application and will be in touch within 2 working days.</p>
           <div style={s.successGrid}>
@@ -313,13 +477,13 @@ export default function App() {
         </div>
         <div style={s.progressBar}><div style={s.progressFill(progress)} /></div>
 
-
         {errors.length > 0 && (
-          <div style={{ background: "#3a1010", border: "1px solid #6a2a2a", borderRadius: 12, padding: "14px 18px", marginBottom: 20 }}>
-            <div style={{ color: "#e07070", fontWeight: 600, fontSize: 13, marginBottom: 6 }}>⚠️ Please complete the following:</div>
-            {errors.map((e, i) => <div key={i} style={{ color: "#e07070", fontSize: 13, marginTop: 4 }}>• {e}</div>)}
+          <div style={{ background: "#fff0f0", border: "1px solid #ffb3b3", borderRadius: 12, padding: "14px 18px", marginBottom: 20 }}>
+            <div style={{ color: "#cc0000", fontWeight: 600, fontSize: 13, marginBottom: 6 }}>⚠️ Please complete the following:</div>
+            {errors.map((e, i) => <div key={i} style={{ color: "#cc0000", fontSize: 13, marginTop: 4 }}>• {e}</div>)}
           </div>
         )}
+
         <div style={s.card}>
           <h2 style={s.cardTitle}>{steps[current - 1].label}</h2>
           <p style={s.cardSub}>Step {current} of {steps.length}</p>
@@ -328,12 +492,12 @@ export default function App() {
           {current === 3 && <Step3 data={p3} set={setP3} />}
           {current === 4 && <Step4 data={p4} set={setP4} />}
           {current === 5 && <Step5 data={p5} set={setP5} />}
+          {current === 6 && <Step6 data={p6} set={setP6} />}
         </div>
 
         <div style={s.navRow}>
-          <button style={{ ...s.btnBack, opacity: current === 1 ? 0.3 : 1 }} disabled={current === 1} onClick={() => setCurrent(current - 1)}>← Back</button>
-          <button style={{ ...s.btnNext, opacity: submitting ? 0.6 : 1 }} disabled={submitting}
-            onClick={handleNext}>
+          <button style={{ ...s.btnBack, opacity: current === 1 ? 0.3 : 1 }} disabled={current === 1} onClick={() => { setErrors([]); setCurrent(current - 1); }}>← Back</button>
+          <button style={{ ...s.btnNext, opacity: submitting ? 0.6 : 1 }} disabled={submitting} onClick={handleNext}>
             {current === steps.length ? (submitting ? "Submitting..." : "Submit Application →") : "Continue →"}
           </button>
         </div>
