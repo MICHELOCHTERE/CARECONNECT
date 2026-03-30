@@ -7,13 +7,13 @@ import './index.css';
 const ADMIN_PASSWORD = 'Quikcare2026!';
 
 const s = {
-  wrap: { minHeight: '100vh', background: '#060e0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif" },
-  box: { background: '#0d1f1a', border: '1px solid #1a3a2e', borderRadius: 16, padding: 40, width: '100%', maxWidth: 380, textAlign: 'center' },
+  wrap: { minHeight: '100vh', background: '#f8f5ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif" },
+  box: { background: '#ffffff', border: '1px solid #1a3a2e', borderRadius: 16, padding: 40, width: '100%', maxWidth: 380, textAlign: 'center' },
   icon: { fontSize: 40, marginBottom: 16 },
-  title: { fontFamily: "'DM Serif Display', serif", fontSize: 26, color: '#4ecba0', marginBottom: 8 },
-  sub: { color: '#4a7a6a', fontSize: 13, marginBottom: 28 },
-  input: { width: '100%', background: '#071510', border: '1px solid #2a4a3e', borderRadius: 8, padding: '12px 16px', color: '#e8f5f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 12 },
-  btn: { width: '100%', padding: '12px', background: '#4ecba0', border: 'none', borderRadius: 8, color: '#071510', fontSize: 14, fontWeight: 700, cursor: 'pointer' },
+  title: { fontFamily: "'DM Serif Display', serif", fontSize: 26, color: '#6C3FC5', marginBottom: 8 },
+  sub: { color: '#9b7fd4', fontSize: 13, marginBottom: 28 },
+  input: { width: '100%', background: '#f8f5ff', border: '1px solid #2a4a3e', borderRadius: 8, padding: '12px 16px', color: '#1a1a2e', fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 12 },
+  btn: { width: '100%', padding: '12px', background: '#6C3FC5', border: 'none', borderRadius: 8, color: '#f8f5ff', fontSize: 14, fontWeight: 700, cursor: 'pointer' },
   error: { color: '#e07070', fontSize: 13, marginTop: 12 },
 };
 
@@ -48,7 +48,7 @@ function AdminLogin({ onLogin }) {
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
         />
         <div style={{ textAlign: 'left', marginBottom: 16 }}>
-          <label style={{ color: '#4a7a6a', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <label style={{ color: '#9b7fd4', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <input type="checkbox" checked={showing} onChange={() => setShowing(!showing)} />
             Show password
           </label>
