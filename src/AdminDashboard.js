@@ -139,7 +139,7 @@ function exportCSV(applications) {
   a.href = url; a.download = "careconnect-applications.csv"; a.click();
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onLogout }) {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
           <div style={s.logoIcon}>🌿</div>
           <span style={s.logoText}>CareConnect</span>
         </div>
-        <span style={s.adminBadge}>ADMIN DASHBOARD</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={s.adminBadge}>ADMIN DASHBOARD</span>{onLogout && <button onClick={onLogout} style={{ background: "none", border: "1px solid #2a4a3e", borderRadius: 6, padding: "4px 12px", color: "#4a7a6a", fontSize: 12, cursor: "pointer" }}>Sign Out</button>}</div>
       </div>
 
       <div style={s.container}>
