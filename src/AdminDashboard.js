@@ -4,50 +4,50 @@ import { collection, onSnapshot, doc, updateDoc, orderBy, query } from "firebase
 
 const STATUS_COLORS = {
   pending: { bg: "#2a3a1a", text: "#a8d060", border: "#4a6a2a" },
-  approved: { bg: "#1a3a2e", text: "#4ecba0", border: "#2a6a4e" },
+  approved: { bg: "#e8e0f5", text: "#6C3FC5", border: "#2a6a4e" },
   rejected: { bg: "#3a1a1a", text: "#e07070", border: "#6a2a2a" },
 };
 const STATUS_LABELS = { pending: "⏳ Pending", approved: "✅ Approved", rejected: "❌ Rejected" };
 
 const s = {
-  app: { minHeight: "100vh", background: "#060e0a", color: "#e8f5f0", fontFamily: "'DM Sans', sans-serif" },
-  header: { background: "#0a1a12", borderBottom: "1px solid #1a3a2e", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 },
+  app: { minHeight: "100vh", background: "#f8f5ff", color: "#1a1a2e", fontFamily: "'DM Sans', sans-serif" },
+  header: { background: "#ffffff", borderBottom: "1px solid #e8e0f5", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 },
   logo: { display: "flex", alignItems: "center", gap: 10 },
-  logoIcon: { width: 32, height: 32, borderRadius: "50%", background: "#4ecba0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 },
-  logoText: { color: "#4ecba0", fontSize: 18, fontFamily: "'DM Serif Display', serif" },
-  adminBadge: { background: "#1a3a2e", border: "1px solid #2a5a3e", borderRadius: 6, padding: "4px 10px", fontSize: 11, color: "#4ecba0", fontWeight: 600, letterSpacing: "0.05em" },
+  logoIcon: { width: 40, height: 40, borderRadius: 10, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "white", fontFamily: "serif" },
+  logoText: { color: "#6C3FC5", fontSize: 18, fontFamily: "'DM Serif Display', serif" },
+  adminBadge: { background: "#e8e0f5", border: "1px solid #2a5a3e", borderRadius: 6, padding: "4px 10px", fontSize: 11, color: "#6C3FC5", fontWeight: 600, letterSpacing: "0.05em" },
   container: { maxWidth: 1100, margin: "0 auto", padding: "24px 16px" },
   statsRow: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 },
-  statCard: (color) => ({ background: "#0d1f1a", borderRadius: 12, padding: "16px 20px", borderLeft: `3px solid ${color}` }),
+  statCard: (color) => ({ background: "#f8f5ff", borderRadius: 12, padding: "16px 20px", borderLeft: `3px solid ${color}` }),
   statNum: (color) => ({ fontSize: 28, fontWeight: 700, color, fontFamily: "'DM Serif Display', serif" }),
-  statLabel: { fontSize: 11, color: "#4a7a6a", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 },
+  statLabel: { fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 },
   toolbar: { display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" },
-  searchInput: { flex: 1, minWidth: 200, background: "#0d1f1a", border: "1px solid #2a4a3e", borderRadius: 8, padding: "10px 16px", color: "#e8f5f0", fontSize: 14, outline: "none" },
-  filterBtn: (active) => ({ padding: "9px 14px", borderRadius: 8, border: `1px solid ${active ? "#4ecba0" : "#2a4a3e"}`, background: active ? "#1a3a2e" : "transparent", color: active ? "#4ecba0" : "#a0c8b8", fontSize: 12, cursor: "pointer", fontWeight: active ? 600 : 400 }),
-  exportBtn: { padding: "9px 16px", borderRadius: 8, border: "1px solid #2a4a3e", background: "transparent", color: "#a0c8b8", fontSize: 12, cursor: "pointer" },
+  searchInput: { flex: 1, minWidth: 200, background: "#f8f5ff", border: "1px solid #c5b3e8", borderRadius: 8, padding: "10px 16px", color: "#1a1a2e", fontSize: 14, outline: "none" },
+  filterBtn: (active) => ({ padding: "9px 14px", borderRadius: 8, border: `1px solid ${active ? "#6C3FC5" : "#c5b3e8"}`, background: active ? "#e8e0f5" : "transparent", color: active ? "#6C3FC5" : "#6C3FC5", fontSize: 12, cursor: "pointer", fontWeight: active ? 600 : 400 }),
+  exportBtn: { padding: "9px 16px", borderRadius: 8, border: "1px solid #c5b3e8", background: "transparent", color: "#6C3FC5", fontSize: 12, cursor: "pointer" },
   table: { width: "100%", borderCollapse: "collapse" },
-  th: { textAlign: "left", padding: "10px 16px", fontSize: 11, color: "#4a7a6a", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid #1a3a2e", fontWeight: 600 },
-  td: { padding: "14px 16px", fontSize: 14, borderBottom: "1px solid #0f2a20", color: "#e8f5f0" },
-  tdSub: { fontSize: 12, color: "#4a7a6a", marginTop: 2 },
-  statusPill: (status) => ({ display: "inline-block", padding: "4px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600, background: STATUS_COLORS[status]?.bg || "#1a2a1a", color: STATUS_COLORS[status]?.text || "#4ecba0", border: `1px solid ${STATUS_COLORS[status]?.border || "#2a4a2a"}` }),
+  th: { textAlign: "left", padding: "10px 16px", fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid #e8e0f5", fontWeight: 600 },
+  td: { padding: "14px 16px", fontSize: 14, borderBottom: "1px solid #0f2a20", color: "#1a1a2e" },
+  tdSub: { fontSize: 12, color: "#9b7fd4", marginTop: 2 },
+  statusPill: (status) => ({ display: "inline-block", padding: "4px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600, background: STATUS_COLORS[status]?.bg || "#1a2a1a", color: STATUS_COLORS[status]?.text || "#6C3FC5", border: `1px solid ${STATUS_COLORS[status]?.border || "#2a4a2a"}` }),
   modal: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 16px", overflowY: "auto" },
-  modalBox: { background: "#0d1f1a", border: "1px solid #1a3a2e", borderRadius: 16, width: "100%", maxWidth: 640, overflow: "hidden", marginBottom: 24 },
-  modalHeader: { background: "#071510", padding: "20px 24px", borderBottom: "1px solid #1a3a2e", display: "flex", justifyContent: "space-between", alignItems: "flex-start" },
-  modalTitle: { fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#e8f5f0" },
-  closeBtn: { background: "none", border: "none", color: "#4a7a6a", fontSize: 22, cursor: "pointer", lineHeight: 1 },
+  modalBox: { background: "#f8f5ff", border: "1px solid #e8e0f5", borderRadius: 16, width: "100%", maxWidth: 640, overflow: "hidden", marginBottom: 24 },
+  modalHeader: { background: "#f8f5ff", padding: "20px 24px", borderBottom: "1px solid #e8e0f5", display: "flex", justifyContent: "space-between", alignItems: "flex-start" },
+  modalTitle: { fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1a1a2e" },
+  closeBtn: { background: "none", border: "none", color: "#9b7fd4", fontSize: 22, cursor: "pointer", lineHeight: 1 },
   modalBody: { padding: 24 },
   section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 11, color: "#4ecba0", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10, paddingBottom: 6, borderBottom: "1px solid #1a3a2e" },
+  sectionTitle: { fontSize: 11, color: "#6C3FC5", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10, paddingBottom: 6, borderBottom: "1px solid #e8e0f5" },
   detailGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
-  detailItem: { background: "#071510", borderRadius: 8, padding: "10px 14px" },
-  detailLabel: { fontSize: 10, color: "#4a7a6a", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 },
-  detailValue: { fontSize: 13, color: "#e8f5f0" },
+  detailItem: { background: "#f8f5ff", borderRadius: 8, padding: "10px 14px" },
+  detailLabel: { fontSize: 10, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 },
+  detailValue: { fontSize: 13, color: "#1a1a2e" },
   tagRow: { display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 },
-  tag: { padding: "4px 10px", borderRadius: 999, background: "#0a2a1e", border: "1px solid #2a4a3e", fontSize: 12, color: "#a0c8b8" },
-  actionRow: { display: "flex", gap: 10, padding: "16px 24px", borderTop: "1px solid #1a3a2e", background: "#071510" },
-  approveBtn: { flex: 1, padding: "12px", borderRadius: 8, border: "none", background: "#4ecba0", color: "#071510", fontSize: 14, fontWeight: 700, cursor: "pointer" },
+  tag: { padding: "4px 10px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", fontSize: 12, color: "#6C3FC5" },
+  actionRow: { display: "flex", gap: 10, padding: "16px 24px", borderTop: "1px solid #e8e0f5", background: "#f8f5ff" },
+  approveBtn: { flex: 1, padding: "12px", borderRadius: 8, border: "none", background: "#6C3FC5", color: "#f8f5ff", fontSize: 14, fontWeight: 700, cursor: "pointer" },
   rejectBtn: { flex: 1, padding: "12px", borderRadius: 8, border: "1px solid #6a2a2a", background: "#2a1010", color: "#e07070", fontSize: 14, fontWeight: 600, cursor: "pointer" },
-  loading: { textAlign: "center", padding: "60px 20px", color: "#4a7a6a", fontSize: 14 },
+  loading: { textAlign: "center", padding: "60px 20px", color: "#9b7fd4", fontSize: 14 },
 };
 
 function DetailItem({ label, value }) {
@@ -67,7 +67,7 @@ function Modal({ app, onClose, onApprove, onReject }) {
         <div style={s.modalHeader}>
           <div>
             <div style={s.modalTitle}>{app.firstName} {app.lastName}</div>
-            <div style={{ fontSize: 12, color: "#4a7a6a", marginTop: 4 }}>Applied {app.appliedAt} · {app.postcode}</div>
+            <div style={{ fontSize: 12, color: "#9b7fd4", marginTop: 4 }}>Applied {app.appliedAt} · {app.postcode}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={s.statusPill(app.status)}>{STATUS_LABELS[app.status]}</span>
@@ -113,9 +113,9 @@ function Modal({ app, onClose, onApprove, onReject }) {
             <div style={s.sectionTitle}>⭐ References</div>
             {app.refs?.map((r, i) => (
               <div key={i} style={{ ...s.detailItem, marginBottom: 8 }}>
-                <div style={{ fontSize: 13, color: "#e8f5f0", fontWeight: 600 }}>{r.name}</div>
-                <div style={{ fontSize: 12, color: "#4a7a6a" }}>{r.title} · {r.org}</div>
-                <div style={{ fontSize: 12, color: "#4a7a6a" }}>{r.email}</div>
+                <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 600 }}>{r.name}</div>
+                <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.title} · {r.org}</div>
+                <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.email}</div>
               </div>
             ))}
           </div>
@@ -184,17 +184,17 @@ export default function AdminDashboard({ onLogout }) {
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
       <div style={s.header}>
         <div style={s.logo}>
-          <div style={s.logoIcon}>🌿</div>
+          <div style={s.logoIcon}>Q</div>
           <span style={s.logoText}>Quikcare</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={s.adminBadge}>ADMIN DASHBOARD</span>{onLogout && <button onClick={onLogout} style={{ background: "none", border: "1px solid #2a4a3e", borderRadius: 6, padding: "4px 12px", color: "#4a7a6a", fontSize: 12, cursor: "pointer" }}>Sign Out</button>}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={s.adminBadge}>ADMIN DASHBOARD</span>{onLogout && <button onClick={onLogout} style={{ background: "none", border: "1px solid #c5b3e8", borderRadius: 6, padding: "4px 12px", color: "#9b7fd4", fontSize: 12, cursor: "pointer" }}>Sign Out</button>}</div>
       </div>
 
       <div style={s.container}>
         <div style={s.statsRow}>
-          <div style={s.statCard("#4ecba0")}><div style={s.statNum("#4ecba0")}>{stats.total}</div><div style={s.statLabel}>Total Applications</div></div>
+          <div style={s.statCard("#6C3FC5")}><div style={s.statNum("#6C3FC5")}>{stats.total}</div><div style={s.statLabel}>Total Applications</div></div>
           <div style={s.statCard("#a8d060")}><div style={s.statNum("#a8d060")}>{stats.pending}</div><div style={s.statLabel}>Pending Review</div></div>
-          <div style={s.statCard("#4ecba0")}><div style={s.statNum("#4ecba0")}>{stats.approved}</div><div style={s.statLabel}>Approved</div></div>
+          <div style={s.statCard("#6C3FC5")}><div style={s.statNum("#6C3FC5")}>{stats.approved}</div><div style={s.statLabel}>Approved</div></div>
           <div style={s.statCard("#e07070")}><div style={s.statNum("#e07070")}>{stats.rejected}</div><div style={s.statLabel}>Rejected</div></div>
         </div>
 
@@ -208,13 +208,13 @@ export default function AdminDashboard({ onLogout }) {
           <button style={s.exportBtn} onClick={() => exportCSV(filtered)}>⬇ Export CSV</button>
         </div>
 
-        <div style={{ background: "#0a1a12", border: "1px solid #1a3a2e", borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 12, overflow: "hidden" }}>
           {loading ? (
             <div style={s.loading}>Loading applications...</div>
           ) : (
             <table style={s.table}>
               <thead>
-                <tr style={{ background: "#071510" }}>
+                <tr style={{ background: "#f8f5ff" }}>
                   {["Applicant", "Location", "Experience", "DBS", "Applied", "Status"].map(h => <th key={h} style={s.th}>{h}</th>)}
                 </tr>
               </thead>
@@ -225,7 +225,7 @@ export default function AdminDashboard({ onLogout }) {
                   </td></tr>
                 ) : filtered.map(app => (
                   <tr key={app.id}
-                    style={{ background: hoveredRow === app.id ? "#0d1f1a" : "transparent", cursor: "pointer", transition: "background 0.15s" }}
+                    style={{ background: hoveredRow === app.id ? "#f8f5ff" : "transparent", cursor: "pointer", transition: "background 0.15s" }}
                     onClick={() => setSelected(app)}
                     onMouseEnter={() => setHoveredRow(app.id)}
                     onMouseLeave={() => setHoveredRow(null)}>
@@ -241,7 +241,7 @@ export default function AdminDashboard({ onLogout }) {
             </table>
           )}
         </div>
-        <div style={{ marginTop: 10, fontSize: 12, color: "#4a7a6a" }}>
+        <div style={{ marginTop: 10, fontSize: 12, color: "#9b7fd4" }}>
           {loading ? "" : `Showing ${filtered.length} of ${applications.length} applications · Updates in real time · Click any row to view details`}
         </div>
       </div>

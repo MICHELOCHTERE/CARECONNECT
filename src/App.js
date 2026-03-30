@@ -11,46 +11,46 @@ const steps = [
 ];
 
 const s = {
-  app: { minHeight: "100vh", background: "#071510", color: "#e8f5f0", fontFamily: "'DM Sans', sans-serif" },
-  header: { borderBottom: "1px solid #1a3a2e", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  app: { minHeight: "100vh", background: "#f8f5ff", color: "#1a1a2e", fontFamily: "'DM Sans', sans-serif" },
+  header: { borderBottom: "1px solid #e8e0f5", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
   logo: { display: "flex", alignItems: "center", gap: 10 },
-  logoIcon: { width: 32, height: 32, borderRadius: "50%", background: "#4ecba0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 },
-  logoText: { color: "#4ecba0", fontSize: 20, fontFamily: "'DM Serif Display', serif" },
-  headerSub: { color: "#4a7a6a", fontSize: 12 },
+  logoIcon: { width: 40, height: 40, borderRadius: 10, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "white", fontFamily: "serif" },
+  logoText: { color: "#6C3FC5", fontSize: 20, fontFamily: "'DM Serif Display', serif" },
+  headerSub: { color: "#9b7fd4", fontSize: 12 },
   container: { maxWidth: 560, margin: "0 auto", padding: "32px 16px 120px" },
   stepRow: { display: "flex", justifyContent: "space-between", marginBottom: 12 },
   stepBtn: { display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer" },
-  stepCircleActive: { width: 36, height: 36, borderRadius: "50%", background: "#4ecba0", border: "2px solid #4ecba0", color: "#071510", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: "bold" },
-  stepCircleDone: { width: 36, height: 36, borderRadius: "50%", background: "transparent", border: "2px solid #4ecba0", color: "#4ecba0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 },
-  stepCircleInactive: { width: 36, height: 36, borderRadius: "50%", background: "transparent", border: "2px solid #2a4a3e", color: "#4a7a6a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 },
-  progressBar: { height: 4, background: "#1a3a2e", borderRadius: 4, overflow: "hidden", marginBottom: 32 },
-  progressFill: (pct) => ({ height: "100%", background: "#4ecba0", borderRadius: 4, width: `${pct}%`, transition: "width 0.4s ease" }),
-  card: { background: "#0d1f1a", border: "1px solid #1a3a2e", borderRadius: 16, padding: 24, marginBottom: 24 },
-  cardTitle: { fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#e8f5f0", marginBottom: 4 },
-  cardSub: { color: "#4a7a6a", fontSize: 13, marginBottom: 24 },
+  stepCircleActive: { width: 36, height: 36, borderRadius: "50%", background: "#6C3FC5", border: "2px solid #6C3FC5", color: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: "bold" },
+  stepCircleDone: { width: 36, height: 36, borderRadius: "50%", background: "transparent", border: "2px solid #6C3FC5", color: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 },
+  stepCircleInactive: { width: 36, height: 36, borderRadius: "50%", background: "transparent", border: "2px solid #c5b3e8", color: "#9b7fd4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 },
+  progressBar: { height: 4, background: "#e8e0f5", borderRadius: 4, overflow: "hidden", marginBottom: 32 },
+  progressFill: (pct) => ({ height: "100%", background: "#6C3FC5", borderRadius: 4, width: `${pct}%`, transition: "width 0.4s ease" }),
+  card: { background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 16, padding: 24, marginBottom: 24 },
+  cardTitle: { fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#1a1a2e", marginBottom: 4 },
+  cardSub: { color: "#9b7fd4", fontSize: 13, marginBottom: 24 },
   field: { marginBottom: 20 },
-  label: { display: "block", color: "#a0c8b8", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 },
-  input: { width: "100%", background: "#071510", border: "1px solid #2a4a3e", borderRadius: 8, padding: "12px 16px", color: "#e8f5f0", fontSize: 14, outline: "none", boxSizing: "border-box" },
-  select: { width: "100%", background: "#071510", border: "1px solid #2a4a3e", borderRadius: 8, padding: "12px 16px", color: "#e8f5f0", fontSize: 14, outline: "none", boxSizing: "border-box" },
+  label: { display: "block", color: "#6C3FC5", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 },
+  input: { width: "100%", background: "#f8f5ff", border: "1px solid #c5b3e8", borderRadius: 8, padding: "12px 16px", color: "#1a1a2e", fontSize: 14, outline: "none", boxSizing: "border-box" },
+  select: { width: "100%", background: "#f8f5ff", border: "1px solid #c5b3e8", borderRadius: 8, padding: "12px 16px", color: "#1a1a2e", fontSize: 14, outline: "none", boxSizing: "border-box" },
   grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 },
   pillRow: { display: "flex", flexWrap: "wrap", gap: 10 },
-  pillActive: { padding: "8px 16px", borderRadius: 999, border: "1px solid #4ecba0", background: "#4ecba0", color: "#071510", fontSize: 13, fontWeight: 500, cursor: "pointer" },
-  pillInactive: { padding: "8px 16px", borderRadius: 999, border: "1px solid #2a4a3e", background: "transparent", color: "#a0c8b8", fontSize: 13, cursor: "pointer" },
-  infoBox: { background: "#0d2a22", border: "1px solid #2a4a3e", borderRadius: 12, padding: 16, fontSize: 13, color: "#a0c8b8", lineHeight: 1.6 },
-  infoTitle: { color: "#4ecba0", fontWeight: 600, marginBottom: 4 },
-  refBox: { border: "1px solid #2a4a3e", borderRadius: 12, padding: 16, marginBottom: 16 },
-  refLabel: { color: "#4ecba0", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 },
+  pillActive: { padding: "8px 16px", borderRadius: 999, border: "1px solid #6C3FC5", background: "#6C3FC5", color: "#f8f5ff", fontSize: 13, fontWeight: 500, cursor: "pointer" },
+  pillInactive: { padding: "8px 16px", borderRadius: 999, border: "1px solid #c5b3e8", background: "transparent", color: "#6C3FC5", fontSize: 13, cursor: "pointer" },
+  infoBox: { background: "#f0ebff", border: "1px solid #c5b3e8", borderRadius: 12, padding: 16, fontSize: 13, color: "#6C3FC5", lineHeight: 1.6 },
+  infoTitle: { color: "#6C3FC5", fontWeight: 600, marginBottom: 4 },
+  refBox: { border: "1px solid #c5b3e8", borderRadius: 12, padding: 16, marginBottom: 16 },
+  refLabel: { color: "#6C3FC5", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 },
   navRow: { display: "flex", justifyContent: "space-between", marginTop: 8 },
-  btnBack: { padding: "12px 24px", border: "1px solid #2a4a3e", borderRadius: 999, color: "#a0c8b8", background: "none", fontSize: 14, cursor: "pointer" },
-  btnNext: { padding: "12px 32px", background: "#4ecba0", border: "none", borderRadius: 999, color: "#071510", fontSize: 14, fontWeight: 600, cursor: "pointer" },
-  successWrap: { minHeight: "100vh", background: "#071510", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 },
+  btnBack: { padding: "12px 24px", border: "1px solid #c5b3e8", borderRadius: 999, color: "#6C3FC5", background: "none", fontSize: 14, cursor: "pointer" },
+  btnNext: { padding: "12px 32px", background: "#6C3FC5", border: "none", borderRadius: 999, color: "#f8f5ff", fontSize: 14, fontWeight: 600, cursor: "pointer" },
+  successWrap: { minHeight: "100vh", background: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 },
   successInner: { textAlign: "center", maxWidth: 400 },
   successIcon: { fontSize: 64, marginBottom: 24 },
-  successTitle: { fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#4ecba0", marginBottom: 16 },
-  successText: { color: "#a0c8b8", lineHeight: 1.7, marginBottom: 32 },
+  successTitle: { fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#6C3FC5", marginBottom: 16 },
+  successText: { color: "#6C3FC5", lineHeight: 1.7, marginBottom: 32 },
   successGrid: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 32 },
-  successCard: { background: "#0d1f1a", border: "1px solid #2a4a3e", borderRadius: 12, padding: 12, fontSize: 11, color: "#4ecba0", fontWeight: 600, textTransform: "uppercase" },
-  resetBtn: { padding: "10px 24px", border: "1px solid #2a4a3e", borderRadius: 999, color: "#a0c8b8", background: "none", fontSize: 13, cursor: "pointer" },
+  successCard: { background: "#ffffff", border: "1px solid #c5b3e8", borderRadius: 12, padding: 12, fontSize: 11, color: "#6C3FC5", fontWeight: 600, textTransform: "uppercase" },
+  resetBtn: { padding: "10px 24px", border: "1px solid #c5b3e8", borderRadius: 999, color: "#6C3FC5", background: "none", fontSize: 13, cursor: "pointer" },
 };
 
 function RadioGroup({ options, value, onChange }) {
@@ -162,7 +162,7 @@ function Step5({ data, set }) {
   };
   return (
     <div>
-      <p style={{ color: "#a0c8b8", fontSize: 13, marginBottom: 20 }}>We require two professional references. At least one must be from a care or health setting.</p>
+      <p style={{ color: "#6C3FC5", fontSize: 13, marginBottom: 20 }}>We require two professional references. At least one must be from a care or health setting.</p>
       {[0, 1].map((i) => (
         <div key={i} style={s.refBox}>
           <div style={s.refLabel}>Reference {i + 1}</div>
@@ -184,7 +184,7 @@ function Step5({ data, set }) {
           </div>
         </div>
       ))}
-      <div style={{ ...s.infoBox, border: "1px solid #4ecba0" }}>
+      <div style={{ ...s.infoBox, border: "1px solid #6C3FC5" }}>
         <div style={s.infoTitle}>✅ Almost there!</div>
         By submitting, you confirm all information is accurate and consent to background checks.
       </div>
@@ -276,7 +276,7 @@ export default function App() {
       <div style={s.successWrap}>
         <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
         <div style={s.successInner}>
-          <div style={s.successIcon}>🌿</div>
+          <div style={s.successIcon}>Q</div>
           <h1 style={s.successTitle}>Application Received</h1>
           <p style={s.successText}>Thank you, {p1.firstName || "there"}! We've received your application and will be in touch within 2 working days.</p>
           <div style={s.successGrid}>
@@ -295,7 +295,7 @@ export default function App() {
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
       <div style={s.header}>
         <div style={s.logo}>
-          <div style={s.logoIcon}>🌿</div>
+          <div style={s.logoIcon}>Q</div>
           <span style={s.logoText}>Quikcare</span>
         </div>
         <span style={s.headerSub}>Carer Onboarding</span>
