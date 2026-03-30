@@ -196,6 +196,7 @@ export default function App() {
   const [current, setCurrent] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState([]);
   const [p1, setP1] = useState({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", driving: "" });
   const [p2, setP2] = useState({ years: "", settings: [], clients: [], quals: [], hours: [] });
   const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [] });
@@ -203,6 +204,54 @@ export default function App() {
   const [p5, setP5] = useState({ refs: [{}, {}] });
 
   const progress = ((current - 1) / (steps.length - 1)) * 100;
+
+
+  const validate = (step) => {
+    const errs = [];
+    if (step === 1) {
+      if (!p1.firstName.trim()) errs.push("First name is required");
+      if (!p1.lastName.trim()) errs.push("Last name is required");
+      if (!p1.email.trim()) errs.push("Email address is required");
+      if (!p1.phone.trim()) errs.push("Phone number is required");
+      if (!p1.dob) errs.push("Date of birth is required");
+      if (!p1.postcode.trim()) errs.push("Postcode is required");
+      if (!p1.driving) errs.push("Please confirm if you hold a driving licence");
+    }
+    if (step === 2) {
+      if (!p2.years) errs.push("Please select your years of experience");
+      if (p2.settings.length === 0) errs.push("Please select at least one care setting");
+      if (p2.clients.length === 0) errs.push("Please select at least one client group");
+      if (p2.quals.length === 0) errs.push("Please select your qualifications");
+      if (p2.hours.length === 0) errs.push("Please select your preferred hours");
+    }
+    if (step === 3) {
+      if (!p3.rightToWork) errs.push("Please confirm your right to work status");
+      if (p3.docs.length === 0) errs.push("Please select at least one document you can provide");
+    }
+    if (step === 4) {
+      if (!p4.hasDbs) errs.push("Please confirm your DBS certificate status");
+      if (!p4.conviction) errs.push("Please answer the convictions question");
+    }
+    if (step === 5) {
+      if (!p5.refs[0]?.name?.trim()) errs.push("Reference 1: Full name is required");
+      if (!p5.refs[0]?.email?.trim()) errs.push("Reference 1: Email is required");
+      if (!p5.refs[1]?.name?.trim()) errs.push("Reference 2: Full name is required");
+      if (!p5.refs[1]?.email?.trim()) errs.push("Reference 2: Email is required");
+    }
+    return errs;
+  };
+
+  const handleNext = () => {
+    const errs = validate(current);
+    if (errs.length > 0) {
+      setErrors(errs);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setErrors([]);
+    if (current === steps.length) handleSubmit();
+    else setCurrent(current + 1);
+  };
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -264,6 +313,13 @@ export default function App() {
         </div>
         <div style={s.progressBar}><div style={s.progressFill(progress)} /></div>
 
+
+        {errors.length > 0 && (
+          <div style={{ background: "#3a1010", border: "1px solid #6a2a2a", borderRadius: 12, padding: "14px 18px", marginBottom: 20 }}>
+            <div style={{ color: "#e07070", fontWeight: 600, fontSize: 13, marginBottom: 6 }}>⚠️ Please complete the following:</div>
+            {errors.map((e, i) => <div key={i} style={{ color: "#e07070", fontSize: 13, marginTop: 4 }}>• {e}</div>)}
+          </div>
+        )}
         <div style={s.card}>
           <h2 style={s.cardTitle}>{steps[current - 1].label}</h2>
           <p style={s.cardSub}>Step {current} of {steps.length}</p>
@@ -277,7 +333,7 @@ export default function App() {
         <div style={s.navRow}>
           <button style={{ ...s.btnBack, opacity: current === 1 ? 0.3 : 1 }} disabled={current === 1} onClick={() => setCurrent(current - 1)}>← Back</button>
           <button style={{ ...s.btnNext, opacity: submitting ? 0.6 : 1 }} disabled={submitting}
-            onClick={() => current === steps.length ? handleSubmit() : setCurrent(current + 1)}>
+            onClick={handleNext}>
             {current === steps.length ? (submitting ? "Submitting..." : "Submit Application →") : "Continue →"}
           </button>
         </div>
