@@ -4,7 +4,7 @@ import App from './App';
 import AdminDashboard from './AdminDashboard';
 import './index.css';
 
-const ADMIN_PASSWORD = 'CareConnect2026!';
+const ADMIN_PASSWORD = 'Quikcare2026!';
 
 const s = {
   wrap: { minHeight: '100vh', background: '#060e0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif" },

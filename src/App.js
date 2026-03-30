@@ -296,7 +296,7 @@ export default function App() {
       <div style={s.header}>
         <div style={s.logo}>
           <div style={s.logoIcon}>🌿</div>
-          <span style={s.logoText}>CareConnect</span>
+          <span style={s.logoText}>Quikcare</span>
         </div>
         <span style={s.headerSub}>Carer Onboarding</span>
       </div>
