@@ -109,6 +109,16 @@ function Modal({ app, onClose, onApprove, onReject }) {
               <DetailItem label="Convictions Declared" value={app.conviction} />
             </div>
           </div>
+          {(app.cvURL || app.poa1URL || app.poa2URL) && (
+            <div style={s.section}>
+              <div style={s.sectionTitle}>📁 Uploaded Documents</div>
+              <div style={s.tagRow}>
+                {app.cvURL && <a href={app.cvURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📄 Download CV</a>}
+                {app.poa1URL && <a href={app.poa1URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Proof of Address 1</a>}
+                {app.poa2URL && <a href={app.poa2URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Proof of Address 2</a>}
+              </div>
+            </div>
+          )}
           <div style={s.section}>
             <div style={s.sectionTitle}>⭐ References</div>
             {app.refs?.map((r, i) => (
@@ -122,11 +132,108 @@ function Modal({ app, onClose, onApprove, onReject }) {
         </div>
         <div style={s.actionRow}>
           <button style={s.rejectBtn} onClick={() => { onReject(app.id); onClose(); }}>✕ Reject</button>
-          <button style={s.approveBtn} onClick={() => { onApprove(app.id); onClose(); }}>✓ Approve Application</button>
+          <button style={{ ...s.approveBtn, background: "#9b7fd4", flex: "0 0 auto", padding: "12px 16px" }} onClick={() => downloadPDF(app)}>📄 PDF</button>
+          <button style={s.approveBtn} onClick={() => { onApprove(app.id); onClose(); }}>✓ Approve</button>
         </div>
       </div>
     </div>
   );
+}
+
+
+function downloadPDF(app) {
+  const html = `
+    <html><head><style>
+      body { font-family: Arial, sans-serif; padding: 40px; color: #1a1a2e; }
+      h1 { color: #6C3FC5; font-size: 24px; margin-bottom: 4px; }
+      h2 { color: #6C3FC5; font-size: 14px; border-bottom: 1px solid #e8e0f5; padding-bottom: 6px; margin-top: 24px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+      .field { background: #f8f5ff; padding: 10px 14px; border-radius: 6px; }
+      .label { font-size: 10px; color: #9b7fd4; text-transform: uppercase; letter-spacing: 0.08em; }
+      .value { font-size: 13px; color: #1a1a2e; margin-top: 2px; }
+      .tag { display: inline-block; padding: 2px 8px; background: #e8e0f5; border-radius: 999px; font-size: 11px; margin: 2px; }
+      .status { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: bold; background: ${app.status === "approved" ? "#e0f5eb" : app.status === "rejected" ? "#fce8e8" : "#f0ebff"}; color: ${app.status === "approved" ? "#1a7a3a" : app.status === "rejected" ? "#cc0000" : "#6C3FC5"}; }
+      .logo { color: #6C3FC5; font-size: 28px; font-weight: bold; margin-bottom: 4px; }
+      .sub { color: #9b7fd4; font-size: 12px; margin-bottom: 24px; }
+      .footer { margin-top: 40px; font-size: 11px; color: #9b7fd4; border-top: 1px solid #e8e0f5; padding-top: 12px; }
+      a { color: #6C3FC5; }
+    </style></head><body>
+      <div class="logo">Quikcare</div>
+      <div class="sub">Carer Application Form — Printed ${new Date().toLocaleDateString("en-GB")}</div>
+      <h1>${app.firstName} ${app.lastName}</h1>
+      <span class="status">${app.status?.toUpperCase()}</span>
+
+      <h2>👤 Personal Details</h2>
+      <div class="grid">
+        <div class="field"><div class="label">Email</div><div class="value">${app.email || "—"}</div></div>
+        <div class="field"><div class="label">Phone</div><div class="value">${app.phone || "—"}</div></div>
+        <div class="field"><div class="label">Date of Birth</div><div class="value">${app.dob || "—"}</div></div>
+        <div class="field"><div class="label">Postcode</div><div class="value">${app.postcode || "—"}</div></div>
+        <div class="field"><div class="label">NI Number</div><div class="value">${app.niNumber || "—"}</div></div>
+        <div class="field"><div class="label">Driving Licence</div><div class="value">${app.driving || "—"}</div></div>
+        <div class="field"><div class="label">Gender</div><div class="value">${app.gender || "—"}</div></div>
+        <div class="field"><div class="label">Nationality</div><div class="value">${app.nationality || "—"}</div></div>
+        <div class="field"><div class="label">Religion</div><div class="value">${app.religion || "—"}</div></div>
+        <div class="field"><div class="label">Languages</div><div class="value">${app.languages?.join(", ") || "—"}</div></div>
+      </div>
+
+      <h2>🚨 Emergency Contact</h2>
+      <div class="grid">
+        <div class="field"><div class="label">Name</div><div class="value">${app.emergencyName || "—"}</div></div>
+        <div class="field"><div class="label">Relationship</div><div class="value">${app.emergencyRelation || "—"}</div></div>
+        <div class="field"><div class="label">Phone</div><div class="value">${app.emergencyPhone || "—"}</div></div>
+      </div>
+
+      <h2>💼 Experience</h2>
+      <div class="grid">
+        <div class="field"><div class="label">Years Experience</div><div class="value">${app.years || "—"}</div></div>
+        <div class="field"><div class="label">Preferred Hours</div><div class="value">${app.hours?.join(", ") || "—"}</div></div>
+      </div>
+      <div style="margin-top:10px"><div class="label">Care Settings</div><div style="margin-top:4px">${app.settings?.map(t => `<span class="tag">${t}</span>`).join("") || "—"}</div></div>
+      <div style="margin-top:10px"><div class="label">Client Groups</div><div style="margin-top:4px">${app.clients?.map(t => `<span class="tag">${t}</span>`).join("") || "—"}</div></div>
+      <div style="margin-top:10px"><div class="label">Qualifications</div><div style="margin-top:4px">${app.quals?.map(t => `<span class="tag">${t}</span>`).join("") || "—"}</div></div>
+
+      <h2>📋 Right to Work</h2>
+      <div class="grid">
+        <div class="field"><div class="label">Status</div><div class="value">${app.rtwStatus || "—"}</div></div>
+        <div class="field"><div class="label">Documents</div><div class="value">${app.docs?.join(", ") || "—"}</div></div>
+        <div class="field"><div class="label">Proof of Address 1</div><div class="value">${app.proofAddress1 || "—"}${app.poa1URL ? ' <a href="' + app.poa1URL + '">View</a>' : ""}</div></div>
+        <div class="field"><div class="label">Proof of Address 2</div><div class="value">${app.proofAddress2 || "—"}${app.poa2URL ? ' <a href="' + app.poa2URL + '">View</a>' : ""}</div></div>
+        <div class="field"><div class="label">Employment Gaps</div><div class="value">${app.employmentGaps || "—"}</div></div>
+        ${app.gapsExplanation ? `<div class="field" style="grid-column:1/-1"><div class="label">Gap Explanation</div><div class="value">${app.gapsExplanation}</div></div>` : ""}
+        ${app.cvURL ? `<div class="field"><div class="label">CV</div><div class="value"><a href="${app.cvURL}">Download CV</a></div></div>` : ""}
+      </div>
+
+      <h2>🔒 DBS</h2>
+      <div class="grid">
+        <div class="field"><div class="label">DBS Certificate</div><div class="value">${app.hasDbs || "—"}</div></div>
+        <div class="field"><div class="label">Update Service</div><div class="value">${app.updateService || "N/A"}</div></div>
+        <div class="field"><div class="label">Convictions</div><div class="value">${app.conviction || "—"}</div></div>
+      </div>
+
+      <h2>🏦 Bank Details</h2>
+      <div class="grid">
+        <div class="field"><div class="label">Account Name</div><div class="value">${app.bankName || "—"}</div></div>
+        <div class="field"><div class="label">Sort Code</div><div class="value">${app.sortCode || "—"}</div></div>
+        <div class="field"><div class="label">Account Number</div><div class="value">${app.accountNumber || "—"}</div></div>
+      </div>
+
+      <h2>⭐ References</h2>
+      ${app.refs?.map((r, i) => `
+        <div class="grid" style="margin-bottom:8px">
+          <div class="field"><div class="label">Reference ${i+1} Name</div><div class="value">${r.name || "—"}</div></div>
+          <div class="field"><div class="label">Organisation</div><div class="value">${r.org || "—"}</div></div>
+          <div class="field"><div class="label">Email</div><div class="value">${r.email || "—"}</div></div>
+          <div class="field"><div class="label">Relationship</div><div class="value">${r.relation || "—"}</div></div>
+        </div>`).join("") || "—"}
+
+      <div class="footer">Generated by Quikcare Recruitment System · quikcare.co.uk · ${new Date().toLocaleDateString("en-GB")}</div>
+    </body></html>
+  `;
+  const win = window.open("", "_blank");
+  win.document.write(html);
+  win.document.close();
+  win.print();
 }
 
 function exportCSV(applications) {

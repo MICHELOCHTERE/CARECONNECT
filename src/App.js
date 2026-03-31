@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { db } from "./firebase";
+import { db, storage } from "./firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const steps = [
   { id: 1, label: "Personal Details", icon: "👤" },
@@ -165,9 +166,19 @@ function Step2({ data, set }) {
 }
 
 function Step3({ data, set }) {
-  const handleFile = (e) => {
+  const handleFile = async (e, field) => {
     const file = e.target.files[0];
-    if (file) set({ ...data, cvFileName: file.name });
+    if (!file) return;
+    set({ ...data, [`${field}Name`]: file.name, [`${field}Uploading`]: true });
+    try {
+      const storageRef = ref(storage, `applications/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      set({ ...data, [`${field}Name`]: file.name, [`${field}URL`]: url, [`${field}Uploading`]: false });
+    } catch (err) {
+      console.error(err);
+      set({ ...data, [`${field}Uploading`]: false });
+    }
   };
   return (
     <div>
@@ -190,9 +201,33 @@ function Step3({ data, set }) {
         <label style={s.label}>Upload CV (optional)</label>
         <div style={s.uploadBox} onClick={() => document.getElementById('cv-upload').click()}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>📄</div>
-          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>{data.cvFileName || "Click to upload your CV"}</div>
+          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>
+            {data.cvUploading ? "Uploading..." : data.cvName ? `✓ ${data.cvName}` : "Click to upload your CV"}
+          </div>
           <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>PDF, DOC or DOCX — max 5MB</div>
-          <input id="cv-upload" type="file" accept=".pdf,.doc,.docx" style={{ display: "none" }} onChange={handleFile} />
+          <input id="cv-upload" type="file" accept=".pdf,.doc,.docx" style={{ display: "none" }} onChange={e => handleFile(e, "cv")} />
+        </div>
+      </div>
+      <div style={s.field}>
+        <label style={s.label}>Upload Proof of Address 1</label>
+        <div style={s.uploadBox} onClick={() => document.getElementById('poa1-upload').click()}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🏠</div>
+          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>
+            {data.poa1Uploading ? "Uploading..." : data.poa1Name ? `✓ ${data.poa1Name}` : "Click to upload proof of address 1"}
+          </div>
+          <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>PDF, JPG or PNG — max 5MB</div>
+          <input id="poa1-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => handleFile(e, "poa1")} />
+        </div>
+      </div>
+      <div style={s.field}>
+        <label style={s.label}>Upload Proof of Address 2</label>
+        <div style={s.uploadBox} onClick={() => document.getElementById('poa2-upload').click()}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🏠</div>
+          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>
+            {data.poa2Uploading ? "Uploading..." : data.poa2Name ? `✓ ${data.poa2Name}` : "Click to upload proof of address 2"}
+          </div>
+          <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>PDF, JPG or PNG — max 5MB</div>
+          <input id="poa2-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => handleFile(e, "poa2")} />
         </div>
       </div>
 
@@ -349,7 +384,7 @@ export default function App() {
   const [errors, setErrors] = useState([]);
   const [p1, setP1] = useState({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
   const [p2, setP2] = useState({ years: "", settings: [], clients: [], quals: [] });
-  const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [], cvFileName: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
+  const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
   const [p4, setP4] = useState({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
   const [p5, setP5] = useState({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
   const [p6, setP6] = useState({ refs: [{}, {}] });
