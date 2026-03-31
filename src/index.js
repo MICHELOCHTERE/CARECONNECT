@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import AdminDashboard from './AdminDashboard';
 import Auth from './Auth';
-import Welcome from './Welcome';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import './index.css';
@@ -64,8 +63,6 @@ function AdminLogin({ onLogin }) {
 function Router() {
   const path = window.location.pathname;
   const [adminAuthed, setAdminAuthed] = useState(sessionStorage.getItem('cc_admin') === 'true');
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [authMode, setAuthMode] = useState('register');
   const [carerUser, setCarerUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -83,16 +80,13 @@ function Router() {
   }
 
   if (!authChecked) return (
-    <div style={{ ...s.wrap }}>
+    <div style={s.wrap}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
       <div style={{ color: '#6C3FC5', fontSize: 16 }}>Loading...</div>
     </div>
   );
 
-  if (!carerUser) {
-    if (showWelcome) return <Welcome onStart={() => { setShowWelcome(false); setAuthMode('register'); }} onLogin={() => { setShowWelcome(false); setAuthMode('login'); }} />;
-    return <Auth mode={authMode} onAuth={(user) => setCarerUser(user)} onBack={() => setShowWelcome(true)} />;
-  }
+  if (!carerUser) return <Auth onAuth={(user) => setCarerUser(user)} />;
 
   return <App user={carerUser} onLogout={() => signOut(auth)} />;
 }
