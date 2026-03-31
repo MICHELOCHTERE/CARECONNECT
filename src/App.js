@@ -388,7 +388,7 @@ function Step6({ data, set }) {
   );
 }
 
-export default function App() {
+export default function App({ user, onLogout }) {
   const [current, setCurrent] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -470,6 +470,8 @@ export default function App() {
         ...p1, ...p2, ...p3, ...p4, ...p5,
         refs: p6.refs,
         status: "pending",
+        userId: user?.uid,
+        userEmail: user?.email,
         appliedAt: new Date().toISOString().split("T")[0],
         createdAt: serverTimestamp()
       });
@@ -508,7 +510,10 @@ export default function App() {
           <div style={s.logoIcon}>Q</div>
           <span style={s.logoText}>Quikcare</span>
         </div>
-        <span style={s.headerSub}>Carer Onboarding</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={s.headerSub}>{user?.email}</span>
+          <button onClick={onLogout} style={{ background: "none", border: "1px solid #c5b3e8", borderRadius: 6, padding: "4px 12px", color: "#9b7fd4", fontSize: 12, cursor: "pointer" }}>Sign Out</button>
+        </div>
       </div>
 
       <div style={s.container}>
