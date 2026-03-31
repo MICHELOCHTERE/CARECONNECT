@@ -109,7 +109,7 @@ function Modal({ app, onClose, onApprove, onReject }) {
               <DetailItem label="Convictions Declared" value={app.conviction} />
             </div>
           </div>
-          {(app.cvURL || app.poa1URL || app.poa2URL) && (
+          {(app.cvURL || app.poa1URL || app.poa2URL || app.rtwDocURL) && (
             <div style={s.section}>
               <div style={s.sectionTitle}>📁 Uploaded Documents</div>
               <div style={s.tagRow}>
