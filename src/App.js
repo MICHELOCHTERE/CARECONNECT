@@ -266,6 +266,17 @@ function Step3({ data, set }) {
           />
         )}
       </div>
+      <div style={s.field}>
+        <label style={s.label}>Upload Right to Work Document</label>
+        <div style={s.uploadBox} onClick={() => document.getElementById('rtw-upload').click()}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
+          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>
+            {data.rtwDocUploading ? "Uploading..." : data.rtwDocName ? `✓ ${data.rtwDocName}` : "Click to upload right to work document"}
+          </div>
+          <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>Passport, BRP, Share Code letter — PDF, JPG or PNG</div>
+          <input id="rtw-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => handleFile(e, "rtwDoc")} />
+        </div>
+      </div>
       <div style={s.infoBox}><div style={s.infoTitle}>📌 Right to Work Check</div>We are legally required to verify your right to work in the UK before you begin employment.</div>
     </div>
   );
@@ -384,7 +395,7 @@ export default function App() {
   const [errors, setErrors] = useState([]);
   const [p1, setP1] = useState({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
   const [p2, setP2] = useState({ years: "", settings: [], clients: [], quals: [] });
-  const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
+  const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
   const [p4, setP4] = useState({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
   const [p5, setP5] = useState({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
   const [p6, setP6] = useState({ refs: [{}, {}] });

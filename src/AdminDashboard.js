@@ -116,6 +116,7 @@ function Modal({ app, onClose, onApprove, onReject }) {
                 {app.cvURL && <a href={app.cvURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📄 Download CV</a>}
                 {app.poa1URL && <a href={app.poa1URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Proof of Address 1</a>}
                 {app.poa2URL && <a href={app.poa2URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Proof of Address 2</a>}
+                {app.rtwDocURL && <a href={app.rtwDocURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📋 Right to Work</a>}
               </div>
             </div>
           )}
