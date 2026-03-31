@@ -63,7 +63,11 @@ export default function Auth({ onAuth, mode: initialMode = "login", onBack }) {
     if (!email) return setError("Please enter your email address.");
     setLoading(true); setError("");
     try {
-      await sendPasswordResetEmail(auth, email);
+const actionCodeSettings = {
+        url: "https://quikcare.co.uk",
+        handleCodeInApp: false,
+      };
+      await sendPasswordResetEmail(auth, email, actionCodeSettings);
       setSuccess("Password reset email sent! Check your inbox.");
     } catch (err) {
       setError("Could not send reset email. Please check your email address.");
