@@ -20,8 +20,8 @@ const s = {
   footer: { marginTop: 24, textAlign: "center", color: "#9b7fd4", fontSize: 13 },
 };
 
-export default function Auth({ onAuth }) {
-  const [mode, setMode] = useState("login"); // login | register | reset
+export default function Auth({ onAuth, mode: initialMode = "login", onBack }) {
+  const [mode, setMode] = useState(initialMode); // login | register | reset
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -98,6 +98,7 @@ export default function Auth({ onAuth }) {
             <div style={s.footer}>
               New to Quikcare? <button style={s.link} onClick={() => { setMode("register"); setError(""); }}>Create an account</button>
             </div>
+            {onBack && <div style={{ ...s.footer, marginTop: 8 }}><button style={s.link} onClick={onBack}>← Back to home</button></div>}
           </>
         )}
 
@@ -118,6 +119,7 @@ export default function Auth({ onAuth }) {
             <div style={s.footer}>
               Already have an account? <button style={s.link} onClick={() => { setMode("login"); setError(""); }}>Log in</button>
             </div>
+            {onBack && <div style={{ ...s.footer, marginTop: 8 }}><button style={s.link} onClick={onBack}>← Back to home</button></div>}
           </>
         )}
 
