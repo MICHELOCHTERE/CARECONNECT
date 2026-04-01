@@ -65,7 +65,6 @@ function Router() {
   const path = window.location.pathname;
   const [adminAuthed, setAdminAuthed] = useState(sessionStorage.getItem('cc_admin') === 'true');
   const [showLanding, setShowLanding] = useState(true);
-  const [authMode, setAuthMode] = useState('register');
   const [carerUser, setCarerUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
