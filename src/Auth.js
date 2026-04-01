@@ -79,6 +79,11 @@ const actionCodeSettings = {
     <div style={s.wrap}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
       <div style={s.box}>
+        {onBack && (
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "#6C3FC5", fontSize: 14, cursor: "pointer", padding: "0 0 16px 0", display: "flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans', sans-serif" }}>
+            ← Back to home
+          </button>
+        )}
         <div style={s.logo}>
           <div style={s.logoIcon}>Q</div>
           <span style={s.logoText}>Quikcare</span>
@@ -102,7 +107,6 @@ const actionCodeSettings = {
             <div style={s.footer}>
               New to Quikcare? <button style={s.link} onClick={() => { setMode("register"); setError(""); }}>Create an account</button>
             </div>
-            {onBack && <div style={{ ...s.footer, marginTop: 8 }}><button style={s.link} onClick={onBack}>← Back to home</button></div>}
           </>
         )}
 
@@ -123,7 +127,6 @@ const actionCodeSettings = {
             <div style={s.footer}>
               Already have an account? <button style={s.link} onClick={() => { setMode("login"); setError(""); }}>Log in</button>
             </div>
-            {onBack && <div style={{ ...s.footer, marginTop: 8 }}><button style={s.link} onClick={onBack}>← Back to home</button></div>}
           </>
         )}
 
