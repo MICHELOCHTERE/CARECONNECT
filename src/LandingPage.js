@@ -69,6 +69,99 @@ const FAQS = [
   { q: "Can I export my applicant data?", a: "Yes. Export all applications to CSV at any time from your admin dashboard." },
 ];
 
+
+const PLANS = [
+  {
+    name: "Starter",
+    price: "£49",
+    color: "#6C3FC5",
+    bg: "white",
+    textColor: "#1a1a2e",
+    subColor: "#9b7fd4",
+    featureBorder: "#f0ebff",
+    btnBg: "#f0ebff",
+    btnColor: "#6C3FC5",
+    link: "https://buy.stripe.com/test_3cI8wO5jtfwMeWjgJT87K03",
+    features: ["Up to 50 applications", "Full onboarding form", "Document uploads", "Admin dashboard", "PDF & CSV export", "Email support"],
+    popular: false,
+  },
+  {
+    name: "Growth",
+    price: "£99",
+    color: "white",
+    bg: "#6C3FC5",
+    textColor: "white",
+    subColor: "rgba(255,255,255,0.7)",
+    featureBorder: "rgba(255,255,255,0.15)",
+    btnBg: "white",
+    btnColor: "#6C3FC5",
+    link: "https://buy.stripe.com/test_28E28q3bl84k6pN8dn87K00",
+    features: ["Unlimited applications", "Everything in Starter", "3 admin users", "Email notifications", "Priority support", "Analytics dashboard"],
+    popular: true,
+  },
+  {
+    name: "Enterprise",
+    price: "£199",
+    color: "#6C3FC5",
+    bg: "white",
+    textColor: "#1a1a2e",
+    subColor: "#9b7fd4",
+    featureBorder: "#f0ebff",
+    btnBg: "#f0ebff",
+    btnColor: "#6C3FC5",
+    link: "https://buy.stripe.com/test_cNi00idPZdoE3dB65f87K04",
+    features: ["Everything in Growth", "White label branding", "Custom domain", "Unlimited admin users", "Dedicated support", "Custom integrations"],
+    popular: false,
+  },
+];
+
+function PricingCards() {
+  const [hovered, setHovered] = useState(null);
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+      {PLANS.map((plan, i) => (
+        <div key={i}
+          onMouseEnter={() => setHovered(i)}
+          onMouseLeave={() => setHovered(null)}
+          style={{
+            background: plan.bg,
+            border: `2px solid ${hovered === i ? "#6C3FC5" : plan.popular ? "#6C3FC5" : "#e8e0f5"}`,
+            borderRadius: 20,
+            padding: 32,
+            textAlign: "center",
+            position: "relative",
+            transition: "transform 0.2s, box-shadow 0.2s",
+            transform: hovered === i ? "translateY(-6px)" : plan.popular ? "translateY(-4px)" : "none",
+            boxShadow: hovered === i ? "0 12px 40px rgba(108,63,197,0.25)" : plan.popular ? "0 8px 30px rgba(108,63,197,0.2)" : "none",
+          }}>
+          {plan.popular && (
+            <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", background: "white", color: "#6C3FC5", padding: "4px 16px", borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", border: "1px solid #e8e0f5" }}>
+              ⭐ Most Popular
+            </div>
+          )}
+          <div style={{ color: plan.color, fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>{plan.name}</div>
+          <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 56, color: plan.popular ? "white" : "#6C3FC5", lineHeight: 1 }}>{plan.price}</div>
+          <div style={{ color: plan.subColor, fontSize: 14, marginBottom: 24 }}>per month</div>
+          {plan.features.map((f, j) => (
+            <div key={j} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${plan.featureBorder}`, color: plan.textColor, fontSize: 14, textAlign: "left" }}>
+              <span style={{ color: plan.popular ? "white" : "#6C3FC5", fontWeight: 700 }}>✓</span> {f}
+            </div>
+          ))}
+          <a href={plan.link} target="_blank" rel="noreferrer" style={{
+            display: "block", marginTop: 24, padding: "14px",
+            background: hovered === i && !plan.popular ? "#6C3FC5" : plan.btnBg,
+            borderRadius: 999, color: hovered === i && !plan.popular ? "white" : plan.btnColor,
+            fontSize: 15, fontWeight: 700, cursor: "pointer", textDecoration: "none",
+            transition: "background 0.2s, color 0.2s"
+          }}>
+            Get Started →
+          </a>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function LandingPage({ onGetStarted, onLogin }) {
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -130,43 +223,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           <div style={s.sectionBadge}>Pricing</div>
           <h2 style={{ ...s.sectionTitle, textAlign: "center" }}>Simple, transparent pricing</h2>
           <p style={{ color: "#6b7280", fontSize: 16, textAlign: "center", marginBottom: 48 }}>No contracts. Cancel anytime. All plans include a 14-day free trial.</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
-
-            {/* Starter */}
-            <div style={{ background: "white", border: "1px solid #e8e0f5", borderRadius: 20, padding: 32, textAlign: "center" }}>
-              <div style={{ color: "#6C3FC5", fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Starter</div>
-              <div style={s.pricingPrice}>£49</div>
-              <div style={s.pricingPer}>per month</div>
-              {["Up to 50 applications", "Full onboarding form", "Document uploads", "Admin dashboard", "PDF & CSV export", "Email support"].map((f, i) => (
-                <div key={i} style={s.pricingFeature}><span style={{ color: "#6C3FC5", fontWeight: 700 }}>✓</span> {f}</div>
-              ))}
-              <a href="https://buy.stripe.com/test_3cI8wO5jtfwMeWjgJT87K03" target="_blank" rel="noreferrer" style={{ display: "block", marginTop: 24, padding: "14px", background: "#f0ebff", border: "none", borderRadius: 999, color: "#6C3FC5", fontSize: 15, fontWeight: 700, cursor: "pointer", textDecoration: "none" }}>Get Started</a>
-            </div>
-
-            {/* Growth - highlighted */}
-            <div style={{ background: "#6C3FC5", border: "2px solid #6C3FC5", borderRadius: 20, padding: 32, textAlign: "center", position: "relative" }}>
-              <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", background: "white", color: "#6C3FC5", padding: "4px 16px", borderRadius: 999, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>Most Popular</div>
-              <div style={{ color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Growth</div>
-              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 56, color: "white", lineHeight: 1 }}>£99</div>
-              <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, marginBottom: 24 }}>per month</div>
-              {["Unlimited applications", "Everything in Starter", "3 admin users", "Email notifications", "Priority support", "Analytics dashboard"].map((f, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 14, textAlign: "left" }}><span style={{ fontWeight: 700 }}>✓</span> {f}</div>
-              ))}
-              <a href="https://buy.stripe.com/test_28E28q3bl84k6pN8dn87K00" target="_blank" rel="noreferrer" style={{ display: "block", marginTop: 24, padding: "14px", background: "white", border: "none", borderRadius: 999, color: "#6C3FC5", fontSize: 15, fontWeight: 700, cursor: "pointer", textDecoration: "none" }}>Get Started</a>
-            </div>
-
-            {/* Enterprise */}
-            <div style={{ background: "white", border: "1px solid #e8e0f5", borderRadius: 20, padding: 32, textAlign: "center" }}>
-              <div style={{ color: "#6C3FC5", fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Enterprise</div>
-              <div style={s.pricingPrice}>£199</div>
-              <div style={s.pricingPer}>per month</div>
-              {["Everything in Growth", "White label branding", "Custom domain", "Unlimited admin users", "Dedicated support", "Custom integrations"].map((f, i) => (
-                <div key={i} style={s.pricingFeature}><span style={{ color: "#6C3FC5", fontWeight: 700 }}>✓</span> {f}</div>
-              ))}
-              <a href="https://buy.stripe.com/test_cNi00idPZdoE3dB65f87K04" target="_blank" rel="noreferrer" style={{ display: "block", marginTop: 24, padding: "14px", background: "#f0ebff", border: "none", borderRadius: 999, color: "#6C3FC5", fontSize: 15, fontWeight: 700, cursor: "pointer", textDecoration: "none" }}>Get Started</a>
-            </div>
-
-          </div>
+          <PricingCards />
           <p style={{ color: "#9b7fd4", fontSize: 13, marginTop: 24 }}>All plans include a 14-day free trial. No credit card required.</p>
         </div>
       </div>
