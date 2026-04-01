@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import AdminDashboard from './AdminDashboard';
 import Auth from './Auth';
+import LandingPage from './LandingPage';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import './index.css';
@@ -63,6 +64,8 @@ function AdminLogin({ onLogin }) {
 function Router() {
   const path = window.location.pathname;
   const [adminAuthed, setAdminAuthed] = useState(sessionStorage.getItem('cc_admin') === 'true');
+  const [showLanding, setShowLanding] = useState(true);
+  const [authMode, setAuthMode] = useState('register');
   const [carerUser, setCarerUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -86,7 +89,10 @@ function Router() {
     </div>
   );
 
-  if (!carerUser) return <Auth onAuth={(user) => setCarerUser(user)} />;
+  if (!carerUser) {
+    if (showLanding) return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+    return <Auth onAuth={(user) => setCarerUser(user)} onBack={() => setShowLanding(true)} />;
+  }
 
   return <App user={carerUser} onLogout={() => signOut(auth)} />;
 }
