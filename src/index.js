@@ -65,6 +65,7 @@ function Router() {
   const path = window.location.pathname;
   const [adminAuthed, setAdminAuthed] = useState(sessionStorage.getItem('cc_admin') === 'true');
   const [showLanding, setShowLanding] = useState(true);
+  const [startWithLogin, setStartWithLogin] = useState(false);
   const [carerUser, setCarerUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -89,8 +90,8 @@ function Router() {
   );
 
   if (!carerUser) {
-    if (showLanding) return <LandingPage onGetStarted={() => setShowLanding(false)} />;
-    return <Auth onAuth={(user) => setCarerUser(user)} onBack={() => setShowLanding(true)} />;
+    if (showLanding) return <LandingPage onGetStarted={() => { setStartWithLogin(false); setShowLanding(false); }} onLogin={() => { setStartWithLogin(true); setShowLanding(false); }} />;
+    return <Auth mode={startWithLogin ? 'login' : 'register'} onAuth={(user) => setCarerUser(user)} onBack={() => setShowLanding(true)} />;
   }
 
   return <App user={carerUser} onLogout={() => signOut(auth)} />;

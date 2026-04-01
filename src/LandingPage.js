@@ -69,7 +69,7 @@ const FAQS = [
   { q: "Can I export my applicant data?", a: "Yes. Export all applications to CSV at any time from your admin dashboard." },
 ];
 
-export default function LandingPage({ onGetStarted }) {
+export default function LandingPage({ onGetStarted, onLogin }) {
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
@@ -85,6 +85,7 @@ export default function LandingPage({ onGetStarted }) {
           <a href="#features" style={s.navLink}>Features</a>
           <a href="#pricing" style={s.navLink}>Pricing</a>
           <a href="#faq" style={s.navLink}>FAQ</a>
+          <button style={{ ...s.navLink, marginRight: 8 }} onClick={onLogin}>Log In</button>
           <button style={s.navCta} onClick={onGetStarted}>Get Started</button>
         </div>
       </nav>
@@ -95,7 +96,8 @@ export default function LandingPage({ onGetStarted }) {
         <p style={s.heroSub}>Quikcare handles your entire carer onboarding — from application to compliance checks — in one simple platform.</p>
         <div style={s.heroBtns}>
           <button style={s.heroBtn1} onClick={onGetStarted}>Start Free Trial</button>
-          <button style={s.heroBtn2} onClick={() => document.getElementById("features").scrollIntoView({ behavior: "smooth" })}>See Features</button>
+          <button style={s.heroBtn2} onClick={onLogin}>Log In</button>
+          <button style={{ ...s.heroBtn2, borderColor: "rgba(255,255,255,0.3)" }} onClick={() => document.getElementById("features").scrollIntoView({ behavior: "smooth" })}>See Features</button>
         </div>
       </div>
 
