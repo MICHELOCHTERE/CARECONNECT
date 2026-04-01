@@ -23,6 +23,11 @@ const s = {
   showPwLabel: { color: '#9b7fd4', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
 };
 
+function go(path) {
+  window.history.pushState({}, '', path);
+  window.dispatchEvent(new Event('popstate'));
+}
+
 function AdminLogin({ onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -54,7 +59,7 @@ function AdminLogin({ onLogin }) {
             Show password
           </label>
         </div>
-        <button style={s.btn} onClick={handleLogin}>Sign In →</button>
+        <button style={s.btn} onClick={handleLogin}>Sign In</button>
         {error && <div style={s.error}>{error}</div>}
       </div>
     </div>
@@ -62,12 +67,16 @@ function AdminLogin({ onLogin }) {
 }
 
 function Router() {
-  const path = window.location.pathname;
+  const [path, setPath] = useState(window.location.pathname);
   const [adminAuthed, setAdminAuthed] = useState(sessionStorage.getItem('cc_admin') === 'true');
-  const [showLanding, setShowLanding] = useState(true);
-  const [startWithLogin, setStartWithLogin] = useState(false);
   const [carerUser, setCarerUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    const handleNav = () => setPath(window.location.pathname);
+    window.addEventListener('popstate', handleNav);
+    return () => window.removeEventListener('popstate', handleNav);
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -89,12 +98,22 @@ function Router() {
     </div>
   );
 
-  if (!carerUser) {
-    if (showLanding) return <LandingPage onGetStarted={() => { setStartWithLogin(false); setShowLanding(false); }} onLogin={() => { setStartWithLogin(true); setShowLanding(false); }} />;
-    return <Auth mode={startWithLogin ? 'login' : 'register'} onAuth={(user) => setCarerUser(user)} onBack={() => setShowLanding(true)} />;
+  if (path === '/login') {
+    if (carerUser) { go('/apply'); return null; }
+    return <Auth mode="login" onAuth={() => go('/apply')} onBack={() => go('/')} />;
   }
 
-  return <App user={carerUser} onLogout={() => signOut(auth)} />;
+  if (path === '/register') {
+    if (carerUser) { go('/apply'); return null; }
+    return <Auth mode="register" onAuth={() => go('/apply')} onBack={() => go('/')} />;
+  }
+
+  if (path === '/apply') {
+    if (!carerUser) { go('/register'); return null; }
+    return <App user={carerUser} onLogout={() => { signOut(auth); go('/'); }} />;
+  }
+
+  return <LandingPage onGetStarted={() => go('/register')} onLogin={() => go('/login')} />;
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
