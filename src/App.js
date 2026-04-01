@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { db, storage } from "./firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, setDoc, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const steps = [
@@ -400,6 +400,52 @@ export default function App({ user, onLogout }) {
   const [p5, setP5] = useState({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
   const [p6, setP6] = useState({ refs: [{}, {}] });
 
+  const [saveStatus, setSaveStatus] = useState("");
+
+  // Load saved progress when app opens
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!user?.uid) return;
+      try {
+        const docRef = doc(db, "drafts", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.p1) setP1(data.p1);
+          if (data.p2) setP2(data.p2);
+          if (data.p3) setP3(data.p3);
+          if (data.p4) setP4(data.p4);
+          if (data.p5) setP5(data.p5);
+          if (data.p6) setP6(data.p6);
+          if (data.current) setCurrent(data.current);
+          setSaveStatus("Progress loaded ✓");
+          setTimeout(() => setSaveStatus(""), 3000);
+        }
+      } catch (err) {
+        console.error("Failed to load progress:", err);
+      }
+    };
+    loadProgress();
+  }, [user]);
+
+  // Auto-save progress to Firebase
+  const saveProgress = useCallback(async (stepData) => {
+    if (!user?.uid) return;
+    try {
+      setSaveStatus("Saving...");
+      await setDoc(doc(db, "drafts", user.uid), {
+        ...stepData,
+        current,
+        savedAt: serverTimestamp()
+      });
+      setSaveStatus("Progress saved ✓");
+      setTimeout(() => setSaveStatus(""), 3000);
+    } catch (err) {
+      console.error("Failed to save:", err);
+      setSaveStatus("");
+    }
+  }, [user, current]);
+
   const progress = ((current - 1) / (steps.length - 1)) * 100;
 
   const validate = (step) => {
@@ -451,7 +497,7 @@ export default function App({ user, onLogout }) {
     return errs;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const errs = validate(current);
     if (errs.length > 0) {
       setErrors(errs);
@@ -459,6 +505,7 @@ export default function App({ user, onLogout }) {
       return;
     }
     setErrors([]);
+    await saveProgress({ p1, p2, p3, p4, p5, p6 });
     if (current === steps.length) handleSubmit();
     else setCurrent(current + 1);
   };
@@ -476,6 +523,9 @@ export default function App({ user, onLogout }) {
         createdAt: serverTimestamp()
       });
       setSubmitted(true);
+      try {
+        await setDoc(doc(db, "drafts", user.uid), { completed: true });
+      } catch (e) {}
     } catch (error) {
       alert("Something went wrong. Please try again.");
       console.error(error);
@@ -511,6 +561,7 @@ export default function App({ user, onLogout }) {
           <span style={s.logoText}>Quikcare</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {saveStatus && <span style={{ color: "#6C3FC5", fontSize: 12 }}>{saveStatus}</span>}
           <span style={s.headerSub}>{user?.email}</span>
           <button onClick={onLogout} style={{ background: "none", border: "1px solid #c5b3e8", borderRadius: 6, padding: "4px 12px", color: "#9b7fd4", fontSize: 12, cursor: "pointer" }}>Sign Out</button>
         </div>
