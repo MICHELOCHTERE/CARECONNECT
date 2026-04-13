@@ -120,6 +120,21 @@ export default function AgencyRegister({ onAuth, onBack, onLogin }) {
     setLoading(false);
   };
 
+  if (paid !== 'true') {
+    return (
+      <div style={s.wrap}>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+        <div style={{ ...s.box, textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>💳</div>
+          <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: '#1a1a2e', marginBottom: 8 }}>Payment required</div>
+          <div style={{ color: '#9b7fd4', fontSize: 14, marginBottom: 28, lineHeight: 1.6 }}>Please choose a plan to get started with Quikcare.</div>
+          <button style={{ width: '100%', padding: '14px', background: '#6C3FC5', border: 'none', borderRadius: 8, color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', marginBottom: 12 }} onClick={() => window.location.href = 'https://quikcare.co.uk/#pricing'}>View Pricing Plans →</button>
+          <button style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid #c5b3e8', borderRadius: 8, color: '#6C3FC5', fontSize: 14, cursor: 'pointer' }} onClick={onBack}>← Back to home</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={s.wrap}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
