@@ -56,9 +56,6 @@ export default function AgencyRegister({ onAuth, onBack, onLogin }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const params = new URLSearchParams(window.location.search);
-  const paid = params.get('paid');
-  const plan = params.get('plan') || 'starter';
   const slug = slugify(agencyName);
 
   // If not coming from Stripe payment, redirect to pricing
