@@ -104,7 +104,7 @@ function Router() {
   // Agency register
   if (path === '/agency/register') {
     if (user && agencyProfile) { go('/agency/dashboard'); return null; }
-    return <AgencyRegister onAuth={(u, slug) => { setUser(u); go('/agency/dashboard'); }} onBack={() => go('/')} />;
+    return <AgencyRegister onAuth={(u, slug) => { setUser(u); go('/agency/dashboard'); }} onBack={() => go('/')} onLogin={() => go('/agency/login')} />;
   }
 
   // Agency login
@@ -159,7 +159,7 @@ function Router() {
           <div style={{ ...s.icon }}>👤</div>
           <div style={s.title}>Create Account</div>
           <div style={s.sub}>Register to start your application</div>
-          <CarerRegisterForm onAuth={(u) => { setUser(u); go(agency ? `/apply/${agency}` : '/'); }} />
+          <CarerRegisterForm agencySlug={agency} onAuth={(u) => { setUser(u); go(agency ? `/apply/${agency}` : '/'); }} />
         </div>
       </div>
     );
@@ -178,7 +178,7 @@ function Router() {
           <div style={s.icon}>🔑</div>
           <div style={s.title}>Welcome back</div>
           <div style={s.sub}>Log in to continue your application</div>
-          <CarerLoginForm onAuth={(u) => { setUser(u); go(loginAgency ? `/apply/${loginAgency}` : '/'); }} />
+          <CarerLoginForm agencySlug={loginAgency} onAuth={(u) => { setUser(u); go(loginAgency ? `/apply/${loginAgency}` : '/'); }} />
         </div>
       </div>
     );
@@ -192,7 +192,7 @@ function Router() {
 }
 
 // Simple inline carer forms
-function CarerRegisterForm({ onAuth }) {
+function CarerRegisterForm({ onAuth, agencySlug }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -215,12 +215,12 @@ function CarerRegisterForm({ onAuth }) {
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="password" placeholder="Choose a password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
       <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading} onClick={handleSubmit}>{loading ? 'Creating...' : 'Create Account →'}</button>
-      <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4' }}>Already have an account? <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => go('/login')}>Log in</button></div>
+      <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4' }}>Already have an account? <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => go(agencySlug ? `/login?agency=${agencySlug}` : '/login')}>Log in</button></div>
     </>
   );
 }
 
-function CarerLoginForm({ onAuth }) {
+function CarerLoginForm({ onAuth, agencySlug }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -243,7 +243,7 @@ function CarerLoginForm({ onAuth }) {
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="password" placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
       <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading} onClick={handleSubmit}>{loading ? 'Logging in...' : 'Log In →'}</button>
-      <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4' }}>New here? <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => go('/register')}>Create account</button></div>
+      <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4' }}>New here? <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => go(agencySlug ? `/register?agency=${agencySlug}` : '/register')}>Create account</button></div>
     </>
   );
 }

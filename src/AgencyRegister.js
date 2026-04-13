@@ -25,7 +25,7 @@ function slugify(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
-export default function AgencyRegister({ onAuth, onBack }) {
+export default function AgencyRegister({ onAuth, onBack, onLogin }) {
   const [agencyName, setAgencyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -122,7 +122,7 @@ export default function AgencyRegister({ onAuth, onBack }) {
         </button>
 
         <div style={s.footer}>
-          Already have an account? <button style={s.link} onClick={() => onBack && onBack()}>Log in</button>
+          Already have an account? <button style={s.link} onClick={() => onLogin ? onLogin() : onBack && onBack()}>Log in</button>
         </div>
       </div>
     </div>
