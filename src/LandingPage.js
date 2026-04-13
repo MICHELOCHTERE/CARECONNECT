@@ -163,6 +163,11 @@ function PricingCards() {
 }
 
 export default function LandingPage({ onGetStarted, onLogin }) {
+  const scrollToPricing = () => {
+    const el = document.getElementById('pricing');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    else onGetStarted();
+  };
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
@@ -179,7 +184,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           <a href="#pricing" style={s.navLink}>Pricing</a>
           <a href="#faq" style={s.navLink}>FAQ</a>
           <button style={{ ...s.navLink, marginRight: 8 }} onClick={onLogin}>Log In</button>
-          <button style={s.navCta} onClick={onGetStarted}>Get Started</button>
+          <a href="https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06" style={{ ...s.navCta, textDecoration: "none" }}>Get Started</a>
         </div>
       </nav>
 
@@ -188,7 +193,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         <h1 style={s.heroTitle}>Recruit care workers faster than ever</h1>
         <p style={s.heroSub}>Quikcare handles your entire carer onboarding — from application to compliance checks — in one simple platform.</p>
         <div style={s.heroBtns}>
-          <button style={s.heroBtn1} onClick={onGetStarted}>Start Free Trial</button>
+          <a href="https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06" style={{ ...s.heroBtn1, textDecoration: "none", display: "inline-block" }}>Start Free Trial →</a>
           <button style={s.heroBtn2} onClick={onLogin}>Log In</button>
           <button style={{ ...s.heroBtn2, borderColor: "rgba(255,255,255,0.3)" }} onClick={() => document.getElementById("features").scrollIntoView({ behavior: "smooth" })}>See Features</button>
         </div>
@@ -244,7 +249,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       <div style={s.ctaWrap}>
         <h2 style={s.ctaTitle}>Ready to transform your recruitment?</h2>
         <p style={s.ctaSub}>Join care agencies across the Midlands using Quikcare to hire faster.</p>
-        <button style={s.ctaBtn} onClick={onGetStarted}>Start Your Free Trial</button>
+        <a href="https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06" style={{ ...s.ctaBtn, textDecoration: "none", display: "inline-block" }}>Start Your Free Trial →</a>
       </div>
 
       <div style={s.footer}>
