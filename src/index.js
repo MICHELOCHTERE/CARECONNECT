@@ -123,8 +123,23 @@ function Router() {
   // Carer apply route — /apply/agencyslug
   if (path.startsWith('/apply/')) {
     const slug = path.replace('/apply/', '');
-    if (!user) { go(`/register?agency=${slug}`); return null; }
-    return <App user={user} agencySlug={slug} onLogout={() => { signOut(auth); go('/'); }} />;
+    if (!user) {
+      return (
+        <div style={s.wrap}>
+          <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+          <div style={{ ...s.box, maxWidth: 440, textAlign: "center" }}>
+            <div style={s.logoRow}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, color: "white", fontFamily: "serif", margin: "0 auto 16px" }}>Q</div>
+            </div>
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#1a1a2e", marginBottom: 8 }}>Apply to join the team</div>
+            <div style={{ color: "#9b7fd4", fontSize: 14, marginBottom: 28, lineHeight: 1.6 }}>Create a free account to start your application. You can save your progress and come back anytime.</div>
+            <button style={{ ...s.btn, marginBottom: 12 }} onClick={() => go(`/register?agency=${slug}`)}>Create Account & Apply →</button>
+            <button style={{ width: "100%", padding: "12px", background: "transparent", border: "1px solid #c5b3e8", borderRadius: 8, color: "#6C3FC5", fontSize: 14, fontWeight: 600, cursor: "pointer" }} onClick={() => go(`/login?agency=${slug}`)}>Already have an account? Log In</button>
+          </div>
+        </div>
+      );
+    }
+    return <App user={user} agencySlug={slug} onLogout={() => { signOut(auth); go(`/apply/${slug}`); }} />;
   }
 
   // Carer register
@@ -148,16 +163,18 @@ function Router() {
 
   // Carer login
   if (path === '/login') {
-    if (user) { go('/'); return null; }
+    const loginParams = new URLSearchParams(window.location.search);
+    const loginAgency = loginParams.get('agency');
+    if (user) { go(loginAgency ? `/apply/${loginAgency}` : '/'); return null; }
     return (
       <div style={s.wrap}>
         <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
         <div style={s.box}>
-          <button onClick={() => go('/')} style={{ background: 'none', border: 'none', color: '#6C3FC5', fontSize: 14, cursor: 'pointer', padding: '0 0 16px 0' }}>← Back</button>
+          <button onClick={() => loginAgency ? go(`/apply/${loginAgency}`) : go('/')} style={{ background: 'none', border: 'none', color: '#6C3FC5', fontSize: 14, cursor: 'pointer', padding: '0 0 16px 0' }}>← Back</button>
           <div style={s.icon}>🔑</div>
           <div style={s.title}>Welcome back</div>
           <div style={s.sub}>Log in to continue your application</div>
-          <CarerLoginForm onAuth={(u) => { setUser(u); go('/'); }} />
+          <CarerLoginForm onAuth={(u) => { setUser(u); go(loginAgency ? `/apply/${loginAgency}` : '/'); }} />
         </div>
       </div>
     );
