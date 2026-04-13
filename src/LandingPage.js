@@ -163,11 +163,6 @@ function PricingCards() {
 }
 
 export default function LandingPage({ onGetStarted, onLogin }) {
-  const scrollToPricing = () => {
-    const el = document.getElementById('pricing');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-    else onGetStarted();
-  };
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
