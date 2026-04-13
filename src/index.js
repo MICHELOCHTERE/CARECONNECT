@@ -123,6 +123,11 @@ function Router() {
   // Carer apply route — /apply/agencyslug
   if (path.startsWith('/apply/')) {
     const slug = path.replace('/apply/', '');
+    // If logged in as agency admin, sign them out and show carer welcome
+    if (user && agencyProfile) {
+      signOut(auth);
+      return null;
+    }
     if (!user) {
       return (
         <div style={s.wrap}>
