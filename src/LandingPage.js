@@ -226,49 +226,12 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.borderColor = "rgba(255,255,255,0.5)"; }}>
               Log In
             </button>
-          </div>
-
-          {/* Video mockup */}
-          <div style={{
-            marginTop: 64, position: "relative", maxWidth: 700, margin: "64px auto 0",
-            opacity: heroVisible ? 1 : 0, transform: heroVisible ? "translateY(0)" : "translateY(40px)",
-            transition: "all 0.8s ease 0.7s",
-          }}>
-            <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
-              {/* Browser bar */}
-              <div style={{ background: "rgba(0,0,0,0.3)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
-                <div style={{ flex: 1, background: "rgba(255,255,255,0.1)", borderRadius: 6, padding: "4px 12px", fontSize: 11, color: "rgba(255,255,255,0.6)", marginLeft: 8 }}>quikcare.co.uk/apply/sunrise-care</div>
-              </div>
-              {/* Video placeholder */}
-              <div onClick={() => window.open('/demo', '_blank')} style={{ padding: "60px 24px", cursor: "pointer", textAlign: "center", position: "relative" }}>
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(108,63,197,0.3), rgba(155,93,229,0.3))" }} />
-                <div style={{ position: "relative", zIndex: 1 }}>
-                  <div onClick={() => window.open('/demo', '_blank')} style={{
-                    width: 72, height: 72, borderRadius: "50%", background: "white",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    margin: "0 auto 16px", cursor: "pointer",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                    animation: "pulse 2s ease-in-out infinite",
-                  }}>
-                    <span style={{ fontSize: 28, marginLeft: 4 }}>▶</span>
-                  </div>
-                  <div style={{ color: "white", fontSize: 16, fontWeight: 600, marginBottom: 6 }}>Watch how Quikcare works</div>
-                  <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>2 minute walkthrough</div>
-                </div>
-                {/* Fake app preview */}
-                <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, opacity: 0.6 }}>
-                  {["Sarah Johnson ✅", "James Okafor ⏳", "Amina Hassan ⏳"].map(name => (
-                    <div key={name} style={{ background: "rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 10px", fontSize: 11, color: "white", textAlign: "left" }}>{name}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            {/* Glow effect */}
-            <div style={{ position: "absolute", inset: -2, borderRadius: 22, background: "linear-gradient(135deg, #6C3FC5, #9b5de5)", zIndex: -1, filter: "blur(20px)", opacity: 0.4 }} />
+            <button onClick={() => window.open('/demo', '_blank')}
+              style={{ padding: "18px 36px", background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)", borderRadius: 999, color: "white", fontSize: 17, fontWeight: 500, cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: 10 }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; }}>
+              <span style={{ fontSize: 20 }}>▶</span> Watch Demo
+            </button>
           </div>
 
         </div>
