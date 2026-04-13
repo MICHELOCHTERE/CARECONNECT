@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import AdminDashboard from './AdminDashboard';
-import Auth from './Auth';
+import AgencyRegister from './AgencyRegister';
+import AgencyLogin from './AgencyLogin';
+import AgencyDashboard from './AgencyDashboard';
 import LandingPage from './LandingPage';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import './index.css';
 
 const ADMIN_PASSWORD = 'Quikcare123';
@@ -32,17 +35,10 @@ function AdminLogin({ onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showing, setShowing] = useState(false);
-
   const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('cc_admin', 'true');
-      onLogin();
-    } else {
-      setError('Incorrect password. Please try again.');
-      setPassword('');
-    }
+    if (password === ADMIN_PASSWORD) { sessionStorage.setItem('cc_admin', 'true'); onLogin(); }
+    else { setError('Incorrect password.'); setPassword(''); }
   };
-
   return (
     <div style={s.wrap}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -51,14 +47,8 @@ function AdminLogin({ onLogin }) {
         <div style={s.title}>Admin Access</div>
         <div style={s.sub}>Enter your password to access the dashboard</div>
         <input style={s.input} type={showing ? 'text' : 'password'} placeholder="Enter password" value={password}
-          onChange={e => { setPassword(e.target.value); setError(''); }}
-          onKeyDown={e => e.key === 'Enter' && handleLogin()} />
-        <div style={s.showPw}>
-          <label style={s.showPwLabel}>
-            <input type="checkbox" checked={showing} onChange={() => setShowing(!showing)} />
-            Show password
-          </label>
-        </div>
+          onChange={e => { setPassword(e.target.value); setError(''); }} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+        <div style={s.showPw}><label style={s.showPwLabel}><input type="checkbox" checked={showing} onChange={() => setShowing(!showing)} /> Show password</label></div>
         <button style={s.btn} onClick={handleLogin}>Sign In</button>
         {error && <div style={s.error}>{error}</div>}
       </div>
@@ -66,10 +56,20 @@ function AdminLogin({ onLogin }) {
   );
 }
 
+function LoadingScreen() {
+  return (
+    <div style={s.wrap}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+      <div style={{ color: '#6C3FC5', fontSize: 16 }}>Loading...</div>
+    </div>
+  );
+}
+
 function Router() {
   const [path, setPath] = useState(window.location.pathname);
   const [adminAuthed, setAdminAuthed] = useState(sessionStorage.getItem('cc_admin') === 'true');
-  const [carerUser, setCarerUser] = useState(null);
+  const [user, setUser] = useState(null);
+  const [agencyProfile, setAgencyProfile] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
@@ -79,46 +79,153 @@ function Router() {
   }, []);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      setCarerUser(user);
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      setUser(u);
+      if (u) {
+        const agencyDoc = await getDoc(doc(db, 'agencies', u.uid));
+        if (agencyDoc.exists()) setAgencyProfile(agencyDoc.data());
+        else setAgencyProfile(null);
+      } else {
+        setAgencyProfile(null);
+      }
       setAuthChecked(true);
     });
     return () => unsub();
   }, []);
 
+  // Super admin route
   if (path === '/admin') {
     if (!adminAuthed) return <AdminLogin onLogin={() => setAdminAuthed(true)} />;
     return <AdminDashboard onLogout={() => { sessionStorage.removeItem('cc_admin'); setAdminAuthed(false); }} />;
   }
 
-  if (!authChecked) return (
-    <div style={s.wrap}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-      <div style={{ color: '#6C3FC5', fontSize: 16 }}>Loading...</div>
-    </div>
-  );
+  if (!authChecked) return <LoadingScreen />;
 
-  if (path === '/login') {
-    if (carerUser) { go('/apply'); return null; }
-    return <Auth mode="login" onAuth={() => go('/apply')} onBack={() => go('/')} />;
+  // Agency register
+  if (path === '/agency/register') {
+    if (user && agencyProfile) { go('/agency/dashboard'); return null; }
+    return <AgencyRegister onAuth={(u, slug) => { setUser(u); go('/agency/dashboard'); }} onBack={() => go('/')} />;
   }
 
+  // Agency login
+  if (path === '/agency/login') {
+    if (user && agencyProfile) { go('/agency/dashboard'); return null; }
+    return <AgencyLogin onAuth={(u) => { setUser(u); go('/agency/dashboard'); }} onBack={() => go('/')} onRegister={() => go('/agency/register')} />;
+  }
+
+  // Agency dashboard
+  if (path === '/agency/dashboard') {
+    if (!user) { go('/agency/login'); return null; }
+    if (!agencyProfile) { go('/agency/register'); return null; }
+    return <AgencyDashboard agency={agencyProfile} onLogout={() => { signOut(auth); setAgencyProfile(null); go('/'); }} />;
+  }
+
+  // Carer apply route — /apply/agencyslug
+  if (path.startsWith('/apply/')) {
+    const slug = path.replace('/apply/', '');
+    if (!user) { go(`/register?agency=${slug}`); return null; }
+    return <App user={user} agencySlug={slug} onLogout={() => { signOut(auth); go('/'); }} />;
+  }
+
+  // Carer register
   if (path === '/register') {
-    if (carerUser) { go('/apply'); return null; }
-    return <Auth mode="register" onAuth={() => go('/apply')} onBack={() => go('/')} />;
+    const params = new URLSearchParams(window.location.search);
+    const agency = params.get('agency');
+    if (user) { go(agency ? `/apply/${agency}` : '/'); return null; }
+    return (
+      <div style={s.wrap}>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+        <div style={s.box}>
+          <button onClick={() => go('/')} style={{ background: 'none', border: 'none', color: '#6C3FC5', fontSize: 14, cursor: 'pointer', padding: '0 0 16px 0' }}>← Back</button>
+          <div style={{ ...s.icon }}>👤</div>
+          <div style={s.title}>Create Account</div>
+          <div style={s.sub}>Register to start your application</div>
+          <CarerRegisterForm onAuth={(u) => { setUser(u); go(agency ? `/apply/${agency}` : '/'); }} />
+        </div>
+      </div>
+    );
   }
 
-  if (path === '/apply') {
-    if (!carerUser) { go('/register'); return null; }
-    return <App user={carerUser} onLogout={() => { signOut(auth); go('/'); }} />;
+  // Carer login
+  if (path === '/login') {
+    if (user) { go('/'); return null; }
+    return (
+      <div style={s.wrap}>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+        <div style={s.box}>
+          <button onClick={() => go('/')} style={{ background: 'none', border: 'none', color: '#6C3FC5', fontSize: 14, cursor: 'pointer', padding: '0 0 16px 0' }}>← Back</button>
+          <div style={s.icon}>🔑</div>
+          <div style={s.title}>Welcome back</div>
+          <div style={s.sub}>Log in to continue your application</div>
+          <CarerLoginForm onAuth={(u) => { setUser(u); go('/'); }} />
+        </div>
+      </div>
+    );
   }
 
-  return <LandingPage onGetStarted={() => go('/register')} onLogin={() => go('/login')} />;
+  // Landing page
+  return <LandingPage
+    onGetStarted={() => go('/agency/register')}
+    onLogin={() => go('/agency/login')}
+  />;
+}
+
+// Simple inline carer forms
+function CarerRegisterForm({ onAuth }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const handleSubmit = async () => {
+    if (!email || !password) return setError('Please fill in all fields.');
+    setLoading(true);
+    try {
+      const { createUserWithEmailAndPassword } = await import('firebase/auth');
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      onAuth(result.user);
+    } catch (err) {
+      setError(err.code === 'auth/email-already-in-use' ? 'Account already exists. Please log in.' : 'Registration failed.');
+    }
+    setLoading(false);
+  };
+  return (
+    <>
+      {error && <div style={{ color: '#cc0000', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+      <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+      <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="password" placeholder="Choose a password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
+      <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading} onClick={handleSubmit}>{loading ? 'Creating...' : 'Create Account →'}</button>
+      <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4' }}>Already have an account? <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => go('/login')}>Log in</button></div>
+    </>
+  );
+}
+
+function CarerLoginForm({ onAuth }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const handleSubmit = async () => {
+    if (!email || !password) return setError('Please fill in all fields.');
+    setLoading(true);
+    try {
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      onAuth(result.user);
+    } catch (err) {
+      setError('Incorrect email or password.');
+    }
+    setLoading(false);
+  };
+  return (
+    <>
+      {error && <div style={{ color: '#cc0000', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+      <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+      <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="password" placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
+      <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading} onClick={handleSubmit}>{loading ? 'Logging in...' : 'Log In →'}</button>
+      <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4' }}>New here? <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => go('/register')}>Create account</button></div>
+    </>
+  );
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <Router />
-  </React.StrictMode>
-);
+root.render(<React.StrictMode><Router /></React.StrictMode>);

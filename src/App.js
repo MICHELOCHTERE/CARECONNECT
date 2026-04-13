@@ -388,7 +388,7 @@ function Step6({ data, set }) {
   );
 }
 
-export default function App({ user, onLogout }) {
+export default function App({ user, onLogout, agencySlug }) {
   const [current, setCurrent] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -519,6 +519,7 @@ export default function App({ user, onLogout }) {
         status: "pending",
         userId: user?.uid,
         userEmail: user?.email,
+        agencySlug: agencySlug || "quikcare",
         appliedAt: new Date().toISOString().split("T")[0],
         createdAt: serverTimestamp()
       });
