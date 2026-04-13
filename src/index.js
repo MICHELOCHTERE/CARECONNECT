@@ -133,9 +133,8 @@ function Router() {
         <div style={s.wrap}>
           <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
           <div style={{ ...s.box, maxWidth: 440, textAlign: "center" }}>
-            <div style={s.logoRow}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, color: "white", fontFamily: "serif", margin: "0 auto 16px" }}>Q</div>
-            </div>
+            <button onClick={() => go('/')} style={{ background: 'none', border: 'none', color: '#6C3FC5', fontSize: 14, cursor: 'pointer', padding: '0 0 20px 0', display: 'flex', alignItems: 'center', gap: 6 }}>← Back to home</button>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, color: "white", fontFamily: "serif", margin: "0 auto 16px" }}>Q</div>
             <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#1a1a2e", marginBottom: 8 }}>Apply to join the team</div>
             <div style={{ color: "#9b7fd4", fontSize: 14, marginBottom: 28, lineHeight: 1.6 }}>Create a free account to start your application. You can save your progress and come back anytime.</div>
             <button style={{ ...s.btn, marginBottom: 12 }} onClick={() => go(`/register?agency=${slug}`)}>Create Account & Apply →</button>
@@ -156,7 +155,7 @@ function Router() {
       <div style={s.wrap}>
         <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
         <div style={s.box}>
-          <button onClick={() => go('/')} style={{ background: 'none', border: 'none', color: '#6C3FC5', fontSize: 14, cursor: 'pointer', padding: '0 0 16px 0' }}>← Back</button>
+          <button onClick={() => agency ? go(`/apply/${agency}`) : go('/')} style={{ background: 'none', border: 'none', color: '#6C3FC5', fontSize: 14, cursor: 'pointer', padding: '0 0 16px 0' }}>← Back</button>
           <div style={{ ...s.icon }}>👤</div>
           <div style={s.title}>Create Account</div>
           <div style={s.sub}>Register to start your application</div>
