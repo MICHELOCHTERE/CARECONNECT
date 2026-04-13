@@ -110,13 +110,36 @@ function Router() {
   // Agency login
   if (path === '/agency/login') {
     if (user && agencyProfile) { go('/agency/dashboard'); return null; }
-    return <AgencyLogin onAuth={(u) => { setUser(u); go('/agency/dashboard'); }} onBack={() => go('/')} onRegister={() => go('/agency/register')} />;
+    return <AgencyLogin onAuth={async (u) => {
+      setUser(u);
+      const { doc, getDoc } = await import('firebase/firestore');
+      const agencyDoc = await getDoc(doc(db, 'agencies', u.uid));
+      if (agencyDoc.exists()) {
+        setAgencyProfile(agencyDoc.data());
+        go('/agency/dashboard');
+      } else {
+        go('/agency/register');
+      }
+    }} onBack={() => go('/')} onRegister={() => go('/agency/register')} />;
   }
 
   // Agency dashboard
   if (path === '/agency/dashboard') {
     if (!user) { go('/agency/login'); return null; }
-    if (!agencyProfile) { go('/agency/register'); return null; }
+    if (!agencyProfile && authChecked) {
+      return (
+        <div style={s.wrap}>
+          <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+          <div style={{ color: '#6C3FC5', fontSize: 16, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, marginBottom: 8 }}>No agency account found</div>
+            <div style={{ color: '#9b7fd4', fontSize: 14, marginBottom: 24 }}>Your account is not linked to an agency.</div>
+            <button style={{ padding: '12px 24px', background: '#6C3FC5', border: 'none', borderRadius: 8, color: 'white', cursor: 'pointer' }} onClick={() => { signOut(auth); go('/'); }}>Back to home</button>
+          </div>
+        </div>
+      );
+    }
+    if (!agencyProfile) return <LoadingScreen />;
     return <AgencyDashboard agency={agencyProfile} onLogout={() => { signOut(auth); setAgencyProfile(null); go('/'); }} />;
   }
 
