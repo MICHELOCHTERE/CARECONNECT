@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 
 const STRIPE_LINKS = {
-  starter: "https://buy.stripe.com/test_dRm14maDN3O4cObfFP87K05",
-  growth: "https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06",
-  enterprise: "https://buy.stripe.com/test_cNi00idPZdoE3dB65f87K04",
+  starter: "https://buy.stripe.com/3cI00l3U25Au1smcl2fYY00",
+  growth: "https://buy.stripe.com/eVqcN73U2bYSc705WEfYY01",
+  enterprise: "https://buy.stripe.com/bJeeVfbmuaUO0oiacUfYY02",
 };
 
 const FEATURES = [
