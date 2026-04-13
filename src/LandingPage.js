@@ -188,7 +188,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         <h1 style={s.heroTitle}>Recruit care workers faster than ever</h1>
         <p style={s.heroSub}>Quikcare handles your entire carer onboarding — from application to compliance checks — in one simple platform.</p>
         <div style={s.heroBtns}>
-          <a href="https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06" style={{ ...s.heroBtn1, textDecoration: "none", display: "inline-block" }}>Start Free Trial →</a>
+          <a href="https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06" style={{ ...s.heroBtn1, textDecoration: "none", display: "inline-block" }}>Get Started →</a>
           <button style={s.heroBtn2} onClick={onLogin}>Log In</button>
           <button style={{ ...s.heroBtn2, borderColor: "rgba(255,255,255,0.3)" }} onClick={() => document.getElementById("features").scrollIntoView({ behavior: "smooth" })}>See Features</button>
         </div>
@@ -222,9 +222,9 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         <div style={{ maxWidth: 1000, margin: "0 auto", textAlign: "center" }}>
           <div style={s.sectionBadge}>Pricing</div>
           <h2 style={{ ...s.sectionTitle, textAlign: "center" }}>Simple, transparent pricing</h2>
-          <p style={{ color: "#6b7280", fontSize: 16, textAlign: "center", marginBottom: 48 }}>No contracts. Cancel anytime. All plans include a 14-day free trial.</p>
+          <p style={{ color: "#6b7280", fontSize: 16, textAlign: "center", marginBottom: 48 }}>No contracts. Cancel anytime. All plans include a no contracts.</p>
           <PricingCards />
-          <p style={{ color: "#9b7fd4", fontSize: 13, marginTop: 24 }}>All plans include a 14-day free trial. No credit card required.</p>
+          <p style={{ color: "#9b7fd4", fontSize: 13, marginTop: 24 }}>All plans include a no contracts. No credit card required.</p>
         </div>
       </div>
 
@@ -244,7 +244,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
       <div style={s.ctaWrap}>
         <h2 style={s.ctaTitle}>Ready to transform your recruitment?</h2>
         <p style={s.ctaSub}>Join care agencies across the Midlands using Quikcare to hire faster.</p>
-        <a href="https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06" style={{ ...s.ctaBtn, textDecoration: "none", display: "inline-block" }}>Start Your Free Trial →</a>
+        <a href="https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06" style={{ ...s.ctaBtn, textDecoration: "none", display: "inline-block" }}>Get Started Today →</a>
       </div>
 
       <div style={s.footer}>
