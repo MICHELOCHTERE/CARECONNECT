@@ -6,6 +6,7 @@ import AgencyRegister from './AgencyRegister';
 import AgencyLogin from './AgencyLogin';
 import AgencyDashboard from './AgencyDashboard';
 import LandingPage from './LandingPage';
+import Demo from './Demo';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -205,6 +206,11 @@ function Router() {
         </div>
       </div>
     );
+  }
+
+  // Demo page
+  if (path === '/demo') {
+    return <Demo />;
   }
 
   // Landing page

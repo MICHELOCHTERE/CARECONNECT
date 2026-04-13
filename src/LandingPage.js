@@ -126,7 +126,7 @@ function PricingCard({ plan, index }) {
 
 export default function LandingPage({ onGetStarted, onLogin }) {
   const [openFaq, setOpenFaq] = useState(null);
-  const [showVideo, setShowVideo] = useState(false);
+
   const [scrolled, setScrolled] = useState(false);
   const [heroVisible, setHeroVisible] = useState(false);
 
@@ -243,10 +243,10 @@ export default function LandingPage({ onGetStarted, onLogin }) {
                 <div style={{ flex: 1, background: "rgba(255,255,255,0.1)", borderRadius: 6, padding: "4px 12px", fontSize: 11, color: "rgba(255,255,255,0.6)", marginLeft: 8 }}>quikcare.co.uk/apply/sunrise-care</div>
               </div>
               {/* Video placeholder */}
-              <div onClick={() => setShowVideo(true)} style={{ padding: "60px 24px", cursor: "pointer", textAlign: "center", position: "relative" }}>
+              <div onClick={() => window.open('/demo', '_blank')} style={{ padding: "60px 24px", cursor: "pointer", textAlign: "center", position: "relative" }}>
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(108,63,197,0.3), rgba(155,93,229,0.3))" }} />
                 <div style={{ position: "relative", zIndex: 1 }}>
-                  <div onClick={() => setShowVideo(true)} style={{
+                  <div onClick={() => window.open('/demo', '_blank')} style={{
                     width: 72, height: 72, borderRadius: "50%", background: "white",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     margin: "0 auto 16px", cursor: "pointer",
@@ -274,9 +274,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         </div>
       </div>
 
-      {/* Video Modal */}
-      {showVideo && (
-        <div onClick={() => setShowVideo(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      {false && (
+        <div onClick={() => window.open('/demo', '_blank')} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#1a1a2e", borderRadius: 20, overflow: "hidden", width: "100%", maxWidth: 800, position: "relative" }}>
             <div style={{ background: "#0d0d1a", padding: "14px 18px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #2a2a4e" }}>
               <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57" }} />
@@ -298,7 +297,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
                   </div>
                 ))}
               </div>
-              <button onClick={() => setShowVideo(false)} style={{ marginTop: 32, padding: "10px 24px", background: "#6C3FC5", border: "none", borderRadius: 999, color: "white", fontSize: 14, cursor: "pointer" }}>Close</button>
+              <button onClick={() => window.open('/demo', '_blank')} style={{ marginTop: 32, padding: "10px 24px", background: "#6C3FC5", border: "none", borderRadius: 999, color: "white", fontSize: 14, cursor: "pointer" }}>Close</button>
             </div>
           </div>
         </div>
