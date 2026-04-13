@@ -126,6 +126,7 @@ function PricingCard({ plan, index }) {
 
 export default function LandingPage({ onGetStarted, onLogin }) {
   const [openFaq, setOpenFaq] = useState(null);
+  const [showVideo, setShowVideo] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [heroVisible, setHeroVisible] = useState(false);
 
@@ -226,8 +227,82 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               Log In
             </button>
           </div>
+
+          {/* Video mockup */}
+          <div style={{
+            marginTop: 64, position: "relative", maxWidth: 700, margin: "64px auto 0",
+            opacity: heroVisible ? 1 : 0, transform: heroVisible ? "translateY(0)" : "translateY(40px)",
+            transition: "all 0.8s ease 0.7s",
+          }}>
+            <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
+              {/* Browser bar */}
+              <div style={{ background: "rgba(0,0,0,0.3)", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,255,255,0.3)" }} />
+                <div style={{ flex: 1, background: "rgba(255,255,255,0.1)", borderRadius: 6, padding: "4px 12px", fontSize: 11, color: "rgba(255,255,255,0.6)", marginLeft: 8 }}>quikcare.co.uk/apply/sunrise-care</div>
+              </div>
+              {/* Video placeholder */}
+              <div onClick={() => setShowVideo(true)} style={{ padding: "60px 24px", cursor: "pointer", textAlign: "center", position: "relative" }}>
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(108,63,197,0.3), rgba(155,93,229,0.3))" }} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <div onClick={() => setShowVideo(true)} style={{
+                    width: 72, height: 72, borderRadius: "50%", background: "white",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    margin: "0 auto 16px", cursor: "pointer",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                    transition: "transform 0.2s, box-shadow 0.2s",
+                    animation: "pulse 2s ease-in-out infinite",
+                  }}>
+                    <span style={{ fontSize: 28, marginLeft: 4 }}>▶</span>
+                  </div>
+                  <div style={{ color: "white", fontSize: 16, fontWeight: 600, marginBottom: 6 }}>Watch how Quikcare works</div>
+                  <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>2 minute walkthrough</div>
+                </div>
+                {/* Fake app preview */}
+                <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, opacity: 0.6 }}>
+                  {["Sarah Johnson ✅", "James Okafor ⏳", "Amina Hassan ⏳"].map(name => (
+                    <div key={name} style={{ background: "rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 10px", fontSize: 11, color: "white", textAlign: "left" }}>{name}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {/* Glow effect */}
+            <div style={{ position: "absolute", inset: -2, borderRadius: 22, background: "linear-gradient(135deg, #6C3FC5, #9b5de5)", zIndex: -1, filter: "blur(20px)", opacity: 0.4 }} />
+          </div>
+
         </div>
       </div>
+
+      {/* Video Modal */}
+      {showVideo && (
+        <div onClick={() => setShowVideo(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#1a1a2e", borderRadius: 20, overflow: "hidden", width: "100%", maxWidth: 800, position: "relative" }}>
+            <div style={{ background: "#0d0d1a", padding: "14px 18px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #2a2a4e" }}>
+              <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57" }} />
+              <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e" }} />
+              <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#28c840" }} />
+              <div style={{ flex: 1, background: "#2a2a4e", borderRadius: 6, padding: "4px 12px", fontSize: 12, color: "#9b7fd4", marginLeft: 8 }}>quikcare.co.uk</div>
+            </div>
+            <div style={{ padding: 40, textAlign: "center", minHeight: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🎬</div>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, color: "white", marginBottom: 12 }}>Demo Video Coming Soon</div>
+              <div style={{ color: "#9b7fd4", fontSize: 15, lineHeight: 1.7, maxWidth: 400, marginBottom: 32 }}>
+                Our full walkthrough video showing how agencies sign up, share their apply link and manage applications will be available soon.
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, width: "100%", maxWidth: 500 }}>
+                {[["1️⃣", "Agency signs up & pays"], ["2️⃣", "Gets unique apply link"], ["3️⃣", "Carers apply online"], ["4️⃣", "Agency reviews dashboard"]].map(([num, text]) => (
+                  <div key={text} style={{ background: "#2a2a4e", borderRadius: 12, padding: "14px 16px", textAlign: "left" }}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{num}</div>
+                    <div style={{ color: "white", fontSize: 13, fontWeight: 500 }}>{text}</div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setShowVideo(false)} style={{ marginTop: 32, padding: "10px 24px", background: "#6C3FC5", border: "none", borderRadius: 999, color: "white", fontSize: 14, cursor: "pointer" }}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div style={{ background: "white", borderTop: "1px solid #e8e0f5", borderBottom: "1px solid #e8e0f5", padding: "40px 24px" }}>
