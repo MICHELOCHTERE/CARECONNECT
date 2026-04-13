@@ -28,7 +28,7 @@ const s = {
 
 function go(path) {
   window.history.pushState({}, '', path);
-  window.dispatchEvent(new Event('popstate'));
+  window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
 }
 
 function AdminLogin({ onLogin }) {
@@ -250,4 +250,3 @@ function CarerLoginForm({ onAuth, agencySlug }) {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<React.StrictMode><Router /></React.StrictMode>);
- 

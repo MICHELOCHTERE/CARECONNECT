@@ -163,6 +163,14 @@ function PricingCards() {
 }
 
 export default function LandingPage({ onGetStarted, onLogin }) {
+  const handleLogin = () => {
+    window.history.pushState({}, '', '/agency/login');
+    window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+  };
+  const handleGetStarted = () => {
+    const el = document.getElementById('pricing');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
@@ -178,7 +186,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           <a href="#features" style={s.navLink}>Features</a>
           <a href="#pricing" style={s.navLink}>Pricing</a>
           <a href="#faq" style={s.navLink}>FAQ</a>
-          <button style={{ ...s.navLink, marginRight: 8 }} onClick={onLogin}>Log In</button>
+          <button style={{ ...s.navLink, marginRight: 8 }} onClick={handleLogin}>Log In</button>
           <a href="https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06" style={{ ...s.navCta, textDecoration: "none" }}>Get Started</a>
         </div>
       </nav>
@@ -189,7 +197,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         <p style={s.heroSub}>Quikcare handles your entire carer onboarding — from application to compliance checks — in one simple platform.</p>
         <div style={s.heroBtns}>
           <a href="https://buy.stripe.com/test_00wdR88vFbgw7tRfFP87K06" style={{ ...s.heroBtn1, textDecoration: "none", display: "inline-block" }}>Get Started →</a>
-          <button style={s.heroBtn2} onClick={onLogin}>Log In</button>
+          <button style={s.heroBtn2} onClick={handleLogin}>Log In</button>
           <button style={{ ...s.heroBtn2, borderColor: "rgba(255,255,255,0.3)" }} onClick={() => document.getElementById("features").scrollIntoView({ behavior: "smooth" })}>See Features</button>
         </div>
       </div>
