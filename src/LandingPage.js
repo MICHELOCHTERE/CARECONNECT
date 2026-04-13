@@ -167,10 +167,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
     window.history.pushState({}, '', '/agency/login');
     window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
   };
-  const handleGetStarted = () => {
-    const el = document.getElementById('pricing');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
+
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
