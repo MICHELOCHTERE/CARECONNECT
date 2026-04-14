@@ -523,35 +523,18 @@ export default function App({ user, onLogout, agencySlug }) {
         appliedAt: new Date().toISOString().split("T")[0],
         createdAt: serverTimestamp()
       });
-      // Send email notifications
+      // Send email notifications (optional - never crashes the app)
       try {
-        const { doc: fDoc, getDoc } = await import('firebase/firestore');
-        const ejs = await import('https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js').catch(() => null);
-        if (!ejs) throw new Error('EmailJS not loaded');
-
-        let agencyEmail = null;
-        let agencyName = agencySlug || 'Quikcare';
-        if (agencySlug) {
-          const slugDoc = await getDoc(fDoc(db, 'agencySlugs', agencySlug));
-          if (slugDoc.exists()) {
-            const agencyDoc = await getDoc(fDoc(db, 'agencies', slugDoc.data().uid));
-            if (agencyDoc.exists()) {
-              agencyEmail = agencyDoc.data().email;
-              agencyName = agencyDoc.data().agencyName;
-            }
-          }
-        }
-
-        const emailParams = {
-          carer_name: `${p1.firstName || ''} ${p1.lastName || ''}`,
-          carer_email: p1.email || user?.email,
-          agency_name: agencyName,
-          applied_at: new Date().toLocaleDateString('en-GB'),
-        };
-
-        await window.emailjs.send('QUIKCARE', 'template_60u7ckv', { ...emailParams, to_email: 'michaelokyere8092@gmail.com' }, 'LD1-M8qPWz2Go1fM2');
-        if (agencyEmail) {
-          await window.emailjs.send('QUIKCARE', 'template_60u7ckv', { ...emailParams, to_email: agencyEmail }, 'LD1-M8qPWz2Go1fM2');
+        if (window.emailjs) {
+          const emailParams = {
+            carer_name: `${p1.firstName || ''} ${p1.lastName || ''}`,
+            carer_email: p1.email || user?.email || '',
+            agency_name: agencySlug || 'Quikcare',
+            applied_at: new Date().toLocaleDateString('en-GB'),
+            to_email: 'michaelokyere8092@gmail.com',
+          };
+          window.emailjs.send('QUIKCARE', 'template_60u7ckv', emailParams, 'LD1-M8qPWz2Go1fM2')
+            .catch(e => console.log('Email failed:', e));
         }
       } catch (emailErr) {
         console.log('Email notification failed:', emailErr);
