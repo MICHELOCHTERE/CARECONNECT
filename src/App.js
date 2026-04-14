@@ -1,4 +1,3 @@
-import emailjs from '@emailjs/browser';
 import React, { useState, useEffect, useCallback } from "react";
 import { db, storage } from "./firebase";
 import { collection, addDoc, serverTimestamp, doc, setDoc, getDoc } from "firebase/firestore";
@@ -526,14 +525,16 @@ export default function App({ user, onLogout, agencySlug }) {
       });
       // Send email notifications
       try {
-        const { doc, getDoc } = await import('firebase/firestore');
-        // Get agency email
+        const { doc: fDoc, getDoc } = await import('firebase/firestore');
+        const ejs = await import('https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js').catch(() => null);
+        if (!ejs) throw new Error('EmailJS not loaded');
+
         let agencyEmail = null;
         let agencyName = agencySlug || 'Quikcare';
         if (agencySlug) {
-          const slugDoc = await getDoc(doc(db, 'agencySlugs', agencySlug));
+          const slugDoc = await getDoc(fDoc(db, 'agencySlugs', agencySlug));
           if (slugDoc.exists()) {
-            const agencyDoc = await getDoc(doc(db, 'agencies', slugDoc.data().uid));
+            const agencyDoc = await getDoc(fDoc(db, 'agencies', slugDoc.data().uid));
             if (agencyDoc.exists()) {
               agencyEmail = agencyDoc.data().email;
               agencyName = agencyDoc.data().agencyName;
@@ -548,18 +549,9 @@ export default function App({ user, onLogout, agencySlug }) {
           applied_at: new Date().toLocaleDateString('en-GB'),
         };
 
-        // Notify you (super admin)
-        emailjs.send('QUIKCARE', 'template_60u7ckv', {
-          ...emailParams,
-          to_email: 'michaelokyere8092@gmail.com',
-        }, 'LD1-M8qPWz2Go1fM2');
-
-        // Notify agency if we have their email
+        await window.emailjs.send('QUIKCARE', 'template_60u7ckv', { ...emailParams, to_email: 'michaelokyere8092@gmail.com' }, 'LD1-M8qPWz2Go1fM2');
         if (agencyEmail) {
-          emailjs.send('QUIKCARE', 'template_60u7ckv', {
-            ...emailParams,
-            to_email: agencyEmail,
-          }, 'LD1-M8qPWz2Go1fM2');
+          await window.emailjs.send('QUIKCARE', 'template_60u7ckv', { ...emailParams, to_email: agencyEmail }, 'LD1-M8qPWz2Go1fM2');
         }
       } catch (emailErr) {
         console.log('Email notification failed:', emailErr);

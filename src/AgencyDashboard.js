@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
 import { collection, onSnapshot, doc, updateDoc, orderBy, query, where } from "firebase/firestore";
-import emailjs from "@emailjs/browser";
 
 const STATUS_COLORS = {
   pending: { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
@@ -186,7 +185,8 @@ export default function AgencyDashboard({ agency, onLogout }) {
     const app = applications.find(a => a.id === id);
     if (app) {
       try {
-        emailjs.send(
+        if (!window.emailjs) throw new Error('EmailJS not loaded');
+        window.emailjs.send(
           'QUIKCARE',
           'template_as31vzw',
           {
