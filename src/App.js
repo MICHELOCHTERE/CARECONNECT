@@ -1,3 +1,4 @@
+import emailjs from '@emailjs/browser';
 import React, { useState, useEffect, useCallback } from "react";
 import { db, storage } from "./firebase";
 import { collection, addDoc, serverTimestamp, doc, setDoc, getDoc } from "firebase/firestore";
@@ -541,8 +542,8 @@ export default function App({ user, onLogout, agencySlug }) {
         }
 
         const emailParams = {
-          carer_name: `${formData.firstName} ${formData.lastName}`,
-          carer_email: formData.email || user?.email,
+          carer_name: `${p1.firstName || ''} ${p1.lastName || ''}`,
+          carer_email: p1.email || user?.email,
           agency_name: agencyName,
           applied_at: new Date().toLocaleDateString('en-GB'),
         };
