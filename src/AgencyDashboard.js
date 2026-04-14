@@ -69,7 +69,7 @@ function DetailItem({ label, value }) {
 function Modal({ app, onClose, onApprove, onReject }) {
   if (!app) return null;
   const downloadPDF = () => {
-    const html = `<html><head><style>body{font-family:Arial,sans-serif;padding:40px;color:#1a1a2e}h1{color:#6C3FC5}h2{color:#6C3FC5;font-size:14px;border-bottom:1px solid #e8e0f5;padding-bottom:6px;margin-top:24px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.field{background:#f8f5ff;padding:10px 14px;border-radius:6px}.label{font-size:10px;color:#9b7fd4;text-transform:uppercase}.value{font-size:13px;color:#1a1a2e;margin-top:2px}</style></head><body><h1>${app.firstName} ${app.lastName}</h1><p>Applied: ${app.appliedAt} | Status: ${app.status}</p><h2>Personal Details</h2><div class="grid"><div class="field"><div class="label">Email</div><div class="value">${app.email||'—'}</div></div><div class="field"><div class="label">Phone</div><div class="value">${app.phone||'—'}</div></div><div class="field"><div class="label">NI Number</div><div class="value">${app.niNumber||'—'}</div></div><div class="field"><div class="label">Driving</div><div class="value">${app.driving||'—'}</div></div></div><h2>Experience</h2><div class="grid"><div class="field"><div class="label">Years</div><div class="value">${app.years||'—'}</div></div><div class="field"><div class="label">Qualifications</div><div class="value">${app.quals?.join(', ')||'—'}</div></div></div><h2>References</h2>${app.refs?.map((r,i)=>`<div class="grid"><div class="field"><div class="label">Reference ${i+1}</div><div class="value">${r.name||'—'} — ${r.org||'—'}</div></div><div class="field"><div class="label">Email</div><div class="value">${r.email||'—'}</div></div></div>`).join('')||'—'}<p style="margin-top:40px;font-size:11px;color:#9b7fd4">Quikcare Recruitment — quikcare.co.uk</p></body></html>`;
+    const html = `<html><head><style>body{font-family:Arial,sans-serif;padding:40px;color:#1a1a2e}h1{color:#6C3FC5}h2{color:#6C3FC5;font-size:14px;border-bottom:1px solid #e8e0f5;padding-bottom:6px;margin-top:24px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.field{background:#f8f5ff;padding:10px 14px;border-radius:6px}.label{font-size:10px;color:#9b7fd4;text-transform:uppercase}.value{font-size:13px;color:#1a1a2e;margin-top:2px}</style></head><body><h1>${app.firstName} ${app.lastName}</h1><p>Applied: ${app.appliedAt} | Status: ${app.status}</p><h2>Personal Details</h2><div class="grid"><div class="field"><div class="label">Email</div><div class="value">${app.email||'—'}</div></div><div class="field"><div class="label">Phone</div><div class="value">${app.phone||'—'}</div></div><div class="field"><div class="label">NI Number</div><div class="value">${app.niNumber||'—'}</div></div><div class="field"><div class="label">Driving</div><div class="value">${app.driving||'—'}</div></div></div><h2>Experience</h2><div class="grid"><div class="field"><div class="label">Years</div><div class="value">${app.years||'—'}</div></div><div class="field"><div class="label">Qualifications</div><div class="value">${app.quals?.join(', ')||'—'}</div></div></div><p style="margin-top:40px;font-size:11px;color:#9b7fd4">Quikcare Recruitment — quikcare.co.uk</p></body></html>`;
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
@@ -175,6 +175,9 @@ export default function AgencyDashboard({ agency, onLogout }) {
     const unsub = onSnapshot(q, (snap) => {
       setApplications(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
+    }, (err) => {
+      console.log("Error loading applications:", err);
+      setLoading(false);
     });
     return () => unsub();
   }, [agency.slug]);
@@ -182,13 +185,11 @@ export default function AgencyDashboard({ agency, onLogout }) {
   const updateStatus = async (id, status) => {
     try {
       await updateDoc(doc(db, "applications", id), { status });
-      // Send email to carer
-      const app = applications.find(a => a.id === id);
-      if (app && window.emailjs) {
-        window.emailjs.send(
-          'QUIKCARE',
-          'template_as31vzw',
-          {
+      // Send email notification if emailjs is available
+      if (window.emailjs) {
+        const app = applications.find(a => a.id === id);
+        if (app) {
+          window.emailjs.send('QUIKCARE', 'template_as31vzw', {
             carer_name: `${app.firstName || ''} ${app.lastName || ''}`,
             carer_email: app.email || app.userEmail || '',
             agency_name: agency.agencyName || 'Quikcare',
@@ -196,12 +197,11 @@ export default function AgencyDashboard({ agency, onLogout }) {
             status_message: status === 'approved'
               ? 'Congratulations! Your application has been approved. The agency will be in touch shortly.'
               : 'Thank you for applying. Unfortunately your application was not successful at this time.',
-          },
-          'LD1-M8qPWz2Go1fM2'
-        ).catch(e => console.log('Email failed:', e));
+          }, 'LD1-M8qPWz2Go1fM2').catch(e => console.log('Email failed:', e));
+        }
       }
     } catch (err) {
-      console.log('Update status error:', err);
+      console.log('Update error:', err);
     }
   };
 
@@ -242,7 +242,6 @@ export default function AgencyDashboard({ agency, onLogout }) {
       </div>
 
       <div style={s.container}>
-        {/* Apply link banner */}
         <div style={s.applyLink}>
           <div>
             <div style={{ fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Your carer application link</div>
@@ -251,7 +250,6 @@ export default function AgencyDashboard({ agency, onLogout }) {
           <button style={s.copyBtn} onClick={copyLink}>{copied ? "Copied! ✓" : "Copy Link"}</button>
         </div>
 
-        {/* Stats */}
         <div style={s.statsRow}>
           <div style={s.statCard("#6C3FC5")}><div style={s.statNum("#6C3FC5")}>{stats.total}</div><div style={s.statLabel}>Total Applications</div></div>
           <div style={s.statCard("#f59e0b")}><div style={s.statNum("#f59e0b")}>{stats.pending}</div><div style={s.statLabel}>Pending Review</div></div>
@@ -259,7 +257,6 @@ export default function AgencyDashboard({ agency, onLogout }) {
           <div style={s.statCard("#cc0000")}><div style={s.statNum("#cc0000")}>{stats.rejected}</div><div style={s.statLabel}>Rejected</div></div>
         </div>
 
-        {/* Toolbar */}
         <div style={s.toolbar}>
           <input style={s.searchInput} placeholder="🔍  Search by name, email or postcode..." value={search} onChange={e => setSearch(e.target.value)} />
           {["all", "pending", "approved", "rejected"].map(f => (
@@ -270,7 +267,6 @@ export default function AgencyDashboard({ agency, onLogout }) {
           <button style={s.exportBtn} onClick={() => exportCSV(filtered)}>⬇ Export CSV</button>
         </div>
 
-        {/* Table */}
         <div style={{ background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 12, overflow: "hidden" }}>
           {loading ? <div style={s.loading}>Loading applications...</div> : (
             <table style={s.table}>
