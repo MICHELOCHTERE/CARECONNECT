@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
 import { collection, onSnapshot, doc, updateDoc, orderBy, query, where } from "firebase/firestore";
+import emailjs from "@emailjs/browser";
 
 const STATUS_COLORS = {
   pending: { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
@@ -181,6 +182,28 @@ export default function AgencyDashboard({ agency, onLogout }) {
 
   const updateStatus = async (id, status) => {
     await updateDoc(doc(db, "applications", id), { status });
+    // Send email to carer
+    const app = applications.find(a => a.id === id);
+    if (app) {
+      try {
+        emailjs.send(
+          'QUIKCARE',
+          'template_as31vzw',
+          {
+            carer_name: `${app.firstName} ${app.lastName}`,
+            carer_email: app.email || app.userEmail,
+            agency_name: agency.agencyName,
+            status: status === 'approved' ? 'approved ✅' : 'unsuccessful ❌',
+            status_message: status === 'approved'
+              ? 'Congratulations! Your application has been approved. The agency will be in touch shortly.'
+              : 'Thank you for applying. Unfortunately your application was not successful at this time.',
+          },
+          'LD1-M8qPWz2Go1fM2'
+        );
+      } catch (emailErr) {
+        console.log('Email notification failed:', emailErr);
+      }
+    }
   };
 
   const stats = {

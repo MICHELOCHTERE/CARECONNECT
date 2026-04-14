@@ -523,6 +523,46 @@ export default function App({ user, onLogout, agencySlug }) {
         appliedAt: new Date().toISOString().split("T")[0],
         createdAt: serverTimestamp()
       });
+      // Send email notifications
+      try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        // Get agency email
+        let agencyEmail = null;
+        let agencyName = agencySlug || 'Quikcare';
+        if (agencySlug) {
+          const slugDoc = await getDoc(doc(db, 'agencySlugs', agencySlug));
+          if (slugDoc.exists()) {
+            const agencyDoc = await getDoc(doc(db, 'agencies', slugDoc.data().uid));
+            if (agencyDoc.exists()) {
+              agencyEmail = agencyDoc.data().email;
+              agencyName = agencyDoc.data().agencyName;
+            }
+          }
+        }
+
+        const emailParams = {
+          carer_name: `${formData.firstName} ${formData.lastName}`,
+          carer_email: formData.email || user?.email,
+          agency_name: agencyName,
+          applied_at: new Date().toLocaleDateString('en-GB'),
+        };
+
+        // Notify you (super admin)
+        emailjs.send('QUIKCARE', 'template_60u7ckv', {
+          ...emailParams,
+          to_email: 'michaelokyere8092@gmail.com',
+        }, 'LD1-M8qPWz2Go1fM2');
+
+        // Notify agency if we have their email
+        if (agencyEmail) {
+          emailjs.send('QUIKCARE', 'template_60u7ckv', {
+            ...emailParams,
+            to_email: agencyEmail,
+          }, 'LD1-M8qPWz2Go1fM2');
+        }
+      } catch (emailErr) {
+        console.log('Email notification failed:', emailErr);
+      }
       setSubmitted(true);
       try {
         await setDoc(doc(db, "drafts", user.uid), { completed: true });
