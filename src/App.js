@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { db, storage } from "./firebase";
-import { collection, addDoc, serverTimestamp, doc, setDoc, getDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const steps = [
@@ -563,7 +563,17 @@ export default function App({ user, onLogout, agencySlug }) {
               <div key={i} style={s.successCard}>{label}</div>
             ))}
           </div>
-          <button style={s.resetBtn} onClick={() => { setSubmitted(false); setCurrent(1); }}>Start New Application</button>
+          <button style={s.resetBtn} onClick={async () => {
+            try { if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid)); } catch(e) {}
+            setP1({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
+            setP2({ years: "", settings: [], clients: [], quals: [] });
+            setP3({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
+            setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
+            setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
+            setP6({ refs: [{}, {}] });
+            setSubmitted(false);
+            setCurrent(1);
+          }}>Start New Application</button>
         </div>
       </div>
     );
