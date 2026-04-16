@@ -57,11 +57,33 @@ function AdminLogin({ onLogin }) {
   );
 }
 
+const loadingStyles = `
+  @keyframes qkPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(108,63,197,0.35); }
+    50% { transform: scale(1.1); box-shadow: 0 0 0 14px rgba(108,63,197,0); }
+  }
+  @keyframes qkDot {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.75); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+  .qk-logo { animation: qkPulse 1.6s ease-in-out infinite; }
+  .qk-d { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #9b7fd4; margin: 0 3px; animation: qkDot 1.4s infinite ease-in-out; }
+  .qk-d:nth-child(2) { animation-delay: 0.2s; }
+  .qk-d:nth-child(3) { animation-delay: 0.4s; }
+`;
+
 function LoadingScreen() {
   return (
-    <div style={s.wrap}>
+    <div style={{ minHeight: '100vh', background: '#f8f5ff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{loadingStyles}</style>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-      <div style={{ color: '#6C3FC5', fontSize: 16 }}>Loading...</div>
+      <div className="qk-logo" style={{ width: 68, height: 68, borderRadius: 18, background: '#6C3FC5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, fontWeight: 700, color: 'white', fontFamily: 'serif' }}>Q</div>
+      <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: '#6C3FC5' }}>Quikcare</div>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <span className="qk-d" />
+        <span className="qk-d" />
+        <span className="qk-d" />
+      </div>
     </div>
   );
 }
