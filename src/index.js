@@ -72,6 +72,7 @@ function Router() {
   const [user, setUser] = useState(null);
   const [agencyProfile, setAgencyProfile] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [agencyLoading, setAgencyLoading] = useState(true);
 
   useEffect(() => {
     const handleNav = () => setPath(window.location.pathname);
@@ -83,11 +84,20 @@ function Router() {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const agencyDoc = await getDoc(doc(db, 'agencies', u.uid));
-        if (agencyDoc.exists()) setAgencyProfile(agencyDoc.data());
-        else setAgencyProfile(null);
+        try {
+          setAgencyLoading(true);
+          const agencyDoc = await getDoc(doc(db, 'agencies', u.uid));
+          if (agencyDoc.exists()) setAgencyProfile(agencyDoc.data());
+          else setAgencyProfile(null);
+        } catch (e) {
+          console.error('Failed to load agency profile:', e);
+          setAgencyProfile(null);
+        } finally {
+          setAgencyLoading(false);
+        }
       } else {
         setAgencyProfile(null);
+        setAgencyLoading(false);
       }
       setAuthChecked(true);
     });
@@ -127,6 +137,7 @@ function Router() {
   // Agency dashboard
   if (path === '/agency/dashboard') {
     if (!user) { go('/agency/login'); return null; }
+    if (agencyLoading) return <LoadingScreen />;
     if (!agencyProfile && authChecked) {
       return (
         <div style={s.wrap}>
