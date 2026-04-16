@@ -167,6 +167,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
   const [selected, setSelected] = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(null);
 
   const applyLink = `quikcare.co.uk/apply/${agency.slug}`;
 
@@ -176,7 +177,8 @@ export default function AgencyDashboard({ agency, onLogout }) {
       setApplications(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
     }, (err) => {
-      console.log("Error loading applications:", err);
+      console.error("Error loading applications:", err);
+      setError(err.message || "Failed to load applications");
       setLoading(false);
     });
     return () => unsub();
@@ -240,6 +242,23 @@ export default function AgencyDashboard({ agency, onLogout }) {
           <button style={s.logoutBtn} onClick={onLogout}>Sign Out</button>
         </div>
       </div>
+
+      {error && (
+        <div style={{ background: "#fff0f0", border: "1px solid #ffb3b3", borderRadius: 10, margin: "24px auto", maxWidth: 1100, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ color: "#cc0000", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>⚠️ Something went wrong</div>
+            <div style={{ color: "#cc0000", fontSize: 13 }}>{error}</div>
+            {error.includes("index") && (
+              <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 6 }}>
+                💡 A Firestore index may still be building — wait 1–2 minutes and refresh.
+              </div>
+            )}
+          </div>
+          <button onClick={() => { setError(null); setLoading(true); }} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #ffb3b3", background: "white", color: "#cc0000", fontSize: 13, cursor: "pointer" }}>
+            Retry
+          </button>
+        </div>
+      )}
 
       <div style={s.container}>
         <div style={s.applyLink}>
