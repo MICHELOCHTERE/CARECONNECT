@@ -145,13 +145,20 @@ function Router() {
     if (user && agencyProfile) { go('/agency/dashboard'); return null; }
     return <AgencyLogin onAuth={async (u) => {
       setUser(u);
-      const { doc, getDoc } = await import('firebase/firestore');
-      const agencyDoc = await getDoc(doc(db, 'agencies', u.uid));
-      if (agencyDoc.exists()) {
-        setAgencyProfile(agencyDoc.data());
-        go('/agency/dashboard');
-      } else {
+      try {
+        setAgencyLoading(true);
+        const agencyDoc = await getDoc(doc(db, 'agencies', u.uid));
+        if (agencyDoc.exists()) {
+          setAgencyProfile(agencyDoc.data());
+          go('/agency/dashboard');
+        } else {
+          go('/agency/register');
+        }
+      } catch (e) {
+        console.error('Failed to load agency after login:', e);
         go('/agency/register');
+      } finally {
+        setAgencyLoading(false);
       }
     }} onBack={() => go('/')} onRegister={() => go('/agency/register')} />;
   }
