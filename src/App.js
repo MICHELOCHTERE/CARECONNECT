@@ -61,7 +61,48 @@ const s = {
   availDay: { padding: "8px 4px", color: "#1a1a2e", fontWeight: 500, display: "flex", alignItems: "center" },
   availCell: (checked) => ({ width: "100%", padding: "8px 4px", borderRadius: 6, border: `1px solid ${checked ? "#6C3FC5" : "#e8e0f5"}`, background: checked ? "#6C3FC5" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }),
   uploadBox: { border: "2px dashed #c5b3e8", borderRadius: 12, padding: 24, textAlign: "center", cursor: "pointer", background: "#f8f5ff" },
+  loadingWrap: { minHeight: "100vh", background: "#f8f5ff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 },
+  loadingLogo: { width: 64, height: 64, borderRadius: 16, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 700, color: "white", fontFamily: "serif" },
+  loadingText: { color: "#6C3FC5", fontSize: 22, fontFamily: "'DM Serif Display', serif" },
+  loadingDots: { color: "#9b7fd4", fontSize: 13, letterSpacing: "0.05em" },
 };
+
+const loadingKeyframes = `
+  @keyframes qPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(108,63,197,0.4); }
+    50% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(108,63,197,0); }
+  }
+  @keyframes qSpin {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-8deg) scale(1.05); }
+    75% { transform: rotate(8deg) scale(1.05); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+  @keyframes dotBlink {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+  .qk-logo-anim { animation: qPulse 1.6s ease-in-out infinite; }
+  .qk-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #9b7fd4; margin: 0 3px; animation: dotBlink 1.4s infinite ease-in-out; }
+  .qk-dot:nth-child(2) { animation-delay: 0.2s; }
+  .qk-dot:nth-child(3) { animation-delay: 0.4s; }
+`;
+
+export function LoadingScreen() {
+  return (
+    <div style={s.loadingWrap}>
+      <style>{loadingKeyframes}</style>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+      <div style={s.loadingLogo} className="qk-logo-anim">Q</div>
+      <div style={s.loadingText}>Quikcare</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <span className="qk-dot" />
+        <span className="qk-dot" />
+        <span className="qk-dot" />
+      </div>
+    </div>
+  );
+}
 
 function RadioGroup({ options, value, onChange }) {
   return (
@@ -267,17 +308,42 @@ function Step3({ data, set }) {
         )}
       </div>
       <div style={s.field}>
-        <label style={s.label}>Upload Right to Work Document</label>
-        <div style={s.uploadBox} onClick={() => document.getElementById('rtw-upload').click()}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
-          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>
-            {data.rtwDocUploading ? "Uploading..." : data.rtwDocName ? `✓ ${data.rtwDocName}` : "Click to upload right to work document"}
+        <label style={s.label}>Upload Passport <span style={{ color: "#cc0000" }}>*</span></label>
+        <p style={{ color: "#9b7fd4", fontSize: 12, marginBottom: 8 }}>Photo page of your passport is required for identity verification</p>
+        <div
+          style={{ ...s.uploadBox, borderColor: data.passportURL ? "#6C3FC5" : "#cc0000", borderWidth: 2 }}
+          onClick={() => document.getElementById('passport-upload').click()}
+        >
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🛂</div>
+          <div style={{ color: data.passportURL ? "#6C3FC5" : "#cc0000", fontWeight: 500, fontSize: 14 }}>
+            {data.passportUploading ? "Uploading..." : data.passportName ? `✓ ${data.passportName}` : "Click to upload passport (required)"}
           </div>
-          <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>Passport, BRP, Share Code letter — PDF, JPG or PNG</div>
+          <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>JPG, PNG or PDF — max 5MB</div>
+          <input id="passport-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => handleFile(e, "passport")} />
+        </div>
+        {!data.passportURL && !data.passportUploading && (
+          <div style={{ color: "#cc0000", fontSize: 12, marginTop: 6 }}>⚠️ Passport upload is mandatory</div>
+        )}
+      </div>
+      <div style={s.field}>
+        <label style={s.label}>Upload Right to Work Document <span style={{ color: "#cc0000" }}>*</span></label>
+        <p style={{ color: "#9b7fd4", fontSize: 12, marginBottom: 8 }}>e.g. BRP, Share Code letter, or Visa document</p>
+        <div
+          style={{ ...s.uploadBox, borderColor: data.rtwDocURL ? "#6C3FC5" : "#cc0000", borderWidth: 2 }}
+          onClick={() => document.getElementById('rtw-upload').click()}
+        >
+          <div style={{ fontSize: 28, marginBottom: 8 }}>📋</div>
+          <div style={{ color: data.rtwDocURL ? "#6C3FC5" : "#cc0000", fontWeight: 500, fontSize: 14 }}>
+            {data.rtwDocUploading ? "Uploading..." : data.rtwDocName ? `✓ ${data.rtwDocName}` : "Click to upload right to work document (required)"}
+          </div>
+          <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>BRP, Share Code letter — PDF, JPG or PNG</div>
           <input id="rtw-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => handleFile(e, "rtwDoc")} />
         </div>
+        {!data.rtwDocURL && !data.rtwDocUploading && (
+          <div style={{ color: "#cc0000", fontSize: 12, marginTop: 6 }}>⚠️ Right to work document is mandatory</div>
+        )}
       </div>
-      <div style={s.infoBox}><div style={s.infoTitle}>📌 Right to Work Check</div>We are legally required to verify your right to work in the UK before you begin employment.</div>
+      <div style={s.infoBox}><div style={s.infoTitle}>📌 Right to Work Check</div>We are legally required to verify your right to work in the UK before you begin employment. Both documents must be uploaded to proceed.</div>
     </div>
   );
 }
@@ -395,7 +461,7 @@ export default function App({ user, onLogout, agencySlug }) {
   const [errors, setErrors] = useState([]);
   const [p1, setP1] = useState({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
   const [p2, setP2] = useState({ years: "", settings: [], clients: [], quals: [] });
-  const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
+  const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", passportName: "", passportURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
   const [p4, setP4] = useState({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
   const [p5, setP5] = useState({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
   const [p6, setP6] = useState({ refs: [{}, {}] });
@@ -474,6 +540,8 @@ export default function App({ user, onLogout, agencySlug }) {
     if (step === 3) {
       if (!p3.rightToWork) errs.push("Please confirm your right to work status");
       if (p3.docs.length === 0) errs.push("Please select at least one document you can provide");
+      if (!p3.passportURL) errs.push("Please upload your passport (mandatory)");
+      if (!p3.rtwDocURL) errs.push("Please upload your right to work document (mandatory)");
       if (!p3.proofAddress1) errs.push("Please select your first proof of address document");
       if (!p3.proofAddress2) errs.push("Please select your second proof of address document");
       if (!p3.employmentGaps) errs.push("Please complete the employment continuity check");
@@ -567,7 +635,7 @@ export default function App({ user, onLogout, agencySlug }) {
             try { if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid)); } catch(e) {}
             setP1({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
             setP2({ years: "", settings: [], clients: [], quals: [] });
-            setP3({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
+            setP3({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", passportName: "", passportURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
             setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
             setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
             setP6({ refs: [{}, {}] });
