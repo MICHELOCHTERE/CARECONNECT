@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { auth, db } from "./firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
@@ -44,7 +44,7 @@ function PaymentRequired({ onBack }) {
 
 export default function AgencyRegister({ onAuth, onBack, onLogin }) {
   const params = new URLSearchParams(window.location.search);
-  const paid = params.get("paid");
+  const sessionId = params.get("session_id");
   const plan = params.get("plan") || "starter";
 
   const [agencyName, setAgencyName] = useState("");
@@ -53,10 +53,40 @@ export default function AgencyRegister({ onAuth, onBack, onLogin }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sessionVerified, setSessionVerified] = useState(false);
+  const [verifying, setVerifying] = useState(!!sessionId);
 
   const slug = slugify(agencyName);
 
-  if (paid !== "true") {
+  // Verify the Stripe session on mount
+  React.useEffect(() => {
+    if (!sessionId) return;
+    setVerifying(true);
+    fetch(`/api/verify-session?session_id=${sessionId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.valid) {
+          setSessionVerified(true);
+          if (data.email) setEmail(data.email);
+        }
+        setVerifying(false);
+      })
+      .catch(() => setVerifying(false));
+  }, [sessionId]);
+
+  if (verifying) {
+    return (
+      <div style={s.wrap}>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+        <div style={{ color: "#6C3FC5", fontSize: 16, textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>⏳</div>
+          <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22 }}>Verifying payment...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!sessionId || !sessionVerified) {
     return <PaymentRequired onBack={onBack} />;
   }
 

@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const STRIPE_LINKS = {
-  starter: "https://buy.stripe.com/3cI00l3U25Au1smcl2fYY00",
-  growth: "https://buy.stripe.com/eVqcN73U2bYSc705WEfYY01",
-  enterprise: "https://buy.stripe.com/bJeeVfbmuaUO0oiacUfYY02",
-};
-
 const FEATURES = [
   { icon: "📋", title: "Smart Application Forms", sub: "6-step onboarding covering everything from personal details to bank details and references." },
   { icon: "📁", title: "Document Management", sub: "Carers upload CV, proof of address and right to work documents. Download instantly." },
@@ -18,19 +12,19 @@ const FEATURES = [
 const PLANS = [
   {
     name: "Starter", price: "£49", sub: "per month",
-    link: STRIPE_LINKS.starter,
+    id: "starter",
     features: ["Up to 50 applications", "Full onboarding form", "Document uploads", "Admin dashboard", "PDF & CSV export", "Email support"],
     highlight: false,
   },
   {
     name: "Growth", price: "£99", sub: "per month",
-    link: STRIPE_LINKS.growth,
+    id: "growth",
     features: ["Unlimited applications", "Everything in Starter", "3 admin users", "Email notifications", "Priority support", "Analytics"],
     highlight: true,
   },
   {
     name: "Enterprise", price: "£199", sub: "per month",
-    link: STRIPE_LINKS.enterprise,
+    id: "enterprise",
     features: ["Everything in Growth", "White label branding", "Custom domain", "Unlimited admins", "Dedicated support", "Custom integrations"],
     highlight: false,
   },
@@ -74,6 +68,27 @@ function AnimatedSection({ children, delay = 0 }) {
 function PricingCard({ plan, index }) {
   const [hovered, setHovered] = useState(false);
   const [ref, inView] = useInView();
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: plan.id }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    } catch (err) {
+      alert("Something went wrong. Please try again.");
+    }
+    setLoading(false);
+  };
   return (
     <div ref={ref} style={{
       opacity: inView ? 1 : 0,
@@ -109,16 +124,17 @@ function PricingCard({ plan, index }) {
             <span style={{ color: plan.highlight ? "rgba(255,255,255,0.8)" : "#6C3FC5", fontWeight: 700, fontSize: 16 }}>✓</span> {f}
           </div>
         ))}
-        <a href={plan.link} target="_blank" rel="noreferrer" style={{
-          display: "block", marginTop: 24, padding: "14px",
+        <button onClick={handleCheckout} disabled={loading} style={{
+          display: "block", width: "100%", marginTop: 24, padding: "14px",
           background: hovered && !plan.highlight ? "#6C3FC5" : plan.highlight ? "white" : "#f0ebff",
-          borderRadius: 999,
+          borderRadius: 999, border: "none", cursor: loading ? "wait" : "pointer",
           color: plan.highlight ? "#6C3FC5" : hovered ? "white" : "#6C3FC5",
-          fontSize: 15, fontWeight: 700, textDecoration: "none",
+          fontSize: 15, fontWeight: 700,
           transition: "background 0.3s, color 0.3s",
+          opacity: loading ? 0.7 : 1,
         }}>
-          Get Started →
-        </a>
+          {loading ? "Redirecting..." : "Get Started →"}
+        </button>
       </div>
     </div>
   );
