@@ -6,6 +6,7 @@ import AgencyRegister from './AgencyRegister';
 import AgencyLogin from './AgencyLogin';
 import AgencyDashboard from './AgencyDashboard';
 import LandingPage from './LandingPage';
+import PrivacyPolicy from './PrivacyPolicy';
 import Demo from './Demo';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -284,6 +285,11 @@ function Router() {
   // Demo page
   if (path === '/demo') {
     return <Demo />;
+  }
+
+  // Privacy policy
+  if (path === '/privacy') {
+    return <PrivacyPolicy />;
   }
 
   // Landing page

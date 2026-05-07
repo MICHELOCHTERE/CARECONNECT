@@ -379,8 +379,9 @@ export default function LandingPage({ onGetStarted, onLogin }) {
             <a key={item} href={`#${item.toLowerCase()}`} style={{ color: "#9b7fd4", fontSize: 14, textDecoration: "none" }}>{item}</a>
           ))}
           <a href="mailto:hello@quikcare.co.uk" style={{ color: "#9b7fd4", fontSize: 14, textDecoration: "none" }}>Contact</a>
+          <a href="/privacy" style={{ color: "#9b7fd4", fontSize: 14, textDecoration: "none" }}>Privacy Policy</a>
         </div>
-        <div style={{ color: "#4b5563", fontSize: 13 }}>© {new Date().getFullYear()} Quikcare · Midlands Home Care Recruitment · quikcare.co.uk</div>
+        <div style={{ color: "#4b5563", fontSize: 13 }}>© {new Date().getFullYear()} Quikcare · ICO Registered · quikcare.co.uk</div>
       </div>
     </div>
   );
