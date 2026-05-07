@@ -631,17 +631,23 @@ export default function App({ user, onLogout, agencySlug }) {
               <div key={i} style={s.successCard}>{label}</div>
             ))}
           </div>
-          <button style={s.resetBtn} onClick={async () => {
-            try { if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid)); } catch(e) {}
-            setP1({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
-            setP2({ years: "", settings: [], clients: [], quals: [] });
-            setP3({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", passportName: "", passportURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
-            setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
-            setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
-            setP6({ refs: [{}, {}] });
-            setSubmitted(false);
-            setCurrent(1);
-          }}>Start New Application</button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+            <button style={{ ...s.resetBtn, background: "#6C3FC5", color: "white", border: "none" }} onClick={async () => {
+              try { if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid)); } catch(e) {}
+              setP1({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
+              setP2({ years: "", settings: [], clients: [], quals: [] });
+              setP3({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", passportName: "", passportURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
+              setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
+              setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
+              setP6({ refs: [{}, {}] });
+              setSubmitted(false);
+              setCurrent(1);
+            }}>📝 Submit Another Application</button>
+            <button style={{ ...s.resetBtn, background: "transparent", color: "#9b7fd4", border: "1px solid #c5b3e8" }} onClick={async () => {
+              try { if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid)); } catch(e) {}
+              onLogout();
+            }}>🚪 Sign Out</button>
+          </div>
         </div>
       </div>
     );
