@@ -119,8 +119,11 @@ export default function AgencyRegister({ onAuth, onBack, onLogin }) {
 
       onAuth(result.user, slug);
     } catch (err) {
-      if (err.code === "auth/email-already-in-use") setError("An account already exists with this email.");
-      else setError("Registration failed. Please try again.");
+      console.error("Registration error:", err);
+      if (err.code === "auth/email-already-in-use") setError("An account already exists with this email. Please log in instead.");
+      else if (err.code === "auth/weak-password") setError("Password is too weak. Please use at least 6 characters.");
+      else if (err.code === "auth/invalid-email") setError("Invalid email address.");
+      else setError(`Registration failed: ${err.message}`);
     }
     setLoading(false);
   };
