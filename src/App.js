@@ -466,7 +466,7 @@ function Step6({ data, set }) {
       ))}
       <div style={{ ...s.infoBox, border: "1px solid #6C3FC5" }}>
         <div style={s.infoTitle}>✅ Almost there!</div>
-        By submitting, you confirm all information is accurate and consent to background checks.
+        Please read and agree to the following before submitting your application.
       </div>
     </div>
   );
@@ -483,6 +483,7 @@ export default function App({ user, onLogout, agencySlug }) {
   const [p4, setP4] = useState({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
   const [p5, setP5] = useState({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
   const [p6, setP6] = useState({ refs: [{}, {}] });
+  const [consent, setConsent] = useState(false);
 
   const [saveStatus, setSaveStatus] = useState("");
 
@@ -577,6 +578,7 @@ export default function App({ user, onLogout, agencySlug }) {
     }
     if (step === 6) {
       if (!p6.refs[0]?.name?.trim()) errs.push("Reference 1: Full name is required");
+      if (current === steps.length && !consent) errs.push("You must agree to the data protection consent before submitting.");
       if (!p6.refs[0]?.email?.trim()) errs.push("Reference 1: Email is required");
       if (!p6.refs[1]?.name?.trim()) errs.push("Reference 2: Full name is required");
       if (!p6.refs[1]?.email?.trim()) errs.push("Reference 2: Email is required");
@@ -593,7 +595,10 @@ export default function App({ user, onLogout, agencySlug }) {
     }
     setErrors([]);
     await saveProgress({ p1, p2, p3, p4, p5, p6 });
-    if (current === steps.length) handleSubmit();
+    if (current === steps.length) {
+      if (!consent) { setErrors(["You must agree to the data protection consent before submitting."]); return; }
+      handleSubmit();
+    }
     else setCurrent(current + 1);
   };
 
@@ -607,6 +612,8 @@ export default function App({ user, onLogout, agencySlug }) {
         userId: user?.uid,
         userEmail: user?.email,
         agencySlug: agencySlug || "quikcare",
+        consentGiven: true,
+        consentAt: new Date().toISOString(),
         appliedAt: new Date().toISOString().split("T")[0],
         createdAt: serverTimestamp()
       });
@@ -658,6 +665,7 @@ export default function App({ user, onLogout, agencySlug }) {
             setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
             setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
             setP6({ refs: [{}, {}] });
+            setConsent(false);
             setSubmitted(false);
             setCurrent(1);
           }}>Start New Application</button>

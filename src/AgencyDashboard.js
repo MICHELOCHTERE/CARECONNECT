@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
-import { collection, onSnapshot, doc, updateDoc, orderBy, query, where } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
 
 const STATUS_COLORS = {
   pending: { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
@@ -66,7 +66,7 @@ function DetailItem({ label, value }) {
   );
 }
 
-function Modal({ app, agency, onClose, onApprove, onReject }) {
+function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
   if (!app) return null;
   const downloadPDF = () => {
     const field = (label, value) => `<div class="field"><div class="label">${label}</div><div class="value">${value || '—'}</div></div>`;
@@ -313,6 +313,13 @@ function Modal({ app, agency, onClose, onApprove, onReject }) {
           <button style={s.pdfBtn} onClick={downloadPDF}>📄 PDF</button>
           <button style={s.approveBtn} onClick={() => { onApprove(app.id); onClose(); }}>✓ Approve</button>
         </div>
+        <div style={{ padding: "12px 24px", borderTop: "1px solid #f0ebff", background: "#fff8f8", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 11, color: "#9b7fd4" }}>🔒 GDPR: Right to Erasure</span>
+          <button style={{ background: "none", border: "1px solid #ffb3b3", borderRadius: 6, padding: "6px 14px", color: "#cc0000", fontSize: 12, cursor: "pointer" }}
+            onClick={() => { onDelete(app.id, `${app.firstName} ${app.lastName}`); onClose(); }}>
+            🗑 Delete Application Data
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -488,7 +495,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
         </div>
       </div>
 
-      <Modal app={selected} agency={agency} onClose={() => setSelected(null)} onApprove={(id) => updateStatus(id, "approved")} onReject={(id) => updateStatus(id, "rejected")} />
+      <Modal app={selected} agency={agency} onClose={() => setSelected(null)} onApprove={(id) => updateStatus(id, "approved")} onReject={(id) => updateStatus(id, "rejected")} onDelete={deleteApplication} />
     </div>
   );
 }
