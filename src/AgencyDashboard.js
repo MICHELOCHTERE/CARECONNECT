@@ -157,7 +157,7 @@ function Modal({ app, agency, onClose, onApprove, onReject }) {
         ${field('Convictions', app.conviction)}
         ${field('Proof of Address 1', app.proofAddress1)}
         ${field('Proof of Address 2', app.proofAddress2)}
-        ${field('Employment Gaps', app.employmentGaps)}
+        ${field('Employment Continuity Check', app.employmentGaps)}
         <div class="field full"><div class="label">RTW Documents Provided</div><div class="tags">${tags(app.docs)}</div></div>
         <div class="field full"><div class="label">Gaps Explanation</div><div class="value">${app.gapsExplanation || '—'}</div></div>
       `)}
@@ -269,7 +269,7 @@ function Modal({ app, agency, onClose, onApprove, onReject }) {
               <DetailItem label="Convictions" value={app.conviction} />
               <DetailItem label="Proof of Address 1" value={app.proofAddress1} />
               <DetailItem label="Proof of Address 2" value={app.proofAddress2} />
-              <DetailItem label="Employment Gaps" value={app.employmentGaps} />
+              <DetailItem label="Employment Continuity Check" value={app.employmentGaps} />
             </div>
             {app.gapsExplanation && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Gaps Explanation</div><div style={{ fontSize: 13, color: "#1a1a2e", background: "#f8f5ff", borderRadius: 8, padding: "10px 14px", marginTop: 4 }}>{app.gapsExplanation}</div></div>}
             {app.docs?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>RTW Documents Provided</div><div style={s.tagRow}>{app.docs.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}

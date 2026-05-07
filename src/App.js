@@ -295,16 +295,34 @@ function Step3({ data, set }) {
         </select>
       </div>
       <div style={s.field}>
-        <label style={s.label}>Employment Continuity Check</label>
-        <p style={{ color: "#9b7fd4", fontSize: 12, marginBottom: 10 }}>Please account for any gaps in employment over the last 5 years</p>
-        <RadioGroup options={["No gaps", "I have gaps to explain"]} value={data.employmentGaps} onChange={v => set({ ...data, employmentGaps: v })} />
+        <label style={s.label}>Employment Continuity Check <span style={{ color: "#cc0000" }}>*</span></label>
+        <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+          <div style={{ color: "#92400e", fontWeight: 600, fontSize: 12, marginBottom: 4 }}>⚠️ Mandatory — 10 Year History Required</div>
+          <div style={{ color: "#92400e", fontSize: 12, lineHeight: 1.6 }}>
+            You must account for <strong>all activity over the last 10 years</strong> including employment, education, volunteering, career breaks, and any periods of unemployment. This is required for safeguarding compliance in the care sector.
+          </div>
+        </div>
+        <RadioGroup options={["No gaps — my history is continuous", "I have gaps to explain"]} value={data.employmentGaps} onChange={v => set({ ...data, employmentGaps: v })} />
         {data.employmentGaps === "I have gaps to explain" && (
           <textarea
-            style={{ ...s.input, marginTop: 10, minHeight: 80, resize: "vertical" }}
-            placeholder="Please explain any gaps in your employment history..."
+            style={{ ...s.input, marginTop: 10, minHeight: 120, resize: "vertical" }}
+            placeholder="Please provide details of all gaps in your 10-year history. Include dates, duration, and reason for each gap (e.g. Jan 2018 – June 2018: Travelling, July 2019 – Dec 2019: Caring for a family member)..."
             value={data.gapsExplanation}
             onChange={e => set({ ...data, gapsExplanation: e.target.value })}
           />
+        )}
+        {data.employmentGaps === "No gaps — my history is continuous" && (
+          <div style={{ marginTop: 10 }}>
+            <textarea
+              style={{ ...s.input, minHeight: 120, resize: "vertical" }}
+              placeholder="Please briefly outline your continuous 10-year employment/education history (e.g. 2014–2018: NVQ Level 3 in Health & Social Care, 2018–present: Care Worker at Sunrise Care)..."
+              value={data.gapsExplanation}
+              onChange={e => set({ ...data, gapsExplanation: e.target.value })}
+            />
+          </div>
+        )}
+        {!data.employmentGaps && (
+          <p style={{ color: "#cc0000", fontSize: 12, marginTop: 6 }}>⚠️ This section is mandatory</p>
         )}
       </div>
       <div style={s.field}>
@@ -544,7 +562,8 @@ export default function App({ user, onLogout, agencySlug }) {
       if (!p3.rtwDocURL) errs.push("Please upload your right to work document (mandatory)");
       if (!p3.proofAddress1) errs.push("Please select your first proof of address document");
       if (!p3.proofAddress2) errs.push("Please select your second proof of address document");
-      if (!p3.employmentGaps) errs.push("Please complete the employment continuity check");
+      if (!p3.employmentGaps) errs.push("Please complete the employment continuity check (10 year history required)");
+      if (p3.employmentGaps && !p3.gapsExplanation?.trim()) errs.push("Please provide your 10-year employment history details");
     }
     if (step === 4) {
       if (!p4.hasDbs) errs.push("Please confirm your DBS certificate status");
@@ -631,23 +650,17 @@ export default function App({ user, onLogout, agencySlug }) {
               <div key={i} style={s.successCard}>{label}</div>
             ))}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-            <button style={{ ...s.resetBtn, background: "#6C3FC5", color: "white", border: "none" }} onClick={async () => {
-              try { if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid)); } catch(e) {}
-              setP1({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
-              setP2({ years: "", settings: [], clients: [], quals: [] });
-              setP3({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", passportName: "", passportURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
-              setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
-              setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
-              setP6({ refs: [{}, {}] });
-              setSubmitted(false);
-              setCurrent(1);
-            }}>📝 Submit Another Application</button>
-            <button style={{ ...s.resetBtn, background: "transparent", color: "#9b7fd4", border: "1px solid #c5b3e8" }} onClick={async () => {
-              try { if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid)); } catch(e) {}
-              onLogout();
-            }}>🚪 Sign Out</button>
-          </div>
+          <button style={s.resetBtn} onClick={async () => {
+            try { if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid)); } catch(e) {}
+            setP1({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
+            setP2({ years: "", settings: [], clients: [], quals: [] });
+            setP3({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", passportName: "", passportURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
+            setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
+            setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
+            setP6({ refs: [{}, {}] });
+            setSubmitted(false);
+            setCurrent(1);
+          }}>Start New Application</button>
         </div>
       </div>
     );
