@@ -126,50 +126,62 @@ function Modal({ app, agency, onClose, onApprove, onReject }) {
         ${field('Date of Birth', app.dob)}
         ${field('Gender', app.gender)}
         ${field('Nationality', app.nationality)}
+        ${field('Religion', app.religion)}
         ${field('NI Number', app.niNumber)}
         ${field('Email', app.email)}
         ${field('Phone', app.phone)}
         ${field('Postcode', app.postcode)}
         ${field('Driving Licence', app.driving)}
         ${field('Languages', app.languages?.join(', '))}
-        ${field('Emergency Contact', app.emergencyContact)}
+      `)}
+
+      ${section('🆘 Emergency Contact', `
+        ${field('Name', app.emergencyName)}
+        ${field('Relationship', app.emergencyRelation)}
+        ${field('Phone', app.emergencyPhone)}
       `)}
 
       ${section('💼 Experience & Qualifications', `
         ${field('Years of Experience', app.years)}
-        ${field('Preferred Hours', app.hours?.join(', '))}
-        ${field('Care Categories', app.careCategories?.join(', '))}
+        <div class="field full"><div class="label">Care Settings</div><div class="tags">${tags(app.settings)}</div></div>
+        <div class="field full"><div class="label">Client Groups</div><div class="tags">${tags(app.clients)}</div></div>
         <div class="field full"><div class="label">Qualifications</div><div class="tags">${tags(app.quals)}</div></div>
-        <div class="field full"><div class="label">Skills</div><div class="tags">${tags(app.skills)}</div></div>
-        <div class="field full"><div class="label">Availability</div><div class="value">${app.availability ? JSON.stringify(app.availability) : '—'}</div></div>
       `)}
 
       ${section('🛡️ DBS & Right to Work', `
-        ${field('Has DBS', app.hasDbs)}
-        ${field('DBS Update Service', app.updateService)}
-        ${field('DBS Certificate Number', app.dbsCertNumber)}
         ${field('Right to Work', app.rightToWork)}
         ${field('RTW Status', app.rtwStatus)}
-        <div class="field full"><div class="label">RTW Documents Provided</div><div class="tags">${tags(app.docs)}</div></div>
-      `)}
-
-      ${section('🏠 Address & Identity', `
+        ${field('Has DBS', app.hasDbs)}
+        ${field('DBS Date', app.dbsDate)}
+        ${field('DBS Update Service', app.updateService)}
+        ${field('Convictions', app.conviction)}
         ${field('Proof of Address 1', app.proofAddress1)}
         ${field('Proof of Address 2', app.proofAddress2)}
         ${field('Employment Gaps', app.employmentGaps)}
+        <div class="field full"><div class="label">RTW Documents Provided</div><div class="tags">${tags(app.docs)}</div></div>
         <div class="field full"><div class="label">Gaps Explanation</div><div class="value">${app.gapsExplanation || '—'}</div></div>
       `)}
 
-      ${section('📋 References', `
-        ${field('Reference 1 Name', app.ref1Name)}
-        ${field('Reference 1 Email', app.ref1Email)}
-        ${field('Reference 1 Phone', app.ref1Phone)}
-        ${field('Reference 1 Relationship', app.ref1Relation)}
-        ${field('Reference 2 Name', app.ref2Name)}
-        ${field('Reference 2 Email', app.ref2Email)}
-        ${field('Reference 2 Phone', app.ref2Phone)}
-        ${field('Reference 2 Relationship', app.ref2Relation)}
+      ${section('💰 Bank Details', `
+        ${field('Account Holder', app.bankName)}
+        ${field('Sort Code', app.sortCode)}
+        ${field('Account Number', app.accountNumber)}
       `)}
+
+      <div class="section"><h2>📋 References</h2>
+        ${(app.refs || []).map((r, i) => `
+          <div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;margin-bottom:8px">
+            <div style="font-weight:700;color:#6C3FC5;margin-bottom:6px">Reference ${i+1}</div>
+            <div class="grid">
+              ${field('Name', r.name)}
+              ${field('Job Title', r.title)}
+              ${field('Organisation', r.org)}
+              ${field('Email', r.email)}
+              ${field('Relationship', r.relation)}
+            </div>
+          </div>
+        `).join('')}
+      </div>
 
       <div class="section">
         <h2>📎 Uploaded Documents</h2>
