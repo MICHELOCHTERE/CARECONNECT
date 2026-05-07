@@ -9,64 +9,6 @@ const STATUS_COLORS = {
 };
 const STATUS_LABELS = { pending: "⏳ Pending", approved: "✅ Approved", rejected: "❌ Rejected" };
 
-const PLAN_LIMITS = {
-  starter:    { maxApplications: 50,  analytics: false, multiAdmin: false, whiteLabel: false },
-  growth:     { maxApplications: -1,  analytics: true,  multiAdmin: true,  whiteLabel: false },
-  enterprise: { maxApplications: -1,  analytics: true,  multiAdmin: true,  whiteLabel: true  },
-  none:       { maxApplications: 0,   analytics: false, multiAdmin: false, whiteLabel: false },
-};
-
-const PLAN_LABELS = { starter: "Starter", growth: "Growth", enterprise: "Enterprise", none: "No Plan" };
-const PLAN_COLORS = { starter: "#f59e0b", growth: "#6C3FC5", enterprise: "#1a7a3a", none: "#cc0000" };
-
-function PlanBanner({ agency, applicationCount }) {
-  const plan = agency.plan || "none";
-  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.none;
-  const isStarter = plan === "starter";
-  const atLimit = isStarter && applicationCount >= limits.maxApplications;
-  const nearLimit = isStarter && applicationCount >= limits.maxApplications * 0.8;
-
-  return (
-    <div style={{ background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 12, padding: "14px 20px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ background: PLAN_COLORS[plan], borderRadius: 6, padding: "3px 10px", fontSize: 11, fontWeight: 700, color: "white", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          {PLAN_LABELS[plan]}
-        </div>
-        {isStarter && (
-          <div style={{ fontSize: 13, color: atLimit ? "#cc0000" : nearLimit ? "#f59e0b" : "#9b7fd4" }}>
-            {applicationCount} / {limits.maxApplications} applications used
-            {atLimit && " — limit reached!"}
-            {!atLimit && nearLimit && " — nearing limit"}
-          </div>
-        )}
-        {!isStarter && plan !== "none" && (
-          <div style={{ fontSize: 13, color: "#1a7a3a" }}>Unlimited applications</div>
-        )}
-      </div>
-      {(atLimit || nearLimit || plan === "none") && (
-        <a href="https://quikcare.co.uk/#pricing" style={{ padding: "8px 16px", background: "#6C3FC5", border: "none", borderRadius: 8, color: "white", fontSize: 12, fontWeight: 700, cursor: "pointer", textDecoration: "none" }}>
-          ⬆ Upgrade Plan
-        </a>
-      )}
-    </div>
-  );
-}
-
-function ApplicationLimitWall({ agency }) {
-  return (
-    <div style={{ textAlign: "center", padding: "60px 20px" }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-      <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1a1a2e", marginBottom: 8 }}>Application limit reached</div>
-      <div style={{ color: "#9b7fd4", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
-        Your Starter plan allows up to 50 applications.<br />Upgrade to Growth for unlimited applications and more features.
-      </div>
-      <a href="https://quikcare.co.uk/#pricing" style={{ display: "inline-block", padding: "14px 28px", background: "#6C3FC5", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>
-        Upgrade to Growth →
-      </a>
-    </div>
-  );
-}
-
 const s = {
   app: { minHeight: "100vh", background: "#f8f5ff", color: "#1a1a2e", fontFamily: "'DM Sans', sans-serif" },
   header: { background: "#ffffff", borderBottom: "1px solid #e8e0f5", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 },
@@ -127,11 +69,130 @@ function DetailItem({ label, value }) {
 function Modal({ app, onClose, onApprove, onReject }) {
   if (!app) return null;
   const downloadPDF = () => {
-    const html = `<html><head><style>body{font-family:Arial,sans-serif;padding:40px;color:#1a1a2e}h1{color:#6C3FC5}h2{color:#6C3FC5;font-size:14px;border-bottom:1px solid #e8e0f5;padding-bottom:6px;margin-top:24px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.field{background:#f8f5ff;padding:10px 14px;border-radius:6px}.label{font-size:10px;color:#9b7fd4;text-transform:uppercase}.value{font-size:13px;color:#1a1a2e;margin-top:2px}</style></head><body><h1>${app.firstName} ${app.lastName}</h1><p>Applied: ${app.appliedAt} | Status: ${app.status}</p><h2>Personal Details</h2><div class="grid"><div class="field"><div class="label">Email</div><div class="value">${app.email||'—'}</div></div><div class="field"><div class="label">Phone</div><div class="value">${app.phone||'—'}</div></div><div class="field"><div class="label">NI Number</div><div class="value">${app.niNumber||'—'}</div></div><div class="field"><div class="label">Driving</div><div class="value">${app.driving||'—'}</div></div></div><h2>Experience</h2><div class="grid"><div class="field"><div class="label">Years</div><div class="value">${app.years||'—'}</div></div><div class="field"><div class="label">Qualifications</div><div class="value">${app.quals?.join(', ')||'—'}</div></div></div><p style="margin-top:40px;font-size:11px;color:#9b7fd4">Quikcare Recruitment — quikcare.co.uk</p></body></html>`;
+    const field = (label, value) => `<div class="field"><div class="label">${label}</div><div class="value">${value || '—'}</div></div>`;
+    const section = (title, fields) => `<div class="section"><h2>${title}</h2><div class="grid">${fields}</div></div>`;
+    const tags = (arr) => arr?.length ? arr.map(t => `<span class="tag">${t}</span>`).join('') : '—';
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${app.firstName} ${app.lastName} — Application</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, sans-serif; color: #1a1a2e; font-size: 13px; line-height: 1.5; }
+      .page { padding: 32px 40px; max-width: 900px; margin: 0 auto; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #6C3FC5; padding-bottom: 16px; margin-bottom: 24px; }
+      .header-left h1 { font-size: 24px; color: #6C3FC5; margin-bottom: 4px; }
+      .header-left p { color: #9b7fd4; font-size: 12px; }
+      .status { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+      .status-pending { background: #f5f0ff; color: #6C3FC5; border: 1px solid #c5b3e8; }
+      .status-approved { background: #e8f5eb; color: #1a7a3a; border: 1px solid #a3d9b1; }
+      .status-rejected { background: #fff0f0; color: #cc0000; border: 1px solid #ffb3b3; }
+      .logo { font-size: 20px; font-weight: 700; color: #6C3FC5; }
+      .section { margin-bottom: 20px; page-break-inside: avoid; }
+      h2 { font-size: 11px; color: #6C3FC5; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #e8e0f5; padding-bottom: 6px; margin-bottom: 10px; font-weight: 700; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+      .field { background: #f8f5ff; padding: 8px 12px; border-radius: 6px; }
+      .field.full { grid-column: 1 / -1; }
+      .label { font-size: 9px; color: #9b7fd4; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+      .value { font-size: 12px; color: #1a1a2e; }
+      .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+      .tag { background: #f0ebff; border: 1px solid #e8e0f5; border-radius: 999px; padding: 2px 8px; font-size: 11px; color: #6C3FC5; }
+      .docs-section { background: #f8f5ff; border-radius: 8px; padding: 12px 16px; margin-top: 8px; }
+      .doc-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #e8e0f5; font-size: 12px; }
+      .doc-row:last-child { border-bottom: none; }
+      .doc-link { color: #6C3FC5; font-size: 11px; }
+      .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e8e0f5; display: flex; justify-content: space-between; font-size: 10px; color: #9b7fd4; }
+      @media print {
+        body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+        .page { padding: 16px 24px; }
+        .section { page-break-inside: avoid; }
+      }
+    </style></head>
+    <body><div class="page">
+
+      <div class="header">
+        <div class="header-left">
+          <h1>${app.firstName || ''} ${app.lastName || ''}</h1>
+          <p>Applied: ${app.appliedAt || '—'} &nbsp;|&nbsp; ${app.email || ''} &nbsp;|&nbsp; ${app.phone || ''}</p>
+        </div>
+        <div style="text-align:right">
+          <div class="logo">Quikcare</div>
+          <div style="margin-top:8px"><span class="status status-${app.status || 'pending'}">${app.status || 'pending'}</span></div>
+        </div>
+      </div>
+
+      ${section('👤 Personal Details', `
+        ${field('First Name', app.firstName)}
+        ${field('Last Name', app.lastName)}
+        ${field('Date of Birth', app.dob)}
+        ${field('Gender', app.gender)}
+        ${field('Nationality', app.nationality)}
+        ${field('NI Number', app.niNumber)}
+        ${field('Email', app.email)}
+        ${field('Phone', app.phone)}
+        ${field('Postcode', app.postcode)}
+        ${field('Driving Licence', app.driving)}
+        ${field('Languages', app.languages?.join(', '))}
+        ${field('Emergency Contact', app.emergencyContact)}
+      `)}
+
+      ${section('💼 Experience & Qualifications', `
+        ${field('Years of Experience', app.years)}
+        ${field('Preferred Hours', app.hours?.join(', '))}
+        ${field('Care Categories', app.careCategories?.join(', '))}
+        <div class="field full"><div class="label">Qualifications</div><div class="tags">${tags(app.quals)}</div></div>
+        <div class="field full"><div class="label">Skills</div><div class="tags">${tags(app.skills)}</div></div>
+        <div class="field full"><div class="label">Availability</div><div class="value">${app.availability ? JSON.stringify(app.availability) : '—'}</div></div>
+      `)}
+
+      ${section('🛡️ DBS & Right to Work', `
+        ${field('Has DBS', app.hasDbs)}
+        ${field('DBS Update Service', app.updateService)}
+        ${field('DBS Certificate Number', app.dbsCertNumber)}
+        ${field('Right to Work', app.rightToWork)}
+        ${field('RTW Status', app.rtwStatus)}
+        <div class="field full"><div class="label">RTW Documents Provided</div><div class="tags">${tags(app.docs)}</div></div>
+      `)}
+
+      ${section('🏠 Address & Identity', `
+        ${field('Proof of Address 1', app.proofAddress1)}
+        ${field('Proof of Address 2', app.proofAddress2)}
+        ${field('Employment Gaps', app.employmentGaps)}
+        <div class="field full"><div class="label">Gaps Explanation</div><div class="value">${app.gapsExplanation || '—'}</div></div>
+      `)}
+
+      ${section('📋 References', `
+        ${field('Reference 1 Name', app.ref1Name)}
+        ${field('Reference 1 Email', app.ref1Email)}
+        ${field('Reference 1 Phone', app.ref1Phone)}
+        ${field('Reference 1 Relationship', app.ref1Relation)}
+        ${field('Reference 2 Name', app.ref2Name)}
+        ${field('Reference 2 Email', app.ref2Email)}
+        ${field('Reference 2 Phone', app.ref2Phone)}
+        ${field('Reference 2 Relationship', app.ref2Relation)}
+      `)}
+
+      <div class="section">
+        <h2>📎 Uploaded Documents</h2>
+        <div class="docs-section">
+          ${app.cvURL ? `<div class="doc-row">📄 CV / Resume &nbsp;<a class="doc-link" href="${app.cvURL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#9b7fd4">📄 CV — not uploaded</div>'}
+          ${app.passportURL ? `<div class="doc-row">🛂 Passport &nbsp;<a class="doc-link" href="${app.passportURL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#cc0000">🛂 Passport — not uploaded</div>'}
+          ${app.rtwDocURL ? `<div class="doc-row">📋 Right to Work Doc &nbsp;<a class="doc-link" href="${app.rtwDocURL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#cc0000">📋 Right to Work Doc — not uploaded</div>'}
+          ${app.poa1URL ? `<div class="doc-row">🏠 Proof of Address 1 &nbsp;<a class="doc-link" href="${app.poa1URL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#9b7fd4">🏠 Proof of Address 1 — not uploaded</div>'}
+          ${app.poa2URL ? `<div class="doc-row">🏠 Proof of Address 2 &nbsp;<a class="doc-link" href="${app.poa2URL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#9b7fd4">🏠 Proof of Address 2 — not uploaded</div>'}
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>Quikcare Recruitment Platform — quikcare.co.uk</span>
+        <span>Generated: ${new Date().toLocaleDateString('en-GB')} &nbsp;|&nbsp; Application ID: ${app.id || '—'}</span>
+      </div>
+
+    </div></body></html>`;
+
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
-    win.print();
+    setTimeout(() => win.print(), 500);
   };
   return (
     <div style={s.modal} onClick={onClose}>
@@ -319,22 +380,6 @@ export default function AgencyDashboard({ agency, onLogout }) {
       )}
 
       <div style={s.container}>
-        <PlanBanner agency={agency} applicationCount={applications.length} />
-        {(() => {
-          const plan = agency.plan || "none";
-          const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.none;
-          if (limits.maxApplications === 0) {
-            return (
-              <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
-                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1a1a2e", marginBottom: 8 }}>No active plan</div>
-                <div style={{ color: "#9b7fd4", fontSize: 14, marginBottom: 24 }}>Please purchase a plan to access your dashboard.</div>
-                <a href="https://quikcare.co.uk/#pricing" style={{ display: "inline-block", padding: "14px 28px", background: "#6C3FC5", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>View Plans →</a>
-              </div>
-            );
-          }
-          return null;
-        })()}
         <div style={s.applyLink}>
           <div>
             <div style={{ fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Your carer application link</div>
@@ -358,26 +403,8 @@ export default function AgencyDashboard({ agency, onLogout }) {
             </button>
           ))}
           <button style={s.exportBtn} onClick={() => exportCSV(filtered)}>⬇ Export CSV</button>
-          {(agency.plan === "growth" || agency.plan === "enterprise") && (
-            <div style={{ padding: "9px 14px", borderRadius: 8, background: "#e8f5eb", border: "1px solid #a3d9b1", color: "#1a7a3a", fontSize: 12, fontWeight: 600 }}>
-              📊 Analytics: ON
-            </div>
-          )}
-          {(!agency.plan || agency.plan === "starter" || agency.plan === "none") && (
-            <a href="https://quikcare.co.uk/#pricing" style={{ padding: "9px 14px", borderRadius: 8, background: "#f8f5ff", border: "1px solid #c5b3e8", color: "#9b7fd4", fontSize: 12, textDecoration: "none" }}>
-              🔒 Analytics (Upgrade)
-            </a>
-          )}
         </div>
 
-        {(() => {
-          const plan = agency.plan || "none";
-          const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.none;
-          if (limits.maxApplications > 0 && applications.length >= limits.maxApplications) {
-            return <ApplicationLimitWall agency={agency} />;
-          }
-          return null;
-        })()}
         <div style={{ background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 12, overflow: "hidden" }}>
           {loading ? <div style={s.loading}>Loading applications...</div> : (
             <table style={s.table}>
