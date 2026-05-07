@@ -326,10 +326,13 @@ function CarerLoginForm({ onAuth, agencySlug }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState('login');
+
   const handleSubmit = async () => {
     if (!email || !password) return setError('Please fill in all fields.');
-    setLoading(true);
+    setLoading(true); setError('');
     try {
       const { signInWithEmailAndPassword } = await import('firebase/auth');
       const result = await signInWithEmailAndPassword(auth, email, password);
@@ -339,11 +342,44 @@ function CarerLoginForm({ onAuth, agencySlug }) {
     }
     setLoading(false);
   };
+
+  const handleReset = async () => {
+    if (!email) return setError('Please enter your email address first.');
+    setLoading(true); setError('');
+    try {
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      await sendPasswordResetEmail(auth, email);
+      setSuccess('Password reset email sent! Check your inbox.');
+    } catch (err) {
+      setError('Could not send reset email. Please check your email address.');
+    }
+    setLoading(false);
+  };
+
+  if (mode === 'reset') {
+    return (
+      <>
+        <div style={{ color: "#1a1a2e", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Reset your password</div>
+        <div style={{ color: "#9b7fd4", fontSize: 13, marginBottom: 16 }}>Enter your email and we'll send you a reset link</div>
+        {error && <div style={{ color: '#cc0000', fontSize: 13, marginBottom: 12, background: '#fff0f0', border: '1px solid #ffb3b3', borderRadius: 8, padding: '10px 14px' }}>⚠️ {error}</div>}
+        {success && <div style={{ color: '#1a7a3a', fontSize: 13, marginBottom: 12, background: '#e8f5eb', border: '1px solid #a3d9b1', borderRadius: 8, padding: '10px 14px' }}>✅ {success}</div>}
+        <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleReset()} />
+        <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading} onClick={handleReset}>{loading ? 'Sending...' : 'Send Reset Link →'}</button>
+        <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4', textAlign: 'center' }}>
+          <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => { setMode('login'); setError(''); setSuccess(''); }}>← Back to login</button>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {error && <div style={{ color: '#cc0000', fontSize: 13, marginBottom: 12 }}>{error}</div>}
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="password" placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
+      <div style={{ textAlign: 'right', marginBottom: 12, marginTop: -8 }}>
+        <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 12 }} onClick={() => { setMode('reset'); setError(''); }}>Forgot password?</button>
+      </div>
       <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading} onClick={handleSubmit}>{loading ? 'Logging in...' : 'Log In →'}</button>
       <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4' }}>New here? <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => go(agencySlug ? `/register?agency=${agencySlug}` : '/register')}>Create account</button></div>
     </>
