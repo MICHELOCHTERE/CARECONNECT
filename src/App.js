@@ -618,7 +618,7 @@ export default function App({ user, onLogout, agencySlug }) {
             carer_email: p1.email || user?.email || '',
             agency_name: agencySlug || 'Quikcare',
             applied_at: new Date().toLocaleDateString('en-GB'),
-            to_email: 'michaelokyere8092@gmail.com',
+            to_email: p1.email || user?.email || '',
           };
           window.emailjs.send('QUIKCARE', 'template_60u7ckv', emailParams, 'LD1-M8qPWz2Go1fM2')
             .catch(e => console.log('Email failed:', e));
