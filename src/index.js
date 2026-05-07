@@ -57,33 +57,66 @@ function AdminLogin({ onLogin }) {
   );
 }
 
-const loadingStyles = `
-  @keyframes qkPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(108,63,197,0.35); }
-    50% { transform: scale(1.1); box-shadow: 0 0 0 14px rgba(108,63,197,0); }
-  }
-  @keyframes qkDot {
-    0%, 80%, 100% { opacity: 0.2; transform: scale(0.75); }
-    40% { opacity: 1; transform: scale(1); }
-  }
-  .qk-logo { animation: qkPulse 1.6s ease-in-out infinite; }
-  .qk-d { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #9b7fd4; margin: 0 3px; animation: qkDot 1.4s infinite ease-in-out; }
-  .qk-d:nth-child(2) { animation-delay: 0.2s; }
-  .qk-d:nth-child(3) { animation-delay: 0.4s; }
-`;
+function SubscriptionScreen({ status, agencyName }) {
+  const screens = {
+    cancelled: {
+      icon: "❌",
+      title: "Subscription cancelled",
+      message: "Your Quikcare subscription has been cancelled. Resubscribe to regain access to your dashboard.",
+      btnText: "Resubscribe →",
+      color: "#cc0000",
+      bg: "#fff0f0",
+      border: "#ffb3b3",
+    },
+    payment_failed: {
+      icon: "⚠️",
+      title: "Payment failed",
+      message: "Your last payment didn't go through. Please update your payment method to restore access.",
+      btnText: "Update Payment →",
+      color: "#f59e0b",
+      bg: "#fffbeb",
+      border: "#fcd34d",
+    },
+    none: {
+      icon: "🔒",
+      title: "No active plan",
+      message: "You don't have an active Quikcare plan. Choose a plan to access your dashboard.",
+      btnText: "View Plans →",
+      color: "#6C3FC5",
+      bg: "#f0ebff",
+      border: "#c5b3e8",
+    },
+  };
+
+  const screen = screens[status] || screens.none;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "'DM Sans', sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+      <div style={{ background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 16, padding: 40, width: "100%", maxWidth: 440, textAlign: "center" }}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, color: "white", fontFamily: "serif", margin: "0 auto 20px" }}>Q</div>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>{screen.icon}</div>
+        <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: "#1a1a2e", marginBottom: 8 }}>{screen.title}</div>
+        {agencyName && <div style={{ color: "#6C3FC5", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{agencyName}</div>}
+        <div style={{ background: screen.bg, border: `1px solid ${screen.border}`, borderRadius: 10, padding: "14px 18px", marginBottom: 24, color: screen.color, fontSize: 14, lineHeight: 1.6 }}>
+          {screen.message}
+        </div>
+        <a href="https://quikcare.co.uk/#pricing" style={{ display: "block", padding: "14px", background: "#6C3FC5", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, textDecoration: "none", marginBottom: 12 }}>
+          {screen.btnText}
+        </a>
+        <button onClick={() => { signOut(auth); window.location.href = "/"; }} style={{ width: "100%", padding: "12px", background: "transparent", border: "1px solid #c5b3e8", borderRadius: 8, color: "#9b7fd4", fontSize: 14, cursor: "pointer" }}>
+          Sign Out
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function LoadingScreen() {
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f5ff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{loadingStyles}</style>
+    <div style={s.wrap}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-      <div className="qk-logo" style={{ width: 68, height: 68, borderRadius: 18, background: '#6C3FC5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34, fontWeight: 700, color: 'white', fontFamily: 'serif' }}>Q</div>
-      <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: '#6C3FC5' }}>Quikcare</div>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <span className="qk-d" />
-        <span className="qk-d" />
-        <span className="qk-d" />
-      </div>
+      <div style={{ color: '#6C3FC5', fontSize: 16 }}>Loading...</div>
     </div>
   );
 }
@@ -145,20 +178,13 @@ function Router() {
     if (user && agencyProfile) { go('/agency/dashboard'); return null; }
     return <AgencyLogin onAuth={async (u) => {
       setUser(u);
-      try {
-        setAgencyLoading(true);
-        const agencyDoc = await getDoc(doc(db, 'agencies', u.uid));
-        if (agencyDoc.exists()) {
-          setAgencyProfile(agencyDoc.data());
-          go('/agency/dashboard');
-        } else {
-          go('/agency/register');
-        }
-      } catch (e) {
-        console.error('Failed to load agency after login:', e);
+      const { doc, getDoc } = await import('firebase/firestore');
+      const agencyDoc = await getDoc(doc(db, 'agencies', u.uid));
+      if (agencyDoc.exists()) {
+        setAgencyProfile(agencyDoc.data());
+        go('/agency/dashboard');
+      } else {
         go('/agency/register');
-      } finally {
-        setAgencyLoading(false);
       }
     }} onBack={() => go('/')} onRegister={() => go('/agency/register')} />;
   }
@@ -181,6 +207,13 @@ function Router() {
       );
     }
     if (!agencyProfile) return <LoadingScreen />;
+
+    // Check subscription status before showing dashboard
+    const status = agencyProfile.status;
+    if (status === 'cancelled' || status === 'payment_failed' || !agencyProfile.plan || agencyProfile.plan === 'none') {
+      return <SubscriptionScreen status={status || 'none'} agencyName={agencyProfile.agencyName} />;
+    }
+
     return <AgencyDashboard agency={agencyProfile} onLogout={() => { signOut(auth); setAgencyProfile(null); go('/'); }} />;
   }
 
