@@ -208,55 +208,93 @@ function Modal({ app, agency, onClose, onApprove, onReject }) {
           </div>
         </div>
         <div style={s.modalBody}>
+
           <div style={s.section}>
             <div style={s.sectionTitle}>👤 Personal Details</div>
             <div style={s.detailGrid}>
+              <DetailItem label="First Name" value={app.firstName} />
+              <DetailItem label="Last Name" value={app.lastName} />
               <DetailItem label="Email" value={app.email} />
               <DetailItem label="Phone" value={app.phone} />
               <DetailItem label="Date of Birth" value={app.dob} />
               <DetailItem label="NI Number" value={app.niNumber} />
+              <DetailItem label="Postcode" value={app.postcode} />
               <DetailItem label="Driving Licence" value={app.driving} />
               <DetailItem label="Nationality" value={app.nationality} />
               <DetailItem label="Gender" value={app.gender} />
+              <DetailItem label="Religion" value={app.religion} />
               <DetailItem label="Languages" value={app.languages?.join(", ")} />
             </div>
           </div>
+
           <div style={s.section}>
-            <div style={s.sectionTitle}>💼 Experience</div>
+            <div style={s.sectionTitle}>🆘 Emergency Contact</div>
+            <div style={s.detailGrid}>
+              <DetailItem label="Name" value={app.emergencyName} />
+              <DetailItem label="Relationship" value={app.emergencyRelation} />
+              <DetailItem label="Phone" value={app.emergencyPhone} />
+            </div>
+          </div>
+
+          <div style={s.section}>
+            <div style={s.sectionTitle}>💼 Experience & Skills</div>
             <div style={s.detailGrid}>
               <DetailItem label="Years Experience" value={app.years} />
-              <DetailItem label="Preferred Hours" value={app.hours?.join(", ")} />
             </div>
-            <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Qualifications</div><div style={s.tagRow}>{app.quals?.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>
+            {app.settings?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Care Settings</div><div style={s.tagRow}>{app.settings.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
+            {app.clients?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Client Groups</div><div style={s.tagRow}>{app.clients.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
+            {app.quals?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Qualifications</div><div style={s.tagRow}>{app.quals.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
           </div>
+
           <div style={s.section}>
-            <div style={s.sectionTitle}>📋 Right to Work</div>
+            <div style={s.sectionTitle}>🛡️ DBS & Right to Work</div>
             <div style={s.detailGrid}>
-              <DetailItem label="Status" value={app.rtwStatus} />
-              <DetailItem label="Documents" value={app.docs?.join(", ")} />
+              <DetailItem label="Right to Work" value={app.rightToWork} />
+              <DetailItem label="RTW Status" value={app.rtwStatus} />
+              <DetailItem label="Has DBS" value={app.hasDbs} />
+              <DetailItem label="DBS Date" value={app.dbsDate} />
+              <DetailItem label="Update Service" value={app.updateService} />
+              <DetailItem label="Convictions" value={app.conviction} />
+              <DetailItem label="Proof of Address 1" value={app.proofAddress1} />
+              <DetailItem label="Proof of Address 2" value={app.proofAddress2} />
+              <DetailItem label="Employment Gaps" value={app.employmentGaps} />
+            </div>
+            {app.gapsExplanation && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Gaps Explanation</div><div style={{ fontSize: 13, color: "#1a1a2e", background: "#f8f5ff", borderRadius: 8, padding: "10px 14px", marginTop: 4 }}>{app.gapsExplanation}</div></div>}
+            {app.docs?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>RTW Documents Provided</div><div style={s.tagRow}>{app.docs.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
+          </div>
+
+          <div style={s.section}>
+            <div style={s.sectionTitle}>📁 Uploaded Documents</div>
+            <div style={s.tagRow}>
+              {app.cvURL ? <a href={app.cvURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📄 CV</a> : <span style={{ fontSize: 12, color: "#9b7fd4" }}>📄 CV — not uploaded</span>}
+              {app.passportURL ? <a href={app.passportURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🛂 Passport</a> : <span style={{ fontSize: 12, color: "#cc0000" }}>🛂 Passport — not uploaded</span>}
+              {app.rtwDocURL ? <a href={app.rtwDocURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📋 RTW Doc</a> : <span style={{ fontSize: 12, color: "#cc0000" }}>📋 RTW Doc — not uploaded</span>}
+              {app.poa1URL ? <a href={app.poa1URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 1</a> : <span style={{ fontSize: 12, color: "#9b7fd4" }}>🏠 Address 1 — not uploaded</span>}
+              {app.poa2URL ? <a href={app.poa2URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 2</a> : <span style={{ fontSize: 12, color: "#9b7fd4" }}>🏠 Address 2 — not uploaded</span>}
             </div>
           </div>
-          {(app.cvURL || app.poa1URL || app.poa2URL || app.rtwDocURL) && (
-            <div style={s.section}>
-              <div style={s.sectionTitle}>📁 Uploaded Documents</div>
-              <div style={s.tagRow}>
-                {app.cvURL && <a href={app.cvURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📄 CV</a>}
-                {app.poa1URL && <a href={app.poa1URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 1</a>}
-                {app.poa2URL && <a href={app.poa2URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 2</a>}
-                {app.rtwDocURL && <a href={app.rtwDocURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📋 Right to Work</a>}
-              </div>
+
+          <div style={s.section}>
+            <div style={s.sectionTitle}>💰 Bank Details</div>
+            <div style={s.detailGrid}>
+              <DetailItem label="Account Holder" value={app.bankName} />
+              <DetailItem label="Sort Code" value={app.sortCode} />
+              <DetailItem label="Account Number" value={app.accountNumber} />
             </div>
-          )}
+          </div>
+
           <div style={s.section}>
             <div style={s.sectionTitle}>⭐ References</div>
             {app.refs?.map((r, i) => (
               <div key={i} style={{ ...s.detailItem, marginBottom: 8 }}>
-                <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 600 }}>{r.name}</div>
-                <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.title} · {r.org}</div>
+                <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 600 }}>{r.name || "—"}</div>
+                <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.title}{r.title && r.org ? " · " : ""}{r.org}</div>
                 <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.email}</div>
+                <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.relation}</div>
               </div>
             ))}
           </div>
+
         </div>
         <div style={s.actionRow}>
           <button style={s.rejectBtn} onClick={() => { onReject(app.id); onClose(); }}>✕ Reject</button>
