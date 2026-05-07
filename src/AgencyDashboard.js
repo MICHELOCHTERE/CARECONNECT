@@ -383,6 +383,15 @@ export default function AgencyDashboard({ agency, onLogout }) {
     }
   };
 
+  const deleteApplication = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to permanently delete ${name}'s application? This cannot be undone.`)) return;
+    try {
+      await deleteDoc(doc(db, "applications", id));
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
   const stats = {
     total: applications.length,
     pending: applications.filter(a => a.status === "pending").length,
