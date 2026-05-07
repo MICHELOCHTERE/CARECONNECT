@@ -9,6 +9,64 @@ const STATUS_COLORS = {
 };
 const STATUS_LABELS = { pending: "⏳ Pending", approved: "✅ Approved", rejected: "❌ Rejected" };
 
+const PLAN_LIMITS = {
+  starter:    { maxApplications: 50,  analytics: false, multiAdmin: false, whiteLabel: false },
+  growth:     { maxApplications: -1,  analytics: true,  multiAdmin: true,  whiteLabel: false },
+  enterprise: { maxApplications: -1,  analytics: true,  multiAdmin: true,  whiteLabel: true  },
+  none:       { maxApplications: 0,   analytics: false, multiAdmin: false, whiteLabel: false },
+};
+
+const PLAN_LABELS = { starter: "Starter", growth: "Growth", enterprise: "Enterprise", none: "No Plan" };
+const PLAN_COLORS = { starter: "#f59e0b", growth: "#6C3FC5", enterprise: "#1a7a3a", none: "#cc0000" };
+
+function PlanBanner({ agency, applicationCount }) {
+  const plan = agency.plan || "none";
+  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.none;
+  const isStarter = plan === "starter";
+  const atLimit = isStarter && applicationCount >= limits.maxApplications;
+  const nearLimit = isStarter && applicationCount >= limits.maxApplications * 0.8;
+
+  return (
+    <div style={{ background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 12, padding: "14px 20px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ background: PLAN_COLORS[plan], borderRadius: 6, padding: "3px 10px", fontSize: 11, fontWeight: 700, color: "white", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          {PLAN_LABELS[plan]}
+        </div>
+        {isStarter && (
+          <div style={{ fontSize: 13, color: atLimit ? "#cc0000" : nearLimit ? "#f59e0b" : "#9b7fd4" }}>
+            {applicationCount} / {limits.maxApplications} applications used
+            {atLimit && " — limit reached!"}
+            {!atLimit && nearLimit && " — nearing limit"}
+          </div>
+        )}
+        {!isStarter && plan !== "none" && (
+          <div style={{ fontSize: 13, color: "#1a7a3a" }}>Unlimited applications</div>
+        )}
+      </div>
+      {(atLimit || nearLimit || plan === "none") && (
+        <a href="https://quikcare.co.uk/#pricing" style={{ padding: "8px 16px", background: "#6C3FC5", border: "none", borderRadius: 8, color: "white", fontSize: 12, fontWeight: 700, cursor: "pointer", textDecoration: "none" }}>
+          ⬆ Upgrade Plan
+        </a>
+      )}
+    </div>
+  );
+}
+
+function ApplicationLimitWall({ agency }) {
+  return (
+    <div style={{ textAlign: "center", padding: "60px 20px" }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+      <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1a1a2e", marginBottom: 8 }}>Application limit reached</div>
+      <div style={{ color: "#9b7fd4", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
+        Your Starter plan allows up to 50 applications.<br />Upgrade to Growth for unlimited applications and more features.
+      </div>
+      <a href="https://quikcare.co.uk/#pricing" style={{ display: "inline-block", padding: "14px 28px", background: "#6C3FC5", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>
+        Upgrade to Growth →
+      </a>
+    </div>
+  );
+}
+
 const s = {
   app: { minHeight: "100vh", background: "#f8f5ff", color: "#1a1a2e", fontFamily: "'DM Sans', sans-serif" },
   header: { background: "#ffffff", borderBottom: "1px solid #e8e0f5", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 },
@@ -261,6 +319,22 @@ export default function AgencyDashboard({ agency, onLogout }) {
       )}
 
       <div style={s.container}>
+        <PlanBanner agency={agency} applicationCount={applications.length} />
+        {(() => {
+          const plan = agency.plan || "none";
+          const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.none;
+          if (limits.maxApplications === 0) {
+            return (
+              <div style={{ textAlign: "center", padding: "60px 20px" }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1a1a2e", marginBottom: 8 }}>No active plan</div>
+                <div style={{ color: "#9b7fd4", fontSize: 14, marginBottom: 24 }}>Please purchase a plan to access your dashboard.</div>
+                <a href="https://quikcare.co.uk/#pricing" style={{ display: "inline-block", padding: "14px 28px", background: "#6C3FC5", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>View Plans →</a>
+              </div>
+            );
+          }
+          return null;
+        })()}
         <div style={s.applyLink}>
           <div>
             <div style={{ fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Your carer application link</div>
@@ -284,8 +358,26 @@ export default function AgencyDashboard({ agency, onLogout }) {
             </button>
           ))}
           <button style={s.exportBtn} onClick={() => exportCSV(filtered)}>⬇ Export CSV</button>
+          {(agency.plan === "growth" || agency.plan === "enterprise") && (
+            <div style={{ padding: "9px 14px", borderRadius: 8, background: "#e8f5eb", border: "1px solid #a3d9b1", color: "#1a7a3a", fontSize: 12, fontWeight: 600 }}>
+              📊 Analytics: ON
+            </div>
+          )}
+          {(!agency.plan || agency.plan === "starter" || agency.plan === "none") && (
+            <a href="https://quikcare.co.uk/#pricing" style={{ padding: "9px 14px", borderRadius: 8, background: "#f8f5ff", border: "1px solid #c5b3e8", color: "#9b7fd4", fontSize: 12, textDecoration: "none" }}>
+              🔒 Analytics (Upgrade)
+            </a>
+          )}
         </div>
 
+        {(() => {
+          const plan = agency.plan || "none";
+          const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.none;
+          if (limits.maxApplications > 0 && applications.length >= limits.maxApplications) {
+            return <ApplicationLimitWall agency={agency} />;
+          }
+          return null;
+        })()}
         <div style={{ background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 12, overflow: "hidden" }}>
           {loading ? <div style={s.loading}>Loading applications...</div> : (
             <table style={s.table}>
