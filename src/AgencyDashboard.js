@@ -66,7 +66,7 @@ function DetailItem({ label, value }) {
   );
 }
 
-function Modal({ app, onClose, onApprove, onReject }) {
+function Modal({ app, agency, onClose, onApprove, onReject }) {
   if (!app) return null;
   const downloadPDF = () => {
     const field = (label, value) => `<div class="field"><div class="label">${label}</div><div class="value">${value || '—'}</div></div>`;
@@ -115,7 +115,7 @@ function Modal({ app, onClose, onApprove, onReject }) {
           <p>Applied: ${app.appliedAt || '—'} &nbsp;|&nbsp; ${app.email || ''} &nbsp;|&nbsp; ${app.phone || ''}</p>
         </div>
         <div style="text-align:right">
-          <div class="logo">Quikcare</div>
+          <div class="logo">${agency?.agencyName || 'Quikcare'}</div>
           <div style="margin-top:8px"><span class="status status-${app.status || 'pending'}">${app.status || 'pending'}</span></div>
         </div>
       </div>
@@ -183,7 +183,7 @@ function Modal({ app, onClose, onApprove, onReject }) {
       </div>
 
       <div class="footer">
-        <span>Quikcare Recruitment Platform — quikcare.co.uk</span>
+        <span>${agency?.agencyName || 'Quikcare'} — Powered by Quikcare</span>
         <span>Generated: ${new Date().toLocaleDateString('en-GB')} &nbsp;|&nbsp; Application ID: ${app.id || '—'}</span>
       </div>
 
@@ -438,7 +438,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
         </div>
       </div>
 
-      <Modal app={selected} onClose={() => setSelected(null)} onApprove={(id) => updateStatus(id, "approved")} onReject={(id) => updateStatus(id, "rejected")} />
+      <Modal app={selected} agency={agency} onClose={() => setSelected(null)} onApprove={(id) => updateStatus(id, "approved")} onReject={(id) => updateStatus(id, "rejected")} />
     </div>
   );
 }
