@@ -19,7 +19,7 @@ Contact us about data protection:
 • Email: privacy@quikcare.co.uk
 • Website: quikcare.co.uk
 
-We are registered with the Information Commissioner's Office (ICO) as a data controller.`
+We are registered with the Information Commissioner's Office (ICO) as a data controller under UK GDPR and the Data Protection Act 2018.`
   },
   {
     id: "collect",
@@ -239,8 +239,8 @@ export default function PrivacyPolicy() {
         <div style={{ background: "#e8f5eb", border: "1px solid #a3d9b1", borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div style={{ fontSize: 24, flexShrink: 0 }}>✅</div>
           <div>
-            <div style={{ fontWeight: 700, color: "#1a7a3a", fontSize: 14, marginBottom: 4 }}>ICO Registered Data Controller</div>
-            <div style={{ color: "#1a7a3a", fontSize: 13, lineHeight: 1.6 }}>Quikcare is registered with the Information Commissioner's Office (ICO) as a data controller under the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.</div>
+            <div style={{ fontWeight: 700, color: "#1a7a3a", fontSize: 14, marginBottom: 4 }}>✅ ICO Registered Data Controller</div>
+            <div style={{ color: "#1a7a3a", fontSize: 13, lineHeight: 1.6 }}>Quikcare Ltd (Company No. 17206901) is registered with the Information Commissioner's Office (ICO) as a data controller under UK GDPR and the Data Protection Act 2018.</div>
           </div>
         </div>
       </div>
