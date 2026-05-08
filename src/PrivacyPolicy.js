@@ -12,10 +12,12 @@ const sections = [
     title: "Who We Are",
     content: `Quikcare is a care sector recruitment platform operated by Quikcare Ltd, registered in England and Wales. We connect care agencies with care workers seeking employment.
 
+Company Registration Number: 17206901
+Registered in England and Wales
+
 Contact us about data protection:
 • Email: privacy@quikcare.co.uk
 • Website: quikcare.co.uk
-• Address: United Kingdom
 
 We are registered with the Information Commissioner's Office (ICO) as a data controller.`
   },
