@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { db } from "./firebase";
-import { collection, onSnapshot, doc, updateDoc, orderBy, query } from "firebase/firestore";
+import { auth } from "./firebase";
 
 const STATUS_COLORS = {
   pending: { bg: "#2a3a1a", text: "#a8d060", border: "#4a6a2a" },
@@ -255,20 +254,45 @@ export default function AdminDashboard({ onLogout }) {
   const [selected, setSelected] = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
 
-  // Live listener — updates instantly when new applications come in
+  // Fetch applications securely via Admin API
   useEffect(() => {
-    const q = query(collection(db, "applications"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const apps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setApplications(apps);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    const fetchApplications = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) { setLoading(false); return; }
+        const token = await user.getIdToken();
+        const res = await fetch("/api/admin-applications", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setApplications(data.applications || []);
+      } catch (err) {
+        console.error("Failed to load applications:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+    // Poll every 30 seconds for new applications
+    const interval = setInterval(fetchApplications, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const updateStatus = async (id, status) => {
-    await updateDoc(doc(db, "applications", id), { status });
-    if (selected?.id === id) setSelected(prev => ({ ...prev, status }));
+    try {
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
+      await fetch("/api/admin-applications", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      setApplications(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      if (selected?.id === id) setSelected(prev => ({ ...prev, status }));
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
   };
 
   const stats = {
