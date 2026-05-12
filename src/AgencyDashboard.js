@@ -363,21 +363,23 @@ export default function AgencyDashboard({ agency, onLogout }) {
   const updateStatus = async (id, status) => {
     try {
       await updateDoc(doc(db, "applications", id), { status });
-      // Send email notification if emailjs is available
-      if (window.emailjs) {
-        const app = applications.find(a => a.id === id);
-        if (app) {
-          window.emailjs.send('QUIKCARE', 'template_as31vzw', {
-            carer_name: `${app.firstName || ''} ${app.lastName || ''}`,
-            carer_email: app.email || app.userEmail || '',
-            agency_name: agency.agencyName || 'Quikcare',
-            status: status === 'approved' ? 'approved' : 'unsuccessful',
-            status_message: status === 'approved'
-              ? 'Congratulations! Your application has been approved. The agency will be in touch shortly.'
-              : 'Thank you for applying. Unfortunately your application was not successful at this time.',
-          }, 'LD1-M8qPWz2Go1fM2').catch(e => console.log('Email failed:', e));
+      const app = applications.find(a => a.id === id);
+      if (app) {
+        const carerName = `${app.firstName || ''} ${app.lastName || ''}`.trim();
+        const carerEmail = app.email || app.userEmail || '';
+        if (carerEmail) {
+          fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: status === 'approved' ? 'carerApproved' : 'carerRejected',
+              data: { carerName, carerEmail, agencyName: agency.agencyName || 'Quikcare' }
+            })
+          }).catch(e => console.log('Status email failed:', e));
         }
       }
+      setApplications(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      if (selected?.id === id) setSelected(prev => ({ ...prev, status }));
     } catch (err) {
       console.log('Update error:', err);
     }

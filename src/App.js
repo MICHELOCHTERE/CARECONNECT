@@ -617,18 +617,54 @@ export default function App({ user, onLogout, agencySlug }) {
         appliedAt: new Date().toISOString().split("T")[0],
         createdAt: serverTimestamp()
       });
-      // Send email notifications (optional - never crashes the app)
+      // Send email notifications via Resend
       try {
-        if (window.emailjs) {
-          const emailParams = {
-            carer_name: `${p1.firstName || ''} ${p1.lastName || ''}`,
-            carer_email: p1.email || user?.email || '',
-            agency_name: agencySlug || 'Quikcare',
-            applied_at: new Date().toLocaleDateString('en-GB'),
-            to_email: p1.email || user?.email || '',
-          };
-          window.emailjs.send('QUIKCARE', 'template_60u7ckv', emailParams, 'LD1-M8qPWz2Go1fM2')
-            .catch(e => console.log('Email failed:', e));
+        const carerName = `${p1.firstName || ''} ${p1.lastName || ''}`.trim();
+        const carerEmail = p1.email || user?.email || '';
+        const appliedAt = new Date().toLocaleDateString('en-GB');
+
+        // 1. Send confirmation email to carer
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'carerConfirmation',
+            data: {
+              carerName,
+              carerEmail,
+              agencyName: agencySlug || 'Quikcare',
+              appliedAt,
+            }
+          })
+        }).catch(e => console.log('Carer email failed:', e));
+
+        // 2. Fetch agency email and notify agency
+        try {
+          const agencySlugDoc = await getDoc(doc(db, 'agencySlugs', agencySlug));
+          if (agencySlugDoc.exists()) {
+            const agencyUid = agencySlugDoc.data().uid;
+            const agencyDoc = await getDoc(doc(db, 'agencies', agencyUid));
+            if (agencyDoc.exists()) {
+              fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: 'agencyNotification',
+                  data: {
+                    carerName,
+                    carerEmail,
+                    carerPhone: p1.phone || '—',
+                    carerPostcode: p1.postcode || '—',
+                    agencyName: agencyDoc.data().agencyName || agencySlug,
+                    agencyEmail: agencyDoc.data().email,
+                    appliedAt,
+                  }
+                })
+              }).catch(e => console.log('Agency email failed:', e));
+            }
+          }
+        } catch (agencyEmailErr) {
+          console.log('Agency notification failed:', agencyEmailErr);
         }
       } catch (emailErr) {
         console.log('Email notification failed:', emailErr);
