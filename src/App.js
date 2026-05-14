@@ -755,6 +755,23 @@ export default function App({ user, onLogout, agencySlug }) {
           {current === 6 && <Step6 data={p6} set={setP6} />}
         </div>
 
+        {current === steps.length && (
+          <div style={{ background: "#f0ebff", border: `1px solid ${consent ? "#6C3FC5" : "#cc0000"}`, borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={e => setConsent(e.target.checked)}
+                style={{ marginTop: 3, width: 18, height: 18, accentColor: "#6C3FC5", flexShrink: 0, cursor: "pointer" }}
+              />
+              <span style={{ fontSize: 13, color: "#1a1a2e", lineHeight: 1.7 }}>
+                <strong>Data Protection Consent</strong> — I consent to Quikcare Ltd and the recruiting agency collecting and processing my personal data for employment assessment purposes in accordance with UK GDPR. I understand my data will be held securely and I have the right to request deletion by contacting <a href="mailto:privacy@quikcare.co.uk" style={{ color: "#6C3FC5" }}>privacy@quikcare.co.uk</a>. I confirm all information provided is accurate. <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: "#6C3FC5" }}>Read Privacy Policy →</a>
+              </span>
+            </label>
+            {!consent && <p style={{ color: "#cc0000", fontSize: 12, marginTop: 8, marginLeft: 30 }}>⚠️ You must agree to this before submitting</p>}
+          </div>
+        )}
+
         <div style={s.navRow}>
           <button style={{ ...s.btnBack, opacity: current === 1 ? 0.3 : 1 }} disabled={current === 1} onClick={() => { setErrors([]); setCurrent(current - 1); }}>← Back</button>
           <button style={{ ...s.btnNext, opacity: submitting ? 0.6 : 1 }} disabled={submitting} onClick={handleNext}>
