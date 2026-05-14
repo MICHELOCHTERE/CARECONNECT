@@ -638,34 +638,22 @@ export default function App({ user, onLogout, agencySlug }) {
           })
         }).catch(e => console.log('Carer email failed:', e));
 
-        // 2. Fetch agency email and notify agency
-        try {
-          const agencySlugDoc = await getDoc(doc(db, 'agencySlugs', agencySlug));
-          if (agencySlugDoc.exists()) {
-            const agencyUid = agencySlugDoc.data().uid;
-            const agencyDoc = await getDoc(doc(db, 'agencies', agencyUid));
-            if (agencyDoc.exists()) {
-              fetch('/api/send-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  type: 'agencyNotification',
-                  data: {
-                    carerName,
-                    carerEmail,
-                    carerPhone: p1.phone || '—',
-                    carerPostcode: p1.postcode || '—',
-                    agencyName: agencyDoc.data().agencyName || agencySlug,
-                    agencyEmail: agencyDoc.data().email,
-                    appliedAt,
-                  }
-                })
-              }).catch(e => console.log('Agency email failed:', e));
+        // 2. Notify agency — server fetches agency email securely
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'agencyNotification',
+            data: {
+              carerName,
+              carerEmail,
+              carerPhone: p1.phone || '—',
+              carerPostcode: p1.postcode || '—',
+              agencySlug: agencySlug || 'quikcare',
+              appliedAt,
             }
-          }
-        } catch (agencyEmailErr) {
-          console.log('Agency notification failed:', agencyEmailErr);
-        }
+          })
+        }).catch(e => console.log('Agency email failed:', e));
       } catch (emailErr) {
         console.log('Email notification failed:', emailErr);
       }

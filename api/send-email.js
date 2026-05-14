@@ -1,8 +1,21 @@
 const { Resend } = require('resend');
+const { initializeApp, cert, getApps } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
 const FROM_EMAIL = 'hello@quikcare.co.uk';
+
+// Initialize Firebase Admin
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+}
+const db = getFirestore();
 
 const templates = {
   // Email to carer confirming submission
@@ -164,7 +177,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    const emailData = template(data);
+    // For agency notifications, fetch agency email from Firestore server-side
+    let emailData;
+    if (type === 'agencyNotification') {
+      const agencySlug = data.agencySlug;
+      if (agencySlug && !data.agencyEmail) {
+        try {
+          const slugDoc = await db.collection('agencySlugs').doc(agencySlug).get();
+          if (slugDoc.exists) {
+            const agencyUid = slugDoc.data().uid;
+            const agencyDoc = await db.collection('agencies').doc(agencyUid).get();
+            if (agencyDoc.exists) {
+              data.agencyEmail = agencyDoc.data().email;
+              data.agencyName = agencyDoc.data().agencyName || agencySlug;
+            }
+          }
+        } catch (fetchErr) {
+          console.error('Failed to fetch agency email:', fetchErr);
+        }
+      }
+      if (!data.agencyEmail) {
+        return res.status(400).json({ error: 'Could not find agency email' });
+      }
+    }
+    emailData = template(data);
     const result = await resend.emails.send(emailData);
     return res.status(200).json({ success: true, id: result.id });
   } catch (err) {
