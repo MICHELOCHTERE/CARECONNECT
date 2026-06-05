@@ -64,7 +64,7 @@ function PaymentRequired({ onBack, onEmailVerify }) {
     <div style={s.wrap}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
       <div style={{ ...s.box, textAlign: "center" }}>
-        <div style={s.logo} onClick={() => window.location.href = "/"} style={{ cursor: "pointer", justifyContent: "center", marginBottom: 24 }}>
+        <div style={{ ...s.logo, cursor: "pointer", justifyContent: "center", marginBottom: 24 }} onClick={() => window.location.href = "/"}>
           <div style={s.logoIcon}>Q</div>
           <span style={s.logoText}>Quikcare</span>
         </div>
