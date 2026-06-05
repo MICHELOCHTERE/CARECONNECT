@@ -44,7 +44,7 @@ function PaymentRequired({ onBack }) {
 
 export default function AgencyRegister({ onAuth, onBack, onLogin }) {
   const params = new URLSearchParams(window.location.search);
-  const sessionId = params.get("session_id");
+  const paid = params.get("paid");
   const plan = params.get("plan") || "starter";
 
   const [agencyName, setAgencyName] = useState("");
@@ -53,40 +53,10 @@ export default function AgencyRegister({ onAuth, onBack, onLogin }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sessionVerified, setSessionVerified] = useState(false);
-  const [verifying, setVerifying] = useState(!!sessionId);
 
   const slug = slugify(agencyName);
 
-  // Verify the Stripe session on mount
-  React.useEffect(() => {
-    if (!sessionId) return;
-    setVerifying(true);
-    fetch(`/api/verify-session?session_id=${sessionId}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.valid) {
-          setSessionVerified(true);
-          if (data.email) setEmail(data.email);
-        }
-        setVerifying(false);
-      })
-      .catch(() => setVerifying(false));
-  }, [sessionId]);
-
-  if (verifying) {
-    return (
-      <div style={s.wrap}>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-        <div style={{ color: "#6C3FC5", fontSize: 16, textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>⏳</div>
-          <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22 }}>Verifying payment...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!sessionId || !sessionVerified) {
+  if (paid !== "true") {
     return <PaymentRequired onBack={onBack} />;
   }
 
@@ -119,8 +89,10 @@ export default function AgencyRegister({ onAuth, onBack, onLogin }) {
 
       onAuth(result.user, slug);
     } catch (err) {
-      console.error("Registration error:", err);
-      if (err.code === "auth/email-already-in-use") setError("An account already exists with this email. Please log in instead.");
+      if (err.code === "auth/email-already-in-use") {
+        setError("You already have a Quikcare account with this email. Redirecting you to login...");
+        setTimeout(() => onLogin(), 2500);
+      }
       else if (err.code === "auth/weak-password") setError("Password is too weak. Please use at least 6 characters.");
       else if (err.code === "auth/invalid-email") setError("Invalid email address.");
       else setError(`Registration failed: ${err.message}`);
@@ -145,7 +117,21 @@ export default function AgencyRegister({ onAuth, onBack, onLogin }) {
         <div style={s.title}>Create your agency account</div>
         <div style={s.sub}>Set up your Quikcare recruitment platform</div>
 
-        {error && <div style={s.error}>⚠️ {error}</div>}
+        {error && (
+          <div style={s.error}>
+            ⚠️ {error}
+            {error.includes("already have") && (
+              <div style={{ marginTop: 10 }}>
+                <button
+                  style={{ background: "#6C3FC5", border: "none", borderRadius: 6, padding: "8px 16px", color: "white", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  onClick={onLogin}
+                >
+                  Log In to Your Account →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <label style={s.label}>Agency Name</label>
         <input style={s.input} placeholder="e.g. Sunrise Care" value={agencyName} onChange={e => setAgencyName(e.target.value)} />
