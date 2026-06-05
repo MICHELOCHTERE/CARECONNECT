@@ -80,6 +80,8 @@ function PricingCard({ plan, index }) {
       });
       const data = await res.json();
       if (data.url) {
+        // Store plan in sessionStorage in case redirect fails after 3D Secure
+        sessionStorage.setItem('qk_pending_plan', plan.id);
         window.location.href = data.url;
       } else {
         alert("Something went wrong. Please try again.");
@@ -332,6 +334,16 @@ export default function LandingPage({ onGetStarted, onLogin }) {
             {PLANS.map((plan, i) => <PricingCard key={i} plan={plan} index={i} />)}
           </div>
         </div>
+      </div>
+
+      {/* Already paid banner */}
+      <div style={{ background: "#f0ebff", borderTop: "1px solid #e8e0f5", padding: "20px 24px", textAlign: "center" }}>
+        <span style={{ color: "#6C3FC5", fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>
+          Already paid but didn't get redirected? &nbsp;
+          <a href="/agency/register" style={{ color: "#6C3FC5", fontWeight: 700, textDecoration: "underline" }}>
+            Complete your registration here →
+          </a>
+        </span>
       </div>
 
       {/* FAQ */}
