@@ -486,6 +486,31 @@ export default function App({ user, onLogout, agencySlug }) {
   const [consent, setConsent] = useState(false);
 
   const [saveStatus, setSaveStatus] = useState("");
+  const [existingApp, setExistingApp] = useState(null);
+  const [checkingExisting, setCheckingExisting] = useState(true);
+
+  // Check if carer already applied to THIS agency
+  useEffect(() => {
+    const checkExisting = async () => {
+      if (!user?.uid || !agencySlug) { setCheckingExisting(false); return; }
+      try {
+        const { getDocs, query, collection, where } = await import("firebase/firestore");
+        const q = query(
+          collection(db, "applications"),
+          where("userId", "==", user.uid),
+          where("agencySlug", "==", agencySlug)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          setExistingApp({ id: snap.docs[0].id, ...snap.docs[0].data() });
+        }
+      } catch (err) {
+        console.error("Failed to check existing application:", err);
+      }
+      setCheckingExisting(false);
+    };
+    checkExisting();
+  }, [user?.uid, agencySlug]);
 
   // Load saved progress when app opens
   useEffect(() => {
@@ -503,8 +528,8 @@ export default function App({ user, onLogout, agencySlug }) {
           if (data.p5) setP5(data.p5);
           if (data.p6) setP6(data.p6);
           if (data.current) setCurrent(data.current);
-          setSaveStatus("Progress loaded ✓");
-          setTimeout(() => setSaveStatus(""), 3000);
+          setSaveStatus("✅ Welcome back! Your progress has been restored.");
+          setTimeout(() => setSaveStatus(""), 4000);
         }
       } catch (err) {
         console.error("Failed to load progress:", err);
@@ -667,6 +692,61 @@ export default function App({ user, onLogout, agencySlug }) {
     }
     setSubmitting(false);
   };
+
+  // Show loading while checking
+  if (checkingExisting) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, color: "white", fontFamily: "serif", margin: "0 auto 16px" }}>Q</div>
+          <div style={{ color: "#6C3FC5", fontSize: 16 }}>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show existing application status if already applied to this agency
+  if (existingApp) {
+    const statusColors = {
+      pending: { bg: "#f5f0ff", color: "#6C3FC5", border: "#c5b3e8", label: "⏳ Pending Review" },
+      approved: { bg: "#e8f5eb", color: "#1a7a3a", border: "#a3d9b1", label: "✅ Approved" },
+      rejected: { bg: "#fff0f0", color: "#cc0000", border: "#ffb3b3", label: "❌ Unsuccessful" },
+    };
+    const sc = statusColors[existingApp.status] || statusColors.pending;
+    return (
+      <div style={{ minHeight: "100vh", background: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "'DM Sans', sans-serif" }}>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+        <div style={{ background: "white", border: "1px solid #e8e0f5", borderRadius: 16, padding: 40, width: "100%", maxWidth: 480, textAlign: "center" }}>
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700, color: "white", fontFamily: "serif", margin: "0 auto 16px" }}>Q</div>
+          <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: "#1a1a2e", marginBottom: 8 }}>Application Status</div>
+          <div style={{ color: "#9b7fd4", fontSize: 13, marginBottom: 24 }}>You have already applied to <strong>{agencySlug}</strong></div>
+
+          <div style={{ background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 12, padding: "20px", marginBottom: 24 }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>
+              {existingApp.status === "approved" ? "🎉" : existingApp.status === "rejected" ? "📋" : "⏳"}
+            </div>
+            <div style={{ color: sc.color, fontWeight: 700, fontSize: 18, marginBottom: 4 }}>{sc.label}</div>
+            <div style={{ color: sc.color, fontSize: 13 }}>
+              {existingApp.status === "approved" && "Congratulations! The agency will be in touch shortly with next steps."}
+              {existingApp.status === "rejected" && "Thank you for applying. Unfortunately your application was not successful at this time."}
+              {existingApp.status === "pending" && "Your application is being reviewed. We'll notify you by email of any updates."}
+            </div>
+          </div>
+
+          <div style={{ background: "#f8f5ff", borderRadius: 10, padding: "14px 18px", marginBottom: 24, textAlign: "left" }}>
+            <div style={{ fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Application Details</div>
+            <div style={{ fontSize: 13, color: "#1a1a2e" }}><strong>Name:</strong> {existingApp.firstName} {existingApp.lastName}</div>
+            <div style={{ fontSize: 13, color: "#1a1a2e", marginTop: 4 }}><strong>Applied to:</strong> {agencySlug}</div>
+            <div style={{ fontSize: 13, color: "#1a1a2e", marginTop: 4 }}><strong>Applied on:</strong> {existingApp.appliedAt || "—"}</div>
+          </div>
+
+          <button onClick={onLogout} style={{ width: "100%", padding: "13px", background: "transparent", border: "1px solid #c5b3e8", borderRadius: 8, color: "#9b7fd4", fontSize: 14, cursor: "pointer" }}>
+            Sign Out
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
