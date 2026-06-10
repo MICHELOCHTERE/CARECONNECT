@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
-import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, orderBy, query, where } from "firebase/firestore";
 
 const STATUS_COLORS = {
   pending: { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
@@ -66,145 +66,14 @@ function DetailItem({ label, value }) {
   );
 }
 
-function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
+function Modal({ app, onClose, onApprove, onReject }) {
   if (!app) return null;
   const downloadPDF = () => {
-    const field = (label, value) => `<div class="field"><div class="label">${label}</div><div class="value">${value || '—'}</div></div>`;
-    const section = (title, fields) => `<div class="section"><h2>${title}</h2><div class="grid">${fields}</div></div>`;
-    const tags = (arr) => arr?.length ? arr.map(t => `<span class="tag">${t}</span>`).join('') : '—';
-
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${app.firstName} ${app.lastName} — Application</title>
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: Arial, sans-serif; color: #1a1a2e; font-size: 13px; line-height: 1.5; }
-      .page { padding: 32px 40px; max-width: 900px; margin: 0 auto; }
-      .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #6C3FC5; padding-bottom: 16px; margin-bottom: 24px; }
-      .header-left h1 { font-size: 24px; color: #6C3FC5; margin-bottom: 4px; }
-      .header-left p { color: #9b7fd4; font-size: 12px; }
-      .status { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-      .status-pending { background: #f5f0ff; color: #6C3FC5; border: 1px solid #c5b3e8; }
-      .status-approved { background: #e8f5eb; color: #1a7a3a; border: 1px solid #a3d9b1; }
-      .status-rejected { background: #fff0f0; color: #cc0000; border: 1px solid #ffb3b3; }
-      .logo { font-size: 20px; font-weight: 700; color: #6C3FC5; }
-      .section { margin-bottom: 20px; page-break-inside: avoid; }
-      h2 { font-size: 11px; color: #6C3FC5; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #e8e0f5; padding-bottom: 6px; margin-bottom: 10px; font-weight: 700; }
-      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-      .field { background: #f8f5ff; padding: 8px 12px; border-radius: 6px; }
-      .field.full { grid-column: 1 / -1; }
-      .label { font-size: 9px; color: #9b7fd4; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
-      .value { font-size: 12px; color: #1a1a2e; }
-      .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-      .tag { background: #f0ebff; border: 1px solid #e8e0f5; border-radius: 999px; padding: 2px 8px; font-size: 11px; color: #6C3FC5; }
-      .docs-section { background: #f8f5ff; border-radius: 8px; padding: 12px 16px; margin-top: 8px; }
-      .doc-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #e8e0f5; font-size: 12px; }
-      .doc-row:last-child { border-bottom: none; }
-      .doc-link { color: #6C3FC5; font-size: 11px; }
-      .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e8e0f5; display: flex; justify-content: space-between; font-size: 10px; color: #9b7fd4; }
-      @media print {
-        body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-        .page { padding: 16px 24px; }
-        .section { page-break-inside: avoid; }
-      }
-    </style></head>
-    <body><div class="page">
-
-      <div class="header">
-        <div class="header-left">
-          <h1>${app.firstName || ''} ${app.lastName || ''}</h1>
-          <p>Applied: ${app.appliedAt || '—'} &nbsp;|&nbsp; ${app.email || ''} &nbsp;|&nbsp; ${app.phone || ''}</p>
-        </div>
-        <div style="text-align:right">
-          <div class="logo">${agency?.agencyName || 'Quikcare'}</div>
-          <div style="margin-top:8px"><span class="status status-${app.status || 'pending'}">${app.status || 'pending'}</span></div>
-        </div>
-      </div>
-
-      ${section('👤 Personal Details', `
-        ${field('First Name', app.firstName)}
-        ${field('Last Name', app.lastName)}
-        ${field('Date of Birth', app.dob)}
-        ${field('Gender', app.gender)}
-        ${field('Nationality', app.nationality)}
-        ${field('Religion', app.religion)}
-        ${field('NI Number', app.niNumber)}
-        ${field('Email', app.email)}
-        ${field('Phone', app.phone)}
-        ${field('Postcode', app.postcode)}
-        ${field('Driving Licence', app.driving)}
-        ${field('Languages', app.languages?.join(', '))}
-      `)}
-
-      ${section('🆘 Emergency Contact', `
-        ${field('Name', app.emergencyName)}
-        ${field('Relationship', app.emergencyRelation)}
-        ${field('Phone', app.emergencyPhone)}
-      `)}
-
-      ${section('💼 Experience & Qualifications', `
-        ${field('Years of Experience', app.years)}
-        <div class="field full"><div class="label">Care Settings</div><div class="tags">${tags(app.settings)}</div></div>
-        <div class="field full"><div class="label">Client Groups</div><div class="tags">${tags(app.clients)}</div></div>
-        <div class="field full"><div class="label">Qualifications</div><div class="tags">${tags(app.quals)}</div></div>
-      `)}
-
-      ${section('🛡️ DBS & Right to Work', `
-        ${field('Right to Work', app.rightToWork)}
-        ${field('RTW Status', app.rtwStatus)}
-        ${field('Has DBS', app.hasDbs)}
-        ${field('DBS Date', app.dbsDate)}
-        ${field('DBS Update Service', app.updateService)}
-        ${field('Convictions', app.conviction)}
-        ${field('Proof of Address 1', app.proofAddress1)}
-        ${field('Proof of Address 2', app.proofAddress2)}
-        ${field('Employment Continuity Check', app.employmentGaps)}
-        <div class="field full"><div class="label">RTW Documents Provided</div><div class="tags">${tags(app.docs)}</div></div>
-        <div class="field full"><div class="label">Gaps Explanation</div><div class="value">${app.gapsExplanation || '—'}</div></div>
-      `)}
-
-      ${section('💰 Bank Details', `
-        ${field('Account Holder', app.bankName)}
-        ${field('Sort Code', app.sortCode)}
-        ${field('Account Number', app.accountNumber)}
-      `)}
-
-      <div class="section"><h2>📋 References</h2>
-        ${(app.refs || []).map((r, i) => `
-          <div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;margin-bottom:8px">
-            <div style="font-weight:700;color:#6C3FC5;margin-bottom:6px">Reference ${i+1}</div>
-            <div class="grid">
-              ${field('Name', r.name)}
-              ${field('Job Title', r.title)}
-              ${field('Organisation', r.org)}
-              ${field('Email', r.email)}
-              ${field('Relationship', r.relation)}
-            </div>
-          </div>
-        `).join('')}
-      </div>
-
-      <div class="section">
-        <h2>📎 Uploaded Documents</h2>
-        <div class="docs-section">
-          ${app.cvURL ? `<div class="doc-row">📄 CV / Resume &nbsp;<a class="doc-link" href="${app.cvURL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#9b7fd4">📄 CV — not uploaded</div>'}
-          ${app.passportURL ? `<div class="doc-row">🛂 Passport &nbsp;<a class="doc-link" href="${app.passportURL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#cc0000">🛂 Passport — not uploaded</div>'}
-          ${app.rtwDocURL ? `<div class="doc-row">📋 Right to Work Doc &nbsp;<a class="doc-link" href="${app.rtwDocURL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#cc0000">📋 Right to Work Doc — not uploaded</div>'}
-          ${app.poa1URL ? `<div class="doc-row">🏠 Proof of Address 1 &nbsp;<a class="doc-link" href="${app.poa1URL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#9b7fd4">🏠 Proof of Address 1 — not uploaded</div>'}
-          ${app.poa2URL ? `<div class="doc-row">🏠 Proof of Address 2 &nbsp;<a class="doc-link" href="${app.poa2URL}" target="_blank">View Document</a></div>` : '<div class="doc-row" style="color:#9b7fd4">🏠 Proof of Address 2 — not uploaded</div>'}
-        </div>
-      </div>
-
-      <div class="footer">
-        <span>${agency?.agencyName || 'Quikcare'} — Powered by Quikcare</span>
-        <span>Generated: ${new Date().toLocaleDateString('en-GB')} &nbsp;|&nbsp; Application ID: ${app.id || '—'}</span>
-      </div>
-
-    </div></body></html>`;
-
+    const html = `<html><head><style>body{font-family:Arial,sans-serif;padding:40px;color:#1a1a2e}h1{color:#6C3FC5}h2{color:#6C3FC5;font-size:14px;border-bottom:1px solid #e8e0f5;padding-bottom:6px;margin-top:24px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.field{background:#f8f5ff;padding:10px 14px;border-radius:6px}.label{font-size:10px;color:#9b7fd4;text-transform:uppercase}.value{font-size:13px;color:#1a1a2e;margin-top:2px}</style></head><body><h1>${app.firstName} ${app.lastName}</h1><p>Applied: ${app.appliedAt} | Status: ${app.status}</p><h2>Personal Details</h2><div class="grid"><div class="field"><div class="label">Email</div><div class="value">${app.email||'—'}</div></div><div class="field"><div class="label">Phone</div><div class="value">${app.phone||'—'}</div></div><div class="field"><div class="label">NI Number</div><div class="value">${app.niNumber||'—'}</div></div><div class="field"><div class="label">Driving</div><div class="value">${app.driving||'—'}</div></div></div><h2>Experience</h2><div class="grid"><div class="field"><div class="label">Years</div><div class="value">${app.years||'—'}</div></div><div class="field"><div class="label">Qualifications</div><div class="value">${app.quals?.join(', ')||'—'}</div></div></div><p style="margin-top:40px;font-size:11px;color:#9b7fd4">Quikcare Recruitment — quikcare.co.uk</p></body></html>`;
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
-    setTimeout(() => win.print(), 500);
+    win.print();
   };
   return (
     <div style={s.modal} onClick={onClose}>
@@ -220,105 +89,60 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
           </div>
         </div>
         <div style={s.modalBody}>
-
           <div style={s.section}>
             <div style={s.sectionTitle}>👤 Personal Details</div>
             <div style={s.detailGrid}>
-              <DetailItem label="First Name" value={app.firstName} />
-              <DetailItem label="Last Name" value={app.lastName} />
               <DetailItem label="Email" value={app.email} />
               <DetailItem label="Phone" value={app.phone} />
               <DetailItem label="Date of Birth" value={app.dob} />
               <DetailItem label="NI Number" value={app.niNumber} />
-              <DetailItem label="Postcode" value={app.postcode} />
               <DetailItem label="Driving Licence" value={app.driving} />
               <DetailItem label="Nationality" value={app.nationality} />
               <DetailItem label="Gender" value={app.gender} />
-              <DetailItem label="Religion" value={app.religion} />
               <DetailItem label="Languages" value={app.languages?.join(", ")} />
             </div>
           </div>
-
           <div style={s.section}>
-            <div style={s.sectionTitle}>🆘 Emergency Contact</div>
-            <div style={s.detailGrid}>
-              <DetailItem label="Name" value={app.emergencyName} />
-              <DetailItem label="Relationship" value={app.emergencyRelation} />
-              <DetailItem label="Phone" value={app.emergencyPhone} />
-            </div>
-          </div>
-
-          <div style={s.section}>
-            <div style={s.sectionTitle}>💼 Experience & Skills</div>
+            <div style={s.sectionTitle}>💼 Experience</div>
             <div style={s.detailGrid}>
               <DetailItem label="Years Experience" value={app.years} />
+              <DetailItem label="Preferred Hours" value={app.hours?.join(", ")} />
             </div>
-            {app.settings?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Care Settings</div><div style={s.tagRow}>{app.settings.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
-            {app.clients?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Client Groups</div><div style={s.tagRow}>{app.clients.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
-            {app.quals?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Qualifications</div><div style={s.tagRow}>{app.quals.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
+            <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Qualifications</div><div style={s.tagRow}>{app.quals?.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>
           </div>
-
           <div style={s.section}>
-            <div style={s.sectionTitle}>🛡️ DBS & Right to Work</div>
+            <div style={s.sectionTitle}>📋 Right to Work</div>
             <div style={s.detailGrid}>
-              <DetailItem label="Right to Work" value={app.rightToWork} />
-              <DetailItem label="RTW Status" value={app.rtwStatus} />
-              <DetailItem label="Has DBS" value={app.hasDbs} />
-              <DetailItem label="DBS Date" value={app.dbsDate} />
-              <DetailItem label="Update Service" value={app.updateService} />
-              <DetailItem label="Convictions" value={app.conviction} />
-              <DetailItem label="Proof of Address 1" value={app.proofAddress1} />
-              <DetailItem label="Proof of Address 2" value={app.proofAddress2} />
-              <DetailItem label="Employment Continuity Check" value={app.employmentGaps} />
-            </div>
-            {app.gapsExplanation && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Gaps Explanation</div><div style={{ fontSize: 13, color: "#1a1a2e", background: "#f8f5ff", borderRadius: 8, padding: "10px 14px", marginTop: 4 }}>{app.gapsExplanation}</div></div>}
-            {app.docs?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>RTW Documents Provided</div><div style={s.tagRow}>{app.docs.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
-          </div>
-
-          <div style={s.section}>
-            <div style={s.sectionTitle}>📁 Uploaded Documents</div>
-            <div style={s.tagRow}>
-              {app.cvURL ? <a href={app.cvURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📄 CV</a> : <span style={{ fontSize: 12, color: "#9b7fd4" }}>📄 CV — not uploaded</span>}
-              {app.passportURL ? <a href={app.passportURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🛂 Passport</a> : <span style={{ fontSize: 12, color: "#cc0000" }}>🛂 Passport — not uploaded</span>}
-              {app.rtwDocURL ? <a href={app.rtwDocURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📋 RTW Doc</a> : <span style={{ fontSize: 12, color: "#cc0000" }}>📋 RTW Doc — not uploaded</span>}
-              {app.poa1URL ? <a href={app.poa1URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 1</a> : <span style={{ fontSize: 12, color: "#9b7fd4" }}>🏠 Address 1 — not uploaded</span>}
-              {app.poa2URL ? <a href={app.poa2URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 2</a> : <span style={{ fontSize: 12, color: "#9b7fd4" }}>🏠 Address 2 — not uploaded</span>}
+              <DetailItem label="Status" value={app.rtwStatus} />
+              <DetailItem label="Documents" value={app.docs?.join(", ")} />
             </div>
           </div>
-
-          <div style={s.section}>
-            <div style={s.sectionTitle}>💰 Bank Details</div>
-            <div style={s.detailGrid}>
-              <DetailItem label="Account Holder" value={app.bankName} />
-              <DetailItem label="Sort Code" value={app.sortCode} />
-              <DetailItem label="Account Number" value={app.accountNumber} />
+          {(app.cvURL || app.poa1URL || app.poa2URL || app.rtwDocURL) && (
+            <div style={s.section}>
+              <div style={s.sectionTitle}>📁 Uploaded Documents</div>
+              <div style={s.tagRow}>
+                {app.cvURL && <a href={app.cvURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📄 CV</a>}
+                {app.poa1URL && <a href={app.poa1URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 1</a>}
+                {app.poa2URL && <a href={app.poa2URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 2</a>}
+                {app.rtwDocURL && <a href={app.rtwDocURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📋 Right to Work</a>}
+              </div>
             </div>
-          </div>
-
+          )}
           <div style={s.section}>
             <div style={s.sectionTitle}>⭐ References</div>
             {app.refs?.map((r, i) => (
               <div key={i} style={{ ...s.detailItem, marginBottom: 8 }}>
-                <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 600 }}>{r.name || "—"}</div>
-                <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.title}{r.title && r.org ? " · " : ""}{r.org}</div>
+                <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 600 }}>{r.name}</div>
+                <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.title} · {r.org}</div>
                 <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.email}</div>
-                <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.relation}</div>
               </div>
             ))}
           </div>
-
         </div>
         <div style={s.actionRow}>
           <button style={s.rejectBtn} onClick={() => { onReject(app.id); onClose(); }}>✕ Reject</button>
           <button style={s.pdfBtn} onClick={downloadPDF}>📄 PDF</button>
           <button style={s.approveBtn} onClick={() => { onApprove(app.id); onClose(); }}>✓ Approve</button>
-        </div>
-        <div style={{ padding: "12px 24px", borderTop: "1px solid #f0ebff", background: "#fff8f8", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 11, color: "#9b7fd4" }}>🔒 GDPR: Right to Erasure</span>
-          <button style={{ background: "none", border: "1px solid #ffb3b3", borderRadius: 6, padding: "6px 14px", color: "#cc0000", fontSize: 12, cursor: "pointer" }}
-            onClick={() => { onDelete(app.id, `${app.firstName} ${app.lastName}`); onClose(); }}>
-            🗑 Delete Application Data
-          </button>
         </div>
       </div>
     </div>
@@ -363,34 +187,23 @@ export default function AgencyDashboard({ agency, onLogout }) {
   const updateStatus = async (id, status) => {
     try {
       await updateDoc(doc(db, "applications", id), { status });
-      const app = applications.find(a => a.id === id);
-      if (app) {
-        const carerName = `${app.firstName || ''} ${app.lastName || ''}`.trim();
-        const carerEmail = app.email || app.userEmail || '';
-        if (carerEmail) {
-          fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: status === 'approved' ? 'carerApproved' : 'carerRejected',
-              data: { carerName, carerEmail, agencyName: agency.agencyName || 'Quikcare' }
-            })
-          }).catch(e => console.log('Status email failed:', e));
+      // Send email notification if emailjs is available
+      if (window.emailjs) {
+        const app = applications.find(a => a.id === id);
+        if (app) {
+          window.emailjs.send('QUIKCARE', 'template_as31vzw', {
+            carer_name: `${app.firstName || ''} ${app.lastName || ''}`,
+            carer_email: app.email || app.userEmail || '',
+            agency_name: agency.agencyName || 'Quikcare',
+            status: status === 'approved' ? 'approved' : 'unsuccessful',
+            status_message: status === 'approved'
+              ? 'Congratulations! Your application has been approved. The agency will be in touch shortly.'
+              : 'Thank you for applying. Unfortunately your application was not successful at this time.',
+          }, 'LD1-M8qPWz2Go1fM2').catch(e => console.log('Email failed:', e));
         }
       }
-      setApplications(prev => prev.map(a => a.id === id ? { ...a, status } : a));
-      if (selected?.id === id) setSelected(prev => ({ ...prev, status }));
     } catch (err) {
       console.log('Update error:', err);
-    }
-  };
-
-  const deleteApplication = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to permanently delete ${name}'s application? This cannot be undone.`)) return;
-    try {
-      await deleteDoc(doc(db, "applications", id));
-    } catch (err) {
-      console.error("Delete error:", err);
     }
   };
 
@@ -448,12 +261,50 @@ export default function AgencyDashboard({ agency, onLogout }) {
       )}
 
       <div style={s.container}>
-        <div style={s.applyLink}>
-          <div>
-            <div style={{ fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Your carer application link</div>
-            <div style={s.applyLinkText}>🔗 https://{applyLink}</div>
+        {/* Share Your Link Section */}
+        <div style={{ background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 12, padding: "20px", marginBottom: 20 }}>
+          <div style={{ fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>📤 Share Your Application Link</div>
+
+          <div style={{ background: "#f8f5ff", border: "1px solid #e8e0f5", borderRadius: 8, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+            <div style={{ color: "#6C3FC5", fontSize: 14, fontWeight: 600 }}>🔗 https://{applyLink}</div>
+            <button style={s.copyBtn} onClick={copyLink}>{copied ? "✓ Copied!" : "Copy Link"}</button>
           </div>
-          <button style={s.copyBtn} onClick={copyLink}>{copied ? "Copied! ✓" : "Copy Link"}</button>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+            <a href={`https://wa.me/?text=${encodeURIComponent("Hi! We're hiring care workers. Apply to join our team here: https://" + applyLink)}`}
+              target="_blank" rel="noreferrer"
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#25D366", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+              📱 WhatsApp
+            </a>
+            <a href={`mailto:?subject=Apply to join our care team&body=Hi,%0D%0A%0D%0AWe are currently recruiting care workers. Please apply using the link below:%0D%0A%0D%0Ahttps://${applyLink}%0D%0A%0D%0AKind regards,%0D%0A${agency.agencyName}`}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#6C3FC5", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+              📧 Email
+            </a>
+            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://" + applyLink)}`}
+              target="_blank" rel="noreferrer"
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#1877F2", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+              📘 Facebook
+            </a>
+            <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://" + applyLink)}`}
+              target="_blank" rel="noreferrer"
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#0A66C2", borderRadius: 8, color: "white", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+              💼 LinkedIn
+            </a>
+          </div>
+
+          <div style={{ borderTop: "1px solid #f0ebff", paddingTop: 12 }}>
+            <div style={{ fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Add to your website</div>
+            <div style={{ background: "#1a1a2e", borderRadius: 8, padding: "12px 16px", position: "relative" }}>
+              <code style={{ color: "#a8d060", fontSize: 11, fontFamily: "monospace", wordBreak: "break-all", display: "block", paddingRight: 60 }}>
+                {`<a href="https://${applyLink}" style="display:inline-block;padding:12px 24px;background:#6C3FC5;color:white;border-radius:8px;font-weight:700;text-decoration:none">Apply Now →</a>`}
+              </code>
+              <button
+                onClick={() => navigator.clipboard.writeText(`<a href="https://${applyLink}" style="display:inline-block;padding:12px 24px;background:#6C3FC5;color:white;border-radius:8px;font-weight:700;text-decoration:none">Apply Now →</a>`)}
+                style={{ position: "absolute", top: 8, right: 8, padding: "4px 10px", background: "#6C3FC5", border: "none", borderRadius: 6, color: "white", fontSize: 11, cursor: "pointer" }}>
+                Copy
+              </button>
+            </div>
+          </div>
         </div>
 
         <div style={s.statsRow}>
@@ -506,7 +357,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
         </div>
       </div>
 
-      <Modal app={selected} agency={agency} onClose={() => setSelected(null)} onApprove={(id) => updateStatus(id, "approved")} onReject={(id) => updateStatus(id, "rejected")} onDelete={deleteApplication} />
+      <Modal app={selected} onClose={() => setSelected(null)} onApprove={(id) => updateStatus(id, "approved")} onReject={(id) => updateStatus(id, "rejected")} />
     </div>
   );
 }
