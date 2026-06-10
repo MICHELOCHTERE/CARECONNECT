@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
-import { collection, onSnapshot, doc, updateDoc, orderBy, query, where } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
 
 const STATUS_COLORS = {
   pending: { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
@@ -66,14 +66,101 @@ function DetailItem({ label, value }) {
   );
 }
 
-function Modal({ app, onClose, onApprove, onReject }) {
+function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
   if (!app) return null;
   const downloadPDF = () => {
-    const html = `<html><head><style>body{font-family:Arial,sans-serif;padding:40px;color:#1a1a2e}h1{color:#6C3FC5}h2{color:#6C3FC5;font-size:14px;border-bottom:1px solid #e8e0f5;padding-bottom:6px;margin-top:24px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.field{background:#f8f5ff;padding:10px 14px;border-radius:6px}.label{font-size:10px;color:#9b7fd4;text-transform:uppercase}.value{font-size:13px;color:#1a1a2e;margin-top:2px}</style></head><body><h1>${app.firstName} ${app.lastName}</h1><p>Applied: ${app.appliedAt} | Status: ${app.status}</p><h2>Personal Details</h2><div class="grid"><div class="field"><div class="label">Email</div><div class="value">${app.email||'—'}</div></div><div class="field"><div class="label">Phone</div><div class="value">${app.phone||'—'}</div></div><div class="field"><div class="label">NI Number</div><div class="value">${app.niNumber||'—'}</div></div><div class="field"><div class="label">Driving</div><div class="value">${app.driving||'—'}</div></div></div><h2>Experience</h2><div class="grid"><div class="field"><div class="label">Years</div><div class="value">${app.years||'—'}</div></div><div class="field"><div class="label">Qualifications</div><div class="value">${app.quals?.join(', ')||'—'}</div></div></div><p style="margin-top:40px;font-size:11px;color:#9b7fd4">Quikcare Recruitment — quikcare.co.uk</p></body></html>`;
+    const field = (label, value) => `<div class="field"><div class="label">${label}</div><div class="value">${value || '—'}</div></div>`;
+    const section = (title, fields) => `<div class="section"><h2>${title}</h2><div class="grid">${fields}</div></div>`;
+    const tags = (arr) => arr?.length ? arr.map(t => `<span class="tag">${t}</span>`).join('') : '—';
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${app.firstName} ${app.lastName} — Application</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, sans-serif; color: #1a1a2e; font-size: 13px; line-height: 1.5; }
+      .page { padding: 32px 40px; max-width: 900px; margin: 0 auto; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #6C3FC5; padding-bottom: 16px; margin-bottom: 24px; }
+      .header-left h1 { font-size: 24px; color: #6C3FC5; margin-bottom: 4px; }
+      .header-left p { color: #9b7fd4; font-size: 12px; }
+      .status { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+      .status-pending { background: #f5f0ff; color: #6C3FC5; border: 1px solid #c5b3e8; }
+      .status-approved { background: #e8f5eb; color: #1a7a3a; border: 1px solid #a3d9b1; }
+      .status-rejected { background: #fff0f0; color: #cc0000; border: 1px solid #ffb3b3; }
+      .logo { font-size: 20px; font-weight: 700; color: #6C3FC5; }
+      .section { margin-bottom: 20px; page-break-inside: avoid; }
+      h2 { font-size: 11px; color: #6C3FC5; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #e8e0f5; padding-bottom: 6px; margin-bottom: 10px; font-weight: 700; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .field { background: #f8f5ff; padding: 8px 12px; border-radius: 6px; }
+      .field.full { grid-column: 1 / -1; }
+      .label { font-size: 9px; color: #9b7fd4; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+      .value { font-size: 12px; color: #1a1a2e; }
+      .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+      .tag { background: #f0ebff; border: 1px solid #e8e0f5; border-radius: 999px; padding: 2px 8px; font-size: 11px; color: #6C3FC5; }
+      .doc-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #e8e0f5; font-size: 12px; }
+      .doc-row:last-child { border-bottom: none; }
+      .doc-link { color: #6C3FC5; font-size: 11px; }
+      .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e8e0f5; display: flex; justify-content: space-between; font-size: 10px; color: #9b7fd4; }
+      @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    </style></head>
+    <body><div class="page">
+      <div class="header">
+        <div class="header-left">
+          <h1>${app.firstName || ''} ${app.lastName || ''}</h1>
+          <p>Applied: ${app.appliedAt || '—'} &nbsp;|&nbsp; ${app.email || ''} &nbsp;|&nbsp; ${app.phone || ''}</p>
+        </div>
+        <div style="text-align:right">
+          <div class="logo">${agency?.agencyName || 'Quikcare'}</div>
+          <div style="margin-top:8px"><span class="status status-${app.status || 'pending'}">${app.status || 'pending'}</span></div>
+        </div>
+      </div>
+      ${section('👤 Personal Details', `
+        ${field('First Name', app.firstName)} ${field('Last Name', app.lastName)}
+        ${field('Date of Birth', app.dob)} ${field('Gender', app.gender)}
+        ${field('Nationality', app.nationality)} ${field('Religion', app.religion)}
+        ${field('NI Number', app.niNumber)} ${field('Email', app.email)}
+        ${field('Phone', app.phone)} ${field('Postcode', app.postcode)}
+        ${field('Driving Licence', app.driving)} ${field('Languages', app.languages?.join(', '))}
+      `)}
+      ${section('🆘 Emergency Contact', `
+        ${field('Name', app.emergencyName)} ${field('Relationship', app.emergencyRelation)} ${field('Phone', app.emergencyPhone)}
+      `)}
+      ${section('💼 Experience & Qualifications', `
+        ${field('Years of Experience', app.years)}
+        <div class="field full"><div class="label">Care Settings</div><div class="tags">${tags(app.settings)}</div></div>
+        <div class="field full"><div class="label">Client Groups</div><div class="tags">${tags(app.clients)}</div></div>
+        <div class="field full"><div class="label">Qualifications</div><div class="tags">${tags(app.quals)}</div></div>
+      `)}
+      ${section('🛡️ DBS & Right to Work', `
+        ${field('Right to Work', app.rightToWork)} ${field('RTW Status', app.rtwStatus)}
+        ${field('Has DBS', app.hasDbs)} ${field('DBS Date', app.dbsDate)}
+        ${field('Update Service', app.updateService)} ${field('Convictions', app.conviction)}
+        ${field('Proof of Address 1', app.proofAddress1)} ${field('Proof of Address 2', app.proofAddress2)}
+        ${field('Employment Continuity Check', app.employmentGaps)}
+        <div class="field full"><div class="label">RTW Documents Provided</div><div class="tags">${tags(app.docs)}</div></div>
+        <div class="field full"><div class="label">History Details</div><div class="value">${app.gapsExplanation || '—'}</div></div>
+      `)}
+      ${section('💰 Bank Details', `
+        ${field('Account Holder', app.bankName)} ${field('Sort Code', app.sortCode)} ${field('Account Number', app.accountNumber)}
+      `)}
+      <div class="section"><h2>📎 Uploaded Documents</h2>
+        <div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;">
+          ${app.cvURL ? `<div class="doc-row">📄 CV &nbsp;<a class="doc-link" href="${app.cvURL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#9b7fd4">📄 CV — not uploaded</div>'}
+          ${app.passportURL ? `<div class="doc-row">🛂 Passport &nbsp;<a class="doc-link" href="${app.passportURL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🛂 Passport — not uploaded</div>'}
+          ${app.rtwDocURL ? `<div class="doc-row">📋 RTW Doc &nbsp;<a class="doc-link" href="${app.rtwDocURL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">📋 RTW Doc — not uploaded</div>'}
+          ${app.poa1URL ? `<div class="doc-row">🏠 Address 1 &nbsp;<a class="doc-link" href="${app.poa1URL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#9b7fd4">🏠 Address 1 — not uploaded</div>'}
+          ${app.poa2URL ? `<div class="doc-row">🏠 Address 2 &nbsp;<a class="doc-link" href="${app.poa2URL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#9b7fd4">🏠 Address 2 — not uploaded</div>'}
+        </div>
+      </div>
+      <div class="section"><h2>📋 References</h2>
+        ${(app.refs || []).map((r, i) => `<div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;margin-bottom:8px"><div style="font-weight:700;color:#6C3FC5;margin-bottom:6px">Reference ${i+1}</div><div class="grid">${field('Name', r.name)}${field('Job Title', r.title)}${field('Organisation', r.org)}${field('Email', r.email)}${field('Relationship', r.relation)}</div></div>`).join('')}
+      </div>
+      <div class="footer">
+        <span>${agency?.agencyName || 'Quikcare'} — Powered by Quikcare Ltd · Co. No. 17206901</span>
+        <span>Generated: ${new Date().toLocaleDateString('en-GB')} &nbsp;|&nbsp; ID: ${app.id || '—'}</span>
+      </div>
+    </div></body></html>`;
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
-    win.print();
+    setTimeout(() => win.print(), 500);
   };
   return (
     <div style={s.modal} onClick={onClose}>
@@ -143,6 +230,13 @@ function Modal({ app, onClose, onApprove, onReject }) {
           <button style={s.rejectBtn} onClick={() => { onReject(app.id); onClose(); }}>✕ Reject</button>
           <button style={s.pdfBtn} onClick={downloadPDF}>📄 PDF</button>
           <button style={s.approveBtn} onClick={() => { onApprove(app.id); onClose(); }}>✓ Approve</button>
+        </div>
+        <div style={{ padding: "12px 24px", borderTop: "1px solid #f0ebff", background: "#fff8f8", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 11, color: "#9b7fd4" }}>🔒 GDPR: Right to Erasure</span>
+          <button style={{ background: "none", border: "1px solid #ffb3b3", borderRadius: 6, padding: "6px 14px", color: "#cc0000", fontSize: 12, cursor: "pointer" }}
+            onClick={() => { onDelete(app.id, `${app.firstName} ${app.lastName}`); onClose(); }}>
+            🗑 Delete Application Data
+          </button>
         </div>
       </div>
     </div>
@@ -292,19 +386,6 @@ export default function AgencyDashboard({ agency, onLogout }) {
             </a>
           </div>
 
-          <div style={{ borderTop: "1px solid #f0ebff", paddingTop: 12 }}>
-            <div style={{ fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Add to your website</div>
-            <div style={{ background: "#1a1a2e", borderRadius: 8, padding: "12px 16px", position: "relative" }}>
-              <code style={{ color: "#a8d060", fontSize: 11, fontFamily: "monospace", wordBreak: "break-all", display: "block", paddingRight: 60 }}>
-                {`<a href="https://${applyLink}" style="display:inline-block;padding:12px 24px;background:#6C3FC5;color:white;border-radius:8px;font-weight:700;text-decoration:none">Apply Now →</a>`}
-              </code>
-              <button
-                onClick={() => navigator.clipboard.writeText(`<a href="https://${applyLink}" style="display:inline-block;padding:12px 24px;background:#6C3FC5;color:white;border-radius:8px;font-weight:700;text-decoration:none">Apply Now →</a>`)}
-                style={{ position: "absolute", top: 8, right: 8, padding: "4px 10px", background: "#6C3FC5", border: "none", borderRadius: 6, color: "white", fontSize: 11, cursor: "pointer" }}>
-                Copy
-              </button>
-            </div>
-          </div>
         </div>
 
         <div style={s.statsRow}>
@@ -357,7 +438,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
         </div>
       </div>
 
-      <Modal app={selected} onClose={() => setSelected(null)} onApprove={(id) => updateStatus(id, "approved")} onReject={(id) => updateStatus(id, "rejected")} />
+      <Modal app={selected} agency={agency} onClose={() => setSelected(null)} onApprove={(id) => updateStatus(id, "approved")} onReject={(id) => updateStatus(id, "rejected")} onDelete={deleteApplication} />
     </div>
   );
 }
