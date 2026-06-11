@@ -6,7 +6,6 @@ import AgencyRegister from './AgencyRegister';
 import AgencyLogin from './AgencyLogin';
 import AgencyDashboard from './AgencyDashboard';
 import LandingPage from './LandingPage';
-import PrivacyPolicy from './PrivacyPolicy';
 import Demo from './Demo';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -53,61 +52,6 @@ function AdminLogin({ onLogin }) {
         <div style={s.showPw}><label style={s.showPwLabel}><input type="checkbox" checked={showing} onChange={() => setShowing(!showing)} /> Show password</label></div>
         <button style={s.btn} onClick={handleLogin}>Sign In</button>
         {error && <div style={s.error}>{error}</div>}
-      </div>
-    </div>
-  );
-}
-
-function SubscriptionScreen({ status, agencyName }) {
-  const screens = {
-    cancelled: {
-      icon: "❌",
-      title: "Subscription cancelled",
-      message: "Your Quikcare subscription has been cancelled. Resubscribe to regain access to your dashboard.",
-      btnText: "Resubscribe →",
-      color: "#cc0000",
-      bg: "#fff0f0",
-      border: "#ffb3b3",
-    },
-    payment_failed: {
-      icon: "⚠️",
-      title: "Payment failed",
-      message: "Your last payment didn't go through. Please update your payment method to restore access.",
-      btnText: "Update Payment →",
-      color: "#f59e0b",
-      bg: "#fffbeb",
-      border: "#fcd34d",
-    },
-    none: {
-      icon: "🔒",
-      title: "No active plan",
-      message: "You don't have an active Quikcare plan. Choose a plan to access your dashboard.",
-      btnText: "View Plans →",
-      color: "#6C3FC5",
-      bg: "#f0ebff",
-      border: "#c5b3e8",
-    },
-  };
-
-  const screen = screens[status] || screens.none;
-
-  return (
-    <div style={{ minHeight: "100vh", background: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "'DM Sans', sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-      <div style={{ background: "#ffffff", border: "1px solid #e8e0f5", borderRadius: 16, padding: 40, width: "100%", maxWidth: 440, textAlign: "center" }}>
-        <div style={{ width: 48, height: 48, borderRadius: 12, background: "#6C3FC5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, color: "white", fontFamily: "serif", margin: "0 auto 20px" }}>Q</div>
-        <div style={{ fontSize: 40, marginBottom: 16 }}>{screen.icon}</div>
-        <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: "#1a1a2e", marginBottom: 8 }}>{screen.title}</div>
-        {agencyName && <div style={{ color: "#6C3FC5", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{agencyName}</div>}
-        <div style={{ background: screen.bg, border: `1px solid ${screen.border}`, borderRadius: 10, padding: "14px 18px", marginBottom: 24, color: screen.color, fontSize: 14, lineHeight: 1.6 }}>
-          {screen.message}
-        </div>
-        <a href="https://quikcare.co.uk/#pricing" style={{ display: "block", padding: "14px", background: "#6C3FC5", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, textDecoration: "none", marginBottom: 12 }}>
-          {screen.btnText}
-        </a>
-        <button onClick={() => { signOut(auth); window.location.href = "/"; }} style={{ width: "100%", padding: "12px", background: "transparent", border: "1px solid #c5b3e8", borderRadius: 8, color: "#9b7fd4", fontSize: 14, cursor: "pointer" }}>
-          Sign Out
-        </button>
       </div>
     </div>
   );
@@ -208,14 +152,7 @@ function Router() {
       );
     }
     if (!agencyProfile) return <LoadingScreen />;
-
-    // Check subscription status before showing dashboard
-    const status = agencyProfile.status;
-    if (status === 'cancelled' || status === 'payment_failed' || !agencyProfile.plan || agencyProfile.plan === 'none') {
-      return <SubscriptionScreen status={status || 'none'} agencyName={agencyProfile.agencyName} />;
-    }
-
-    return <AgencyDashboard agency={agencyProfile} onLogout={() => { signOut(auth); setAgencyProfile(null); go('/'); }} />;
+    return <AgencyDashboard agency={agencyProfile} onLogout={() => { signOut(auth); setAgencyProfile(null); go('/agency/login'); }} />;
   }
 
   // Carer apply route — /apply/agencyslug
@@ -287,11 +224,6 @@ function Router() {
     return <Demo />;
   }
 
-  // Privacy policy
-  if (path === '/privacy') {
-    return <PrivacyPolicy />;
-  }
-
   // Landing page
   return <LandingPage
     onGetStarted={() => go('/agency/register')}
@@ -332,13 +264,10 @@ function CarerLoginForm({ onAuth, agencySlug }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState('login');
-
   const handleSubmit = async () => {
     if (!email || !password) return setError('Please fill in all fields.');
-    setLoading(true); setError('');
+    setLoading(true);
     try {
       const { signInWithEmailAndPassword } = await import('firebase/auth');
       const result = await signInWithEmailAndPassword(auth, email, password);
@@ -348,44 +277,11 @@ function CarerLoginForm({ onAuth, agencySlug }) {
     }
     setLoading(false);
   };
-
-  const handleReset = async () => {
-    if (!email) return setError('Please enter your email address first.');
-    setLoading(true); setError('');
-    try {
-      const { sendPasswordResetEmail } = await import('firebase/auth');
-      await sendPasswordResetEmail(auth, email);
-      setSuccess('Password reset email sent! Check your inbox.');
-    } catch (err) {
-      setError('Could not send reset email. Please check your email address.');
-    }
-    setLoading(false);
-  };
-
-  if (mode === 'reset') {
-    return (
-      <>
-        <div style={{ color: "#1a1a2e", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Reset your password</div>
-        <div style={{ color: "#9b7fd4", fontSize: 13, marginBottom: 16 }}>Enter your email and we'll send you a reset link</div>
-        {error && <div style={{ color: '#cc0000', fontSize: 13, marginBottom: 12, background: '#fff0f0', border: '1px solid #ffb3b3', borderRadius: 8, padding: '10px 14px' }}>⚠️ {error}</div>}
-        {success && <div style={{ color: '#1a7a3a', fontSize: 13, marginBottom: 12, background: '#e8f5eb', border: '1px solid #a3d9b1', borderRadius: 8, padding: '10px 14px' }}>✅ {success}</div>}
-        <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleReset()} />
-        <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading} onClick={handleReset}>{loading ? 'Sending...' : 'Send Reset Link →'}</button>
-        <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4', textAlign: 'center' }}>
-          <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => { setMode('login'); setError(''); setSuccess(''); }}>← Back to login</button>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
       {error && <div style={{ color: '#cc0000', fontSize: 13, marginBottom: 12 }}>{error}</div>}
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="password" placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
-      <div style={{ textAlign: 'right', marginBottom: 12, marginTop: -8 }}>
-        <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 12 }} onClick={() => { setMode('reset'); setError(''); }}>Forgot password?</button>
-      </div>
       <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading} onClick={handleSubmit}>{loading ? 'Logging in...' : 'Log In →'}</button>
       <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4' }}>New here? <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => go(agencySlug ? `/register?agency=${agencySlug}` : '/register')}>Create account</button></div>
     </>
