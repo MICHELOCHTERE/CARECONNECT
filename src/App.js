@@ -367,6 +367,20 @@ function Step3({ data, set }) {
 }
 
 function Step4({ data, set }) {
+  const handleFile = async (e, field) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    set({ ...data, [`${field}Name`]: file.name, [`${field}Uploading`]: true });
+    try {
+      const storageRef = ref(storage, `applications/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      set({ ...data, [`${field}Name`]: file.name, [`${field}URL`]: url, [`${field}Uploading`]: false });
+    } catch (err) {
+      console.error(err);
+      set({ ...data, [`${field}Uploading`]: false });
+    }
+  };
   return (
     <div>
       <div style={s.field}><label style={s.label}>Do you have an existing DBS certificate?</label><RadioGroup options={["Yes — Enhanced", "Yes — Basic", "No"]} value={data.hasDbs} onChange={v => set({ ...data, hasDbs: v })} /></div>
@@ -374,6 +388,20 @@ function Step4({ data, set }) {
         <>
           <div style={s.field}><label style={s.label}>DBS Issue Date</label><input style={s.input} type="date" value={data.dbsDate} onChange={e => set({ ...data, dbsDate: e.target.value })} /></div>
           <div style={s.field}><label style={s.label}>Are you on the DBS Update Service?</label><RadioGroup options={["Yes", "No"]} value={data.updateService} onChange={v => set({ ...data, updateService: v })} /></div>
+          <div style={s.field}>
+            <label style={s.label}>Upload DBS Certificate</label>
+            <div style={s.uploadBox} onClick={() => document.getElementById('dbs-upload').click()}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+              <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>
+                {data.dbsDocUploading ? "Uploading..." : data.dbsDocName ? `✓ ${data.dbsDocName}` : "Click to upload your DBS certificate"}
+              </div>
+              <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>PDF, JPG or PNG</div>
+              <input id="dbs-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => handleFile(e, "dbsDoc")} />
+            </div>
+            {!data.dbsDocURL && !data.dbsDocUploading && (
+              <div style={{ color: "#cc0000", fontSize: 12, marginTop: 6 }}>⚠️ Please upload a copy of your DBS certificate</div>
+            )}
+          </div>
         </>
       )}
       <div style={s.field}><label style={s.label}>Have you ever been convicted of a criminal offence?</label><RadioGroup options={["No", "Yes — declared"]} value={data.conviction} onChange={v => set({ ...data, conviction: v })} /></div>
@@ -480,7 +508,7 @@ export default function App({ user, onLogout, agencySlug }) {
   const [p1, setP1] = useState({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
   const [p2, setP2] = useState({ years: "", settings: [], clients: [], quals: [] });
   const [p3, setP3] = useState({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", passportName: "", passportURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
-  const [p4, setP4] = useState({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
+  const [p4, setP4] = useState({ hasDbs: "", dbsDate: "", updateService: "", conviction: "", dbsDocName: "", dbsDocURL: "" });
   const [p5, setP5] = useState({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
   const [p6, setP6] = useState({ refs: [{}, {}] });
   const [consent, setConsent] = useState(false);
@@ -593,6 +621,7 @@ export default function App({ user, onLogout, agencySlug }) {
     }
     if (step === 4) {
       if (!p4.hasDbs) errs.push("Please confirm your DBS certificate status");
+      if (p4.hasDbs?.startsWith("Yes") && !p4.dbsDocURL) errs.push("Please upload your DBS certificate");
       if (!p4.conviction) errs.push("Please answer the convictions question");
     }
     if (step === 5) {
@@ -766,7 +795,7 @@ export default function App({ user, onLogout, agencySlug }) {
             setP1({ firstName: "", lastName: "", email: "", phone: "", dob: "", postcode: "", niNumber: "", driving: "", languages: [], emergencyName: "", emergencyRelation: "", emergencyPhone: "", gender: "", nationality: "", religion: "" });
             setP2({ years: "", settings: [], clients: [], quals: [] });
             setP3({ rightToWork: "", rtwStatus: "", docs: [], cvName: "", cvURL: "", passportName: "", passportURL: "", poa1Name: "", poa1URL: "", poa2Name: "", poa2URL: "", rtwDocName: "", rtwDocURL: "", proofAddress1: "", proofAddress2: "", employmentGaps: "", gapsExplanation: "" });
-            setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "" });
+            setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "", dbsDocName: "", dbsDocURL: "" });
             setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
             setP6({ refs: [{}, {}] });
             setConsent(false);
