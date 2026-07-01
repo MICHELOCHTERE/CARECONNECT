@@ -5,6 +5,7 @@ import AdminDashboard from './AdminDashboard';
 import AgencyRegister from './AgencyRegister';
 import AgencyLogin from './AgencyLogin';
 import AgencyDashboard from './AgencyDashboard';
+import TrainingMatrix from './TrainingMatrix';
 import LandingPage from './LandingPage';
 import Demo from './Demo';
 import { auth, db } from './firebase';
@@ -217,6 +218,12 @@ function Router() {
         </div>
       </div>
     );
+  }
+
+  // Training Matrix — agency only
+  if (path === '/training') {
+    if (!user || !agencyProfile) { go('/agency/login'); return null; }
+    return <TrainingMatrix agency={agencyProfile} onBack={() => { go('/agency/dashboard'); }} />;
   }
 
   // Demo page

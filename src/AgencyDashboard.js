@@ -19,6 +19,7 @@ const s = {
   headerRight: { display: "flex", alignItems: "center", gap: 12 },
   agencyBadge: { background: "#f0ebff", border: "1px solid #c5b3e8", borderRadius: 6, padding: "4px 10px", fontSize: 11, color: "#6C3FC5", fontWeight: 600 },
   logoutBtn: { background: "none", border: "1px solid #c5b3e8", borderRadius: 6, padding: "4px 12px", color: "#9b7fd4", fontSize: 12, cursor: "pointer" },
+  trainingBtn: { background: "#6C3FC5", border: "none", borderRadius: 6, padding: "6px 14px", color: "white", fontSize: 12, fontWeight: 600, cursor: "pointer" },
   container: { maxWidth: 1100, margin: "0 auto", padding: "24px 16px" },
   statsRow: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 },
   statCard: (color) => ({ background: "#ffffff", borderRadius: 12, padding: "16px 20px", borderLeft: `3px solid ${color}` }),
@@ -339,6 +340,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
         </div>
         <div style={s.headerRight}>
           <span style={s.agencyBadge}>{agency.agencyName}</span>
+          <button style={s.trainingBtn} onClick={() => { window.history.pushState({}, '', '/training'); window.dispatchEvent(new PopStateEvent('popstate', { state: {} })); }}>📋 Training Matrix</button>
           <button style={s.logoutBtn} onClick={onLogout}>Sign Out</button>
         </div>
       </div>
