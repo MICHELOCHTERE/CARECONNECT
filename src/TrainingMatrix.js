@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 const TEMPLATE_COURSES = [
   ['Communication, Handling Information and Confidentiality', 24],
@@ -77,7 +77,6 @@ export default function TrainingMatrix({ agency, onBack }) {
   const [employees, setEmployees] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [statusMsg, setStatusMsg] = useState('');
-  const csvRef = useRef();
 
   // Load from localStorage keyed by agency
   const storageKey = `training-matrix-${agency?.slug || 'default'}`;
