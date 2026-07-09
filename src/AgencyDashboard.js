@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
+import ReferencesPanel from "./ReferencesPanel";
 
 const STATUS_COLORS = {
   pending: { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
@@ -20,6 +21,8 @@ const s = {
   agencyBadge: { background: "#f0ebff", border: "1px solid #c5b3e8", borderRadius: 6, padding: "4px 10px", fontSize: 11, color: "#6C3FC5", fontWeight: 600 },
   logoutBtn: { background: "none", border: "1px solid #c5b3e8", borderRadius: 6, padding: "4px 12px", color: "#9b7fd4", fontSize: 12, cursor: "pointer" },
   trainingBtn: { background: "#6C3FC5", border: "none", borderRadius: 6, padding: "6px 14px", color: "white", fontSize: 12, fontWeight: 600, cursor: "pointer" },
+  tabRow: { display: "flex", gap: 4, padding: "0 24px", borderBottom: "1px solid #e8e0f5", background: "#ffffff" },
+  tab: (active) => ({ padding: "12px 18px", fontSize: 13, fontWeight: active ? 700 : 400, color: active ? "#6C3FC5" : "#9b7fd4", borderBottom: active ? "2px solid #6C3FC5" : "2px solid transparent", background: "none", border: "none", cursor: "pointer" }),
   container: { maxWidth: 1100, margin: "0 auto", padding: "24px 16px" },
   statsRow: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 },
   statCard: (color) => ({ background: "#ffffff", borderRadius: 12, padding: "16px 20px", borderLeft: `3px solid ${color}` }),
@@ -264,6 +267,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
   const [hoveredRow, setHoveredRow] = useState(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("applications");
 
   const applyLink = `quikcare.co.uk/apply/${agency.slug}`;
 
@@ -345,6 +349,15 @@ export default function AgencyDashboard({ agency, onLogout }) {
         </div>
       </div>
 
+      {/* Tab Bar */}
+      <div style={s.tabRow}>
+        <button style={s.tab(activeTab === "applications")} onClick={() => setActiveTab("applications")}>📁 Applications</button>
+        <button style={s.tab(activeTab === "references")} onClick={() => setActiveTab("references")}>⭐ References</button>
+      </div>
+
+      {activeTab === "references" && <ReferencesPanel agency={agency} applications={applications} />}
+
+      {activeTab === "applications" && <>
       {error && (
         <div style={{ background: "#fff0f0", border: "1px solid #ffb3b3", borderRadius: 10, margin: "24px auto", maxWidth: 1100, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
@@ -447,6 +460,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
       </div>
 
       <Modal app={selected} agency={agency} onClose={() => setSelected(null)} onApprove={(id) => updateStatus(id, "approved")} onReject={(id) => updateStatus(id, "rejected")} onDelete={deleteApplication} />
+      </>}
     </div>
   );
 }
