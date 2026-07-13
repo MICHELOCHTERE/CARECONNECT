@@ -111,8 +111,13 @@ export default function ReferencesPanel({ agency, applications }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showSend, setShowSend] = useState(false);
+  const [sendMode, setSendMode] = useState("carer"); // "carer" | "manual"
   const [selectedApp, setSelectedApp] = useState("");
   const [selectedRef, setSelectedRef] = useState("");
+  const [manualCarerName, setManualCarerName] = useState("");
+  const [manualRefName, setManualRefName] = useState("");
+  const [manualRefEmail, setManualRefEmail] = useState("");
+  const [manualRefOrg, setManualRefOrg] = useState("");
   const [sending, setSending] = useState(false);
   const [viewReq, setViewReq] = useState(null);
   const [copied, setCopied] = useState(null);
@@ -131,29 +136,37 @@ export default function ReferencesPanel({ agency, applications }) {
   const refs = chosenApp?.refs || [];
 
   const sendRequest = async () => {
-    if (!chosenApp || selectedRef === "") return;
-    const referee = refs[parseInt(selectedRef)];
-    if (!referee?.email) { alert("This referee has no email address on file."); return; }
     setSending(true);
     try {
       const token = uid();
-      await addDoc(collection(db, "referenceRequests"), {
+      let payload = {
         token,
         agencySlug: agency.slug,
         agencyName: agency.agencyName,
-        applicationId: chosenApp.id,
-        carerName: `${chosenApp.firstName} ${chosenApp.lastName}`,
-        refereeName: referee.name || "Referee",
-        refereeEmail: referee.email,
-        refereeOrg: referee.org || "",
-        refereeTitle: referee.title || "",
         status: "pending",
         createdAt: serverTimestamp(),
-      });
+      };
+
+      if (sendMode === "carer") {
+        if (!chosenApp || selectedRef === "") { setSending(false); return; }
+        const referee = refs[parseInt(selectedRef)];
+        if (!referee?.email) { alert("This referee has no email address on file."); setSending(false); return; }
+        payload = { ...payload, applicationId: chosenApp.id, carerName: `${chosenApp.firstName} ${chosenApp.lastName}`, refereeName: referee.name || "Referee", refereeEmail: referee.email, refereeOrg: referee.org || "", refereeTitle: referee.title || "" };
+      } else {
+        if (!manualCarerName.trim() || !manualRefName.trim() || !manualRefEmail.trim()) {
+          alert("Please fill in the applicant name, referee name and referee email.");
+          setSending(false); return;
+        }
+        payload = { ...payload, applicationId: "", carerName: manualCarerName.trim(), refereeName: manualRefName.trim(), refereeEmail: manualRefEmail.trim(), refereeOrg: manualRefOrg.trim(), refereeTitle: "" };
+      }
+
+      await addDoc(collection(db, "referenceRequests"), payload);
+      const link = `${window.location.origin}/reference/${token}`;
       setShowSend(false);
-      setSelectedApp("");
-      setSelectedRef("");
-      alert(`Reference request created!\n\nSend this link to ${referee.name || referee.email}:\n\n${window.location.origin}/reference/${token}`);
+      setSelectedApp(""); setSelectedRef("");
+      setManualCarerName(""); setManualRefName(""); setManualRefEmail(""); setManualRefOrg("");
+      setSendMode("carer");
+      alert(`Reference request created!\n\nSend this link to ${payload.refereeName}:\n\n${link}`);
     } catch (e) {
       console.error(e);
       alert("Failed to create request. Please try again.");
@@ -232,42 +245,73 @@ export default function ReferencesPanel({ agency, applications }) {
               <button style={{ background: "none", border: "none", fontSize: 20, color: "#9b7fd4", cursor: "pointer" }} onClick={() => setShowSend(false)}>×</button>
             </div>
             <div style={s.modalBody}>
-              {approvedApps.length === 0 ? (
-                <div style={s.infoBox}>No approved carers yet. Approve an application first before sending a reference request.</div>
+              {/* Mode toggle */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 20, background: "#f8f5ff", borderRadius: 10, padding: 4 }}>
+                {[["carer", "📁 From Application"], ["manual", "✏️ Manual Entry"]].map(([mode, label]) => (
+                  <button key={mode} type="button"
+                    style={{ flex: 1, padding: "9px 12px", borderRadius: 8, border: "none", background: sendMode === mode ? "#6C3FC5" : "transparent", color: sendMode === mode ? "white" : "#9b7fd4", fontSize: 13, fontWeight: sendMode === mode ? 700 : 400, cursor: "pointer" }}
+                    onClick={() => setSendMode(mode)}>{label}</button>
+                ))}
+              </div>
+
+              {sendMode === "carer" ? (
+                <>
+                  <div style={s.infoBox}>Select an approved carer and which referee to contact. A unique link will be generated for the referee to complete their reference online.</div>
+                  {approvedApps.length === 0 ? (
+                    <div style={{ color: "#cc0000", fontSize: 13, marginBottom: 16 }}>No approved carers yet. Approve an application first, or use Manual Entry instead.</div>
+                  ) : (
+                    <>
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={s.label}>Select Carer (approved only)</label>
+                        <select style={s.select} value={selectedApp} onChange={e => { setSelectedApp(e.target.value); setSelectedRef(""); }}>
+                          <option value="">Choose carer...</option>
+                          {approvedApps.map(a => <option key={a.id} value={a.id}>{a.firstName} {a.lastName}</option>)}
+                        </select>
+                      </div>
+                      {chosenApp && (
+                        <div style={{ marginBottom: 20 }}>
+                          <label style={s.label}>Select Referee</label>
+                          {refs.length === 0 ? (
+                            <div style={{ color: "#cc0000", fontSize: 13 }}>This carer has no referee details on file. Use Manual Entry instead.</div>
+                          ) : (
+                            <select style={s.select} value={selectedRef} onChange={e => setSelectedRef(e.target.value)}>
+                              <option value="">Choose referee...</option>
+                              {refs.map((r, i) => <option key={i} value={i}>{r.name || "Referee " + (i + 1)} — {r.org || r.email || ""}</option>)}
+                            </select>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
               ) : (
                 <>
-                  <div style={s.infoBox}>
-                    Select an approved carer and which referee to contact. A unique link will be generated for the referee to complete their reference online.
+                  <div style={s.infoBox}>Send a reference request to anyone — no account needed. Fill in the applicant and referee details manually.</div>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={s.label}>Applicant Name (who the reference is for)</label>
+                    <input type="text" style={{ ...s.select, marginBottom: 0 }} placeholder="e.g. John Smith" value={manualCarerName} onChange={e => setManualCarerName(e.target.value)} />
                   </div>
-                  <div style={{ marginBottom: 16 }}>
-                    <label style={s.label}>Select Carer (approved only)</label>
-                    <select style={s.select} value={selectedApp} onChange={e => { setSelectedApp(e.target.value); setSelectedRef(""); }}>
-                      <option value="">Choose carer...</option>
-                      {approvedApps.map(a => <option key={a.id} value={a.id}>{a.firstName} {a.lastName}</option>)}
-                    </select>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={s.label}>Referee Name</label>
+                    <input type="text" style={{ ...s.select, marginBottom: 0 }} placeholder="e.g. Jane Doe" value={manualRefName} onChange={e => setManualRefName(e.target.value)} />
                   </div>
-                  {chosenApp && (
-                    <div style={{ marginBottom: 20 }}>
-                      <label style={s.label}>Select Referee</label>
-                      {refs.length === 0 ? (
-                        <div style={{ color: "#cc0000", fontSize: 13 }}>This carer has no referee details on file.</div>
-                      ) : (
-                        <select style={s.select} value={selectedRef} onChange={e => setSelectedRef(e.target.value)}>
-                          <option value="">Choose referee...</option>
-                          {refs.map((r, i) => <option key={i} value={i}>{r.name || "Referee " + (i + 1)} — {r.org || r.email || ""}</option>)}
-                        </select>
-                      )}
-                    </div>
-                  )}
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button style={{ ...s.btn, flex: 1, padding: 12, opacity: (sending || !selectedApp || selectedRef === "") ? 0.5 : 1 }}
-                      disabled={sending || !selectedApp || selectedRef === ""} onClick={sendRequest}>
-                      {sending ? "Creating..." : "Create Reference Link →"}
-                    </button>
-                    <button style={{ ...s.btnOutline, padding: 12 }} onClick={() => setShowSend(false)}>Cancel</button>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={s.label}>Referee Email</label>
+                    <input type="email" style={{ ...s.select, marginBottom: 0 }} placeholder="referee@example.com" value={manualRefEmail} onChange={e => setManualRefEmail(e.target.value)} />
+                  </div>
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={s.label}>Referee Organisation (optional)</label>
+                    <input type="text" style={{ ...s.select, marginBottom: 0 }} placeholder="e.g. NHS, Sunrise Care Home..." value={manualRefOrg} onChange={e => setManualRefOrg(e.target.value)} />
                   </div>
                 </>
               )}
+
+              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                <button style={{ ...s.btn, flex: 1, padding: 12, opacity: sending ? 0.5 : 1 }} disabled={sending} onClick={sendRequest}>
+                  {sending ? "Creating..." : "Create Reference Link →"}
+                </button>
+                <button style={{ ...s.btnOutline, padding: 12 }} onClick={() => setShowSend(false)}>Cancel</button>
+              </div>
             </div>
           </div>
         </div>
