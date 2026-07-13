@@ -6,6 +6,7 @@ import AgencyRegister from './AgencyRegister';
 import AgencyLogin from './AgencyLogin';
 import AgencyDashboard from './AgencyDashboard';
 import TrainingMatrix from './TrainingMatrix';
+import ReferenceForm from './ReferenceForm';
 import LandingPage from './LandingPage';
 import Demo from './Demo';
 import { auth, db } from './firebase';
@@ -104,6 +105,11 @@ function Router() {
     });
     return () => unsub();
   }, []);
+
+  // Reference form — public, no auth needed — check BEFORE auth loading
+  if (path.startsWith('/reference/')) {
+    return <ReferenceForm />;
+  }
 
   // Super admin route
   if (path === '/admin') {
