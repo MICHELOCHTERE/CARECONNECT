@@ -162,11 +162,29 @@ export default function ReferencesPanel({ agency, applications }) {
 
       await addDoc(collection(db, "referenceRequests"), payload);
       const link = `${window.location.origin}/reference/${token}`;
+
+      // Send email to referee
+      try {
+        await fetch('/api/send-reference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            refereeName: payload.refereeName,
+            refereeEmail: payload.refereeEmail,
+            carerName: payload.carerName,
+            agencyName: agency.agencyName,
+            referenceLink: link,
+          }),
+        });
+      } catch (emailErr) {
+        console.error('Email failed:', emailErr);
+      }
+
       setShowSend(false);
       setSelectedApp(""); setSelectedRef("");
       setManualCarerName(""); setManualRefName(""); setManualRefEmail(""); setManualRefOrg("");
       setSendMode("carer");
-      alert(`Reference request created!\n\nSend this link to ${payload.refereeName}:\n\n${link}`);
+      alert(`✅ Reference request sent!\n\nAn email has been sent to ${payload.refereeEmail} with the reference link.`);
     } catch (e) {
       console.error(e);
       alert("Failed to create request. Please try again.");
