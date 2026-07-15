@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 
 const s = {
   wrap: { minHeight: "100vh", background: "#f8f5ff", fontFamily: "'DM Sans', sans-serif", color: "#1a1a2e" },
@@ -78,6 +78,7 @@ function RatingTable({ ratings, onChange }) {
 
 export default function ReferenceForm() {
   const token = window.location.pathname.replace("/reference/", "");
+  const [docId, setDocId] = useState(null);
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
@@ -108,9 +109,12 @@ export default function ReferenceForm() {
   useEffect(() => {
     const load = async () => {
       try {
-        const snap = await getDoc(doc(db, "referenceRequests", token));
-        if (!snap.exists()) { setLoading(false); return; }
-        const data = snap.data();
+        const q = query(collection(db, "referenceRequests"), where("token", "==", token));
+        const snap = await getDocs(q);
+        if (snap.empty) { setLoading(false); return; }
+        const docSnap = snap.docs[0];
+        setDocId(docSnap.id);
+        const data = docSnap.data();
         setRequest(data);
         if (data.status === "completed") setSubmitted(true);
       } catch (e) { console.error(e); }
@@ -138,7 +142,7 @@ export default function ReferenceForm() {
     if (errs.length) { setErrors(errs); window.scrollTo(0, 0); return; }
     setSubmitting(true);
     try {
-      await updateDoc(doc(db, "referenceRequests", token), {
+      await updateDoc(doc(db, "referenceRequests", docId), {
         ratings,
         ...form,
         status: "completed",
