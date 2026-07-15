@@ -47,14 +47,113 @@ function DetailModal({ req, onClose }) {
   if (!req) return null;
   const r = req;
   const copyLink = () => { navigator.clipboard.writeText(`${window.location.origin}/reference/${r.token}`); };
+
+  const downloadPDF = () => {
+    const RATINGS_ORDER = ["Excellent","Very Good","Good","Satisfactory","Poor"];
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Reference — ${r.carerName}</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: Arial, sans-serif; font-size: 13px; color: #1a1a2e; padding: 32px; }
+          h1 { font-size: 22px; color: #6C3FC5; margin-bottom: 4px; }
+          .sub { color: #9b7fd4; font-size: 12px; margin-bottom: 24px; }
+          .section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #6C3FC5; border-bottom: 1px solid #e8e0f5; padding-bottom: 6px; margin: 20px 0 12px; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+          .item { background: #f8f5ff; border-radius: 6px; padding: 8px 12px; }
+          .item-label { font-size: 9px; color: #9b7fd4; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+          .item-value { font-size: 12px; color: #1a1a2e; }
+          .full { background: #f8f5ff; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+          th { background: #f8f5ff; padding: 7px 8px; font-size: 10px; color: #9b7fd4; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e8e0f5; text-align: center; }
+          th:first-child { text-align: left; }
+          td { padding: 7px 8px; border-bottom: 1px solid #f0ebff; font-size: 12px; text-align: center; }
+          td:first-child { text-align: left; }
+          .tick { color: #6C3FC5; font-weight: 700; }
+          .sig { font-style: italic; font-size: 15px; color: #1a1a2e; }
+          .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e8e0f5; font-size: 10px; color: #9b7fd4; text-align: center; }
+          @media print { body { padding: 16px; } }
+        </style>
+      </head>
+      <body>
+        <h1>Professional Reference</h1>
+        <div class="sub">
+          Applicant: <strong>${r.carerName}</strong> &nbsp;·&nbsp;
+          Agency: <strong>${r.agencyName}</strong> &nbsp;·&nbsp;
+          Completed: ${r.refDate || new Date().toLocaleDateString("en-GB")}
+        </div>
+
+        <div class="section">⭐ Personal Attributes</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Attribute</th>
+              ${RATINGS_ORDER.map(rt => `<th>${rt}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${r.ratings ? Object.entries(r.ratings).map(([attr, val]) => `
+              <tr>
+                <td>${attr}</td>
+                ${RATINGS_ORDER.map(rt => `<td>${val === rt ? '<span class="tick">✓</span>' : ''}</td>`).join("")}
+              </tr>
+            `).join("") : "<tr><td colspan='6'>No ratings recorded</td></tr>"}
+          </tbody>
+        </table>
+
+        <div class="section">📋 Additional Information</div>
+        <div class="grid">
+          <div class="item"><div class="item-label">Known How Long</div><div class="item-value">${r.knownHowLong || "—"}</div></div>
+          <div class="item"><div class="item-label">Known Capacity</div><div class="item-value">${r.knownCapacity || "—"}</div></div>
+          <div class="item"><div class="item-label">Sick Days (2 yrs)</div><div class="item-value">${r.sickDays || "—"}</div></div>
+          <div class="item"><div class="item-label">Would Re-employ</div><div class="item-value">${r.reemploy || "—"}</div></div>
+          <div class="item"><div class="item-label">Criminal Convictions</div><div class="item-value">${r.criminalConvictions || "—"}</div></div>
+        </div>
+        ${r.criminalDetails ? `<div class="full"><div class="item-label">Conviction Details</div><div class="item-value">${r.criminalDetails}</div></div>` : ""}
+        ${r.reemployReason ? `<div class="full"><div class="item-label">Re-employ Reason</div><div class="item-value">${r.reemployReason}</div></div>` : ""}
+        ${r.additionalComments ? `<div class="full"><div class="item-label">Additional Comments</div><div class="item-value">${r.additionalComments}</div></div>` : ""}
+
+        <div class="section">✍️ Referee Details</div>
+        <div class="grid">
+          <div class="item"><div class="item-label">Name</div><div class="item-value">${r.refName || "—"}</div></div>
+          <div class="item"><div class="item-label">Position</div><div class="item-value">${r.refPosition || "—"}</div></div>
+          <div class="item"><div class="item-label">Company</div><div class="item-value">${r.refCompany || "—"}</div></div>
+          <div class="item"><div class="item-label">Contact</div><div class="item-value">${r.refContact || "—"}</div></div>
+        </div>
+        <div class="full">
+          <div class="item-label">Signature</div>
+          <div class="sig">${r.refSignature || "—"}</div>
+        </div>
+
+        <div class="footer">
+          Generated by Quikcare · quikcare.co.uk · ${new Date().toLocaleDateString("en-GB")}
+        </div>
+      </body>
+      </html>
+    `;
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 500);
+  };
+
   return (
     <div style={s.modal} onClick={onClose}>
-      <div style={s.modalBox} onClick={e => e.stopPropagation()}>
+      <div style={{ ...s.modalBox, maxHeight: "90vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
         <div style={s.modalHead}>
           <div style={s.modalTitle}>{r.carerName} — {r.refereeName}</div>
-          <button style={{ background: "none", border: "none", fontSize: 20, color: "#9b7fd4", cursor: "pointer" }} onClick={onClose}>×</button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {r.status === "completed" && (
+              <button style={{ ...s.btn, fontSize: 11 }} onClick={downloadPDF}>⬇ Download PDF</button>
+            )}
+            <button style={{ background: "none", border: "none", fontSize: 20, color: "#9b7fd4", cursor: "pointer" }} onClick={onClose}>×</button>
+          </div>
         </div>
-        <div style={s.modalBody}>
+        <div style={{ ...s.modalBody, overflowY: "auto" }}>
           {r.status === "pending" ? (
             <>
               <div style={s.infoBox}>
