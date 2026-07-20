@@ -17,13 +17,18 @@ const s = {
   btnSm: { padding: "5px 10px", borderRadius: 6, border: "none", background: "#6C3FC5", color: "white", fontSize: 11, fontWeight: 600, cursor: "pointer" },
   btnSmOutline: { padding: "5px 10px", borderRadius: 6, border: "1px solid #c5b3e8", background: "transparent", color: "#6C3FC5", fontSize: 11, cursor: "pointer" },
   modal: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px" },
-  modalBox: { background: "#ffffff", borderRadius: 16, width: "100%", maxWidth: 600, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" },
+  modalBox: { background: "#ffffff", borderRadius: 16, width: "100%", maxWidth: 620, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" },
   modalHead: { background: "#f8f5ff", borderBottom: "1px solid #e8e0f5", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 },
   modalTitle: { fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#1a1a2e" },
   modalBody: { padding: 24, overflowY: "auto" },
   label: { display: "block", color: "#6C3FC5", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 },
-  select: { width: "100%", background: "#f8f5ff", border: "1px solid #c5b3e8", borderRadius: 8, padding: "12px 16px", color: "#1a1a2e", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 16 },
+  input: { width: "100%", background: "#f8f5ff", border: "1px solid #c5b3e8", borderRadius: 8, padding: "12px 16px", color: "#1a1a2e", fontSize: 14, outline: "none", boxSizing: "border-box" },
+  select: { width: "100%", background: "#f8f5ff", border: "1px solid #c5b3e8", borderRadius: 8, padding: "12px 16px", color: "#1a1a2e", fontSize: 14, outline: "none", boxSizing: "border-box" },
   infoBox: { background: "#f0ebff", border: "1px solid #c5b3e8", borderRadius: 10, padding: 14, fontSize: 13, color: "#6C3FC5", marginBottom: 16, lineHeight: 1.6 },
+  successBox: { background: "#e8f5eb", border: "1px solid #a3d9b1", borderRadius: 10, padding: 14, fontSize: 13, color: "#1a7a3a", marginBottom: 12, lineHeight: 1.6 },
+  refBox: { background: "#f8f5ff", border: "1px solid #e8e0f5", borderRadius: 10, padding: 16, marginBottom: 16 },
+  refBoxTitle: { fontSize: 12, fontWeight: 700, color: "#6C3FC5", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 },
+  grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
   empty: { textAlign: "center", padding: "48px 20px", color: "#9b7fd4", fontSize: 14 },
   detailSection: { marginBottom: 16 },
   detailTitle: { fontSize: 11, color: "#6C3FC5", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10, paddingBottom: 6, borderBottom: "1px solid #e8e0f5" },
@@ -33,11 +38,11 @@ const s = {
   detailValue: { fontSize: 13, color: "#1a1a2e" },
   ratingBadge: (val) => {
     const colors = {
-      "Excellent":  { bg: "#e8f5eb", text: "#1a7a3a", border: "#a3d9b1" },
-      "Very Good":  { bg: "#f0ebff", text: "#6C3FC5", border: "#c5b3e8" },
-      "Good":       { bg: "#e8f0ff", text: "#2251cc", border: "#a3b9f5" },
+      "Excellent":   { bg: "#e8f5eb", text: "#1a7a3a", border: "#a3d9b1" },
+      "Very Good":   { bg: "#f0ebff", text: "#6C3FC5", border: "#c5b3e8" },
+      "Good":        { bg: "#e8f0ff", text: "#2251cc", border: "#a3b9f5" },
       "Satisfactory":{ bg: "#fff8e8", text: "#b37a00", border: "#f0c060" },
-      "Poor":       { bg: "#fff0f0", text: "#cc0000", border: "#ffb3b3" },
+      "Poor":        { bg: "#fff0f0", text: "#cc0000", border: "#ffb3b3" },
     };
     const c = colors[val] || { bg: "#f8f5ff", text: "#9b7fd4", border: "#e8e0f5" };
     return { display: "inline-block", padding: "2px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600, background: c.bg, color: c.text, border: `1px solid ${c.border}` };
@@ -50,45 +55,23 @@ const STATUS_COLORS = {
 };
 
 const CARER_STATUS = {
-  none:      { bg: "#f8f5ff",  text: "#9b7fd4", border: "#e8e0f5", label: "No references" },
-  partial:   { bg: "#fff8e8",  text: "#b37a00", border: "#f0c060", label: "⏳ In Progress" },
-  complete:  { bg: "#e8f5eb",  text: "#1a7a3a", border: "#a3d9b1", label: "✅ Fully Referenced" },
+  none:     { bg: "#f8f5ff", text: "#9b7fd4", border: "#e8e0f5", label: "No references" },
+  partial:  { bg: "#fff8e8", text: "#b37a00", border: "#f0c060", label: "⏳ In Progress" },
+  complete: { bg: "#e8f5eb", text: "#1a7a3a", border: "#a3d9b1", label: "✅ Fully Referenced" },
 };
 
 function uid() { return Math.random().toString(36).slice(2, 11) + Date.now().toString(36); }
 
-// ─── PDF download helper ───────────────────────────────────────────────
 function downloadReferencePDF(r) {
   const RATINGS_ORDER = ["Excellent", "Very Good", "Good", "Satisfactory", "Poor"];
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <title>Reference — ${r.carerName}</title>
-    <style>
-      *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a2e;padding:32px}
-      h1{font-size:22px;color:#6C3FC5;margin-bottom:4px}
-      .sub{color:#9b7fd4;font-size:12px;margin-bottom:24px}
-      .section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6C3FC5;border-bottom:1px solid #e8e0f5;padding-bottom:6px;margin:20px 0 12px}
-      .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-      .item{background:#f8f5ff;border-radius:6px;padding:8px 12px}
-      .item-label{font-size:9px;color:#9b7fd4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
-      .item-value{font-size:12px;color:#1a1a2e}
-      .full{background:#f8f5ff;border-radius:6px;padding:8px 12px;margin-bottom:8px}
-      table{width:100%;border-collapse:collapse;margin-bottom:8px}
-      th{background:#f8f5ff;padding:7px 8px;font-size:10px;color:#9b7fd4;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e8e0f5;text-align:center}
-      th:first-child{text-align:left}
-      td{padding:7px 8px;border-bottom:1px solid #f0ebff;font-size:12px;text-align:center}
-      td:first-child{text-align:left}
-      .tick{color:#6C3FC5;font-weight:700}
-      .sig{font-style:italic;font-size:15px;color:#1a1a2e}
-      .footer{margin-top:32px;padding-top:12px;border-top:1px solid #e8e0f5;font-size:10px;color:#9b7fd4;text-align:center}
-    </style></head><body>
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reference — ${r.carerName}</title>
+    <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a2e;padding:32px}h1{font-size:22px;color:#6C3FC5;margin-bottom:4px}.sub{color:#9b7fd4;font-size:12px;margin-bottom:24px}.section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6C3FC5;border-bottom:1px solid #e8e0f5;padding-bottom:6px;margin:20px 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.item{background:#f8f5ff;border-radius:6px;padding:8px 12px}.item-label{font-size:9px;color:#9b7fd4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}.item-value{font-size:12px;color:#1a1a2e}.full{background:#f8f5ff;border-radius:6px;padding:8px 12px;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin-bottom:8px}th{background:#f8f5ff;padding:7px 8px;font-size:10px;color:#9b7fd4;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e8e0f5;text-align:center}th:first-child{text-align:left}td{padding:7px 8px;border-bottom:1px solid #f0ebff;font-size:12px;text-align:center}td:first-child{text-align:left}.tick{color:#6C3FC5;font-weight:700}.sig{font-style:italic;font-size:15px}.footer{margin-top:32px;padding-top:12px;border-top:1px solid #e8e0f5;font-size:10px;color:#9b7fd4;text-align:center}</style>
+    </head><body>
     <h1>Professional Reference</h1>
     <div class="sub">Applicant: <strong>${r.carerName}</strong> &nbsp;·&nbsp; Agency: <strong>${r.agencyName}</strong> &nbsp;·&nbsp; Completed: ${r.refDate || new Date().toLocaleDateString("en-GB")}</div>
     <div class="section">⭐ Personal Attributes</div>
     <table><thead><tr><th>Attribute</th>${RATINGS_ORDER.map(rt => `<th>${rt}</th>`).join("")}</tr></thead>
-    <tbody>${r.ratings ? Object.entries(r.ratings).map(([attr, val]) =>
-      `<tr><td>${attr}</td>${RATINGS_ORDER.map(rt => `<td>${val === rt ? '<span class="tick">✓</span>' : ""}</td>`).join("")}</tr>`
-    ).join("") : `<tr><td colspan="6">No ratings recorded</td></tr>`}</tbody></table>
+    <tbody>${r.ratings ? Object.entries(r.ratings).map(([attr, val]) => `<tr><td>${attr}</td>${RATINGS_ORDER.map(rt => `<td>${val === rt ? '<span class="tick">✓</span>' : ""}</td>`).join("")}</tr>`).join("") : `<tr><td colspan="6">No ratings</td></tr>`}</tbody></table>
     <div class="section">📋 Additional Information</div>
     <div class="grid">
       <div class="item"><div class="item-label">Known How Long</div><div class="item-value">${r.knownHowLong || "—"}</div></div>
@@ -117,20 +100,16 @@ function downloadReferencePDF(r) {
   setTimeout(() => win.print(), 500);
 }
 
-// ─── Single reference detail modal ────────────────────────────────────
 function DetailModal({ req, onClose }) {
   if (!req) return null;
   const r = req;
-  const copyLink = () => navigator.clipboard.writeText(`${window.location.origin}/reference/${r.token}`);
   return (
     <div style={s.modal} onClick={onClose}>
       <div style={s.modalBox} onClick={e => e.stopPropagation()}>
         <div style={s.modalHead}>
           <div style={s.modalTitle}>{r.refereeName}</div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            {r.status === "completed" && (
-              <button style={{ ...s.btn, fontSize: 11 }} onClick={() => downloadReferencePDF(r)}>⬇ Download PDF</button>
-            )}
+            {r.status === "completed" && <button style={{ ...s.btn, fontSize: 11 }} onClick={() => downloadReferencePDF(r)}>⬇ Download PDF</button>}
             <button style={{ background: "none", border: "none", fontSize: 20, color: "#9b7fd4", cursor: "pointer" }} onClick={onClose}>×</button>
           </div>
         </div>
@@ -138,14 +117,10 @@ function DetailModal({ req, onClose }) {
           {r.status === "pending" ? (
             <>
               <div style={s.infoBox}>Reference link sent to <strong>{r.refereeEmail}</strong>. Waiting for response.</div>
-              <div style={{ marginBottom: 16 }}>
-                <div style={s.label}>Reference Link</div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <div style={{ flex: 1, background: "#f8f5ff", border: "1px solid #e8e0f5", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#6C3FC5", wordBreak: "break-all" }}>
-                    {window.location.origin}/reference/{r.token}
-                  </div>
-                  <button style={s.btn} onClick={copyLink}>Copy</button>
-                </div>
+              <div style={s.label}>Reference Link</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ flex: 1, background: "#f8f5ff", border: "1px solid #e8e0f5", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#6C3FC5", wordBreak: "break-all" }}>{window.location.origin}/reference/{r.token}</div>
+                <button style={s.btn} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/reference/${r.token}`)}>Copy</button>
               </div>
             </>
           ) : (
@@ -185,50 +160,33 @@ function DetailModal({ req, onClose }) {
   );
 }
 
-// ─── Per-carer references row (expandable) ────────────────────────────
 function CarerReferenceRow({ carerName, refs, onViewRef }) {
   const [expanded, setExpanded] = useState(false);
   const completed = refs.filter(r => r.status === "completed").length;
   const total = refs.length;
   const statusKey = total === 0 ? "none" : completed >= 2 ? "complete" : "partial";
   const sc = CARER_STATUS[statusKey];
-
   return (
     <>
       <tr style={{ cursor: "pointer", background: expanded ? "#faf8ff" : "transparent" }} onClick={() => setExpanded(e => !e)}>
-        <td style={s.td}>
-          <div style={{ fontWeight: 600 }}>{carerName}</div>
-          <div style={s.tdSub}>{total} reference{total !== 1 ? "s" : ""} sent</div>
-        </td>
+        <td style={s.td}><div style={{ fontWeight: 600 }}>{carerName}</div><div style={s.tdSub}>{total} sent</div></td>
         <td style={s.td}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Progress bar */}
             <div style={{ flex: 1, maxWidth: 100, height: 6, background: "#e8e0f5", borderRadius: 999, overflow: "hidden" }}>
-              <div style={{ width: `${Math.min((completed / 2) * 100, 100)}%`, height: "100%", background: completed >= 2 ? "#1a7a3a" : "#d4a24e", borderRadius: 999, transition: "width 0.3s" }} />
+              <div style={{ width: `${Math.min((completed / 2) * 100, 100)}%`, height: "100%", background: completed >= 2 ? "#1a7a3a" : "#d4a24e", borderRadius: 999 }} />
             </div>
             <span style={{ fontSize: 12, color: "#9b7fd4" }}>{completed}/2</span>
           </div>
         </td>
         <td style={s.td}><span style={s.pill(sc)}>{sc.label}</span></td>
-        <td style={s.td}>
-          <span style={{ color: "#9b7fd4", fontSize: 12 }}>{expanded ? "▲ Hide" : "▼ Show"} referees</span>
-        </td>
+        <td style={s.td}><span style={{ color: "#9b7fd4", fontSize: 12 }}>{expanded ? "▲ Hide" : "▼ Show"}</span></td>
       </tr>
       {expanded && refs.map(ref => (
         <tr key={ref.id} style={{ background: "#faf8ff" }}>
-          <td style={{ ...s.td, paddingLeft: 32, borderBottom: "1px solid #f0ebff" }}>
-            <div style={{ fontSize: 13 }}>{ref.refereeName}</div>
-            <div style={{ fontSize: 11, color: "#9b7fd4" }}>{ref.refereeEmail}</div>
-          </td>
-          <td style={{ ...s.td, borderBottom: "1px solid #f0ebff" }}>
-            <div style={{ fontSize: 12, color: "#9b7fd4" }}>{ref.refereeOrg || "—"}</div>
-          </td>
-          <td style={{ ...s.td, borderBottom: "1px solid #f0ebff" }}>
-            <span style={s.pill(STATUS_COLORS[ref.status] || STATUS_COLORS.pending)}>
-              {(STATUS_COLORS[ref.status] || STATUS_COLORS.pending).label}
-            </span>
-          </td>
-          <td style={{ ...s.td, borderBottom: "1px solid #f0ebff" }}>
+          <td style={{ ...s.td, paddingLeft: 32 }}><div style={{ fontSize: 13 }}>{ref.refereeName}</div><div style={{ fontSize: 11, color: "#9b7fd4" }}>{ref.refereeEmail}</div></td>
+          <td style={s.td}><div style={{ fontSize: 12, color: "#9b7fd4" }}>{ref.refereeOrg || "—"}</div></td>
+          <td style={s.td}><span style={s.pill(STATUS_COLORS[ref.status] || STATUS_COLORS.pending)}>{(STATUS_COLORS[ref.status] || STATUS_COLORS.pending).label}</span></td>
+          <td style={s.td}>
             <div style={{ display: "flex", gap: 6 }}>
               {ref.status === "completed" ? (
                 <>
@@ -236,9 +194,7 @@ function CarerReferenceRow({ carerName, refs, onViewRef }) {
                   <button style={{ ...s.btnSm, background: "#4a7a5a" }} onClick={() => downloadReferencePDF(ref)}>⬇ PDF</button>
                 </>
               ) : (
-                <button style={s.btnSmOutline} onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/reference/${ref.token}`); }}>
-                  Copy Link
-                </button>
+                <button style={s.btnSmOutline} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/reference/${ref.token}`)}>Copy Link</button>
               )}
             </div>
           </td>
@@ -248,18 +204,20 @@ function CarerReferenceRow({ carerName, refs, onViewRef }) {
   );
 }
 
-// ─── Main panel ───────────────────────────────────────────────────────
+// ─── Empty referee form ───────────────────────────────────────────────
+const emptyRef = () => ({ name: "", email: "", org: "" });
+
 export default function ReferencesPanel({ agency, applications }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showSend, setShowSend] = useState(false);
   const [sendMode, setSendMode] = useState("carer");
+  // From application mode
   const [selectedApp, setSelectedApp] = useState("");
-  const [selectedRef, setSelectedRef] = useState("");
+  // Manual mode — two referees
   const [manualCarerName, setManualCarerName] = useState("");
-  const [manualRefName, setManualRefName] = useState("");
-  const [manualRefEmail, setManualRefEmail] = useState("");
-  const [manualRefOrg, setManualRefOrg] = useState("");
+  const [referee1, setReferee1] = useState(emptyRef());
+  const [referee2, setReferee2] = useState(emptyRef());
   const [sending, setSending] = useState(false);
   const [viewReq, setViewReq] = useState(null);
 
@@ -272,75 +230,99 @@ export default function ReferencesPanel({ agency, applications }) {
     return () => unsub();
   }, [agency.slug]);
 
-  // Group by carerName
   const grouped = requests.reduce((acc, req) => {
-    const key = req.carerName;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(req);
+    if (!acc[req.carerName]) acc[req.carerName] = [];
+    acc[req.carerName].push(req);
     return acc;
   }, {});
 
   const approvedApps = applications.filter(a => a.status === "approved");
   const chosenApp = approvedApps.find(a => a.id === selectedApp);
-  const refs = chosenApp?.refs || [];
+  // Pull both referees from application
+  const appRefs = chosenApp?.refs || [];
 
-  // Stats
   const totalCarers = Object.keys(grouped).length;
   const fullyReferenced = Object.values(grouped).filter(refs => refs.filter(r => r.status === "completed").length >= 2).length;
   const pendingCount = requests.filter(r => r.status === "pending").length;
 
-  const sendRequest = async () => {
+  const sendEmail = async (refereeName, refereeEmail, carerName, link) => {
+    try {
+      await fetch("/api/send-reference", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refereeName, refereeEmail, carerName, agencyName: agency.agencyName, referenceLink: link }),
+      });
+    } catch (e) { console.error("Email failed:", e); }
+  };
+
+  const createRequest = async (carerName, refereeName, refereeEmail, refereeOrg, applicationId = "") => {
+    const token = uid();
+    await addDoc(collection(db, "referenceRequests"), {
+      token, agencySlug: agency.slug, agencyName: agency.agencyName,
+      applicationId, carerName, refereeName, refereeEmail, refereeOrg,
+      status: "pending", createdAt: serverTimestamp(),
+    });
+    const link = `${window.location.origin}/reference/${token}`;
+    await sendEmail(refereeName, refereeEmail, carerName, link);
+    return link;
+  };
+
+  const resetModal = () => {
+    setSelectedApp("");
+    setManualCarerName("");
+    setReferee1(emptyRef());
+    setReferee2(emptyRef());
+    setSendMode("carer");
+    setShowSend(false);
+  };
+
+  const handleSend = async () => {
     setSending(true);
     try {
-      const token = uid();
-      let payload = { token, agencySlug: agency.slug, agencyName: agency.agencyName, status: "pending", createdAt: serverTimestamp() };
-
       if (sendMode === "carer") {
-        if (!chosenApp || selectedRef === "") { setSending(false); return; }
-        const referee = refs[parseInt(selectedRef)];
-        if (!referee?.email) { alert("This referee has no email address on file."); setSending(false); return; }
-        payload = { ...payload, applicationId: chosenApp.id, carerName: `${chosenApp.firstName} ${chosenApp.lastName}`, refereeName: referee.name || "Referee", refereeEmail: referee.email, refereeOrg: referee.org || "", refereeTitle: referee.title || "" };
-      } else {
-        if (!manualCarerName.trim() || !manualRefName.trim() || !manualRefEmail.trim()) {
-          alert("Please fill in the applicant name, referee name and referee email.");
-          setSending(false); return;
+        // From application — send to ALL referees on file (up to 2)
+        if (!chosenApp) { alert("Please select a carer."); setSending(false); return; }
+        if (appRefs.length === 0) { alert("This carer has no referee details on file. Use Manual Entry."); setSending(false); return; }
+        const carerName = `${chosenApp.firstName} ${chosenApp.lastName}`;
+        const toSend = appRefs.slice(0, 2); // max 2
+        for (const ref of toSend) {
+          if (!ref.email) continue;
+          await createRequest(carerName, ref.name || "Referee", ref.email, ref.org || "", chosenApp.id);
         }
-        payload = { ...payload, applicationId: "", carerName: manualCarerName.trim(), refereeName: manualRefName.trim(), refereeEmail: manualRefEmail.trim(), refereeOrg: manualRefOrg.trim(), refereeTitle: "" };
+        alert(`✅ Reference requests sent to ${toSend.length} referee(s) for ${carerName}!`);
+      } else {
+        // Manual — validate at least referee 1
+        if (!manualCarerName.trim()) { alert("Please enter the applicant name."); setSending(false); return; }
+        if (!referee1.name.trim() || !referee1.email.trim()) { alert("Please fill in Referee 1 name and email."); setSending(false); return; }
+        await createRequest(manualCarerName.trim(), referee1.name.trim(), referee1.email.trim(), referee1.org.trim());
+        // Send referee 2 if filled in
+        if (referee2.name.trim() && referee2.email.trim()) {
+          await createRequest(manualCarerName.trim(), referee2.name.trim(), referee2.email.trim(), referee2.org.trim());
+          alert(`✅ Reference requests sent to both referees for ${manualCarerName.trim()}!`);
+        } else {
+          alert(`✅ Reference request sent to ${referee1.name.trim()}!\n\nReferee 2 was left blank — you can send it later.`);
+        }
       }
-
-      await addDoc(collection(db, "referenceRequests"), payload);
-      const link = `${window.location.origin}/reference/${token}`;
-
-      // Send email
-      try {
-        await fetch("/api/send-reference", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refereeName: payload.refereeName, refereeEmail: payload.refereeEmail, carerName: payload.carerName, agencyName: agency.agencyName, referenceLink: link }),
-        });
-      } catch (emailErr) { console.error("Email failed:", emailErr); }
-
-      setShowSend(false);
-      setSelectedApp(""); setSelectedRef("");
-      setManualCarerName(""); setManualRefName(""); setManualRefEmail(""); setManualRefOrg("");
-      setSendMode("carer");
-      alert(`✅ Reference request sent!\n\nAn email has been sent to ${payload.refereeEmail} with the reference link.`);
+      resetModal();
     } catch (e) {
       console.error(e);
-      alert("Failed to create request. Please try again.");
+      alert("Failed to send. Please try again.");
     }
     setSending(false);
   };
+
+  const RefInput = ({ label, value, onChange, type = "text", placeholder }) => (
+    <div style={{ marginBottom: 12 }}>
+      <label style={s.label}>{label}</label>
+      <input type={type} style={s.input} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} />
+    </div>
+  );
 
   return (
     <div style={s.container}>
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 20 }}>
-        {[
-          ["Carers in Progress", totalCarers, "#6C3FC5"],
-          ["Awaiting Response", pendingCount, "#f59e0b"],
-          ["Fully Referenced ✅", fullyReferenced, "#1a7a3a"],
-        ].map(([l, v, c]) => (
+        {[["Carers in Progress", totalCarers, "#6C3FC5"], ["Awaiting Response", pendingCount, "#f59e0b"], ["Fully Referenced ✅", fullyReferenced, "#1a7a3a"]].map(([l, v, c]) => (
           <div key={l} style={{ background: "#ffffff", borderRadius: 12, padding: "16px 20px", borderLeft: `3px solid ${c}` }}>
             <div style={{ fontSize: 28, fontWeight: 700, color: c, fontFamily: "'DM Serif Display', serif" }}>{v}</div>
             <div style={{ fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}>{l}</div>
@@ -348,7 +330,6 @@ export default function ReferencesPanel({ agency, applications }) {
         ))}
       </div>
 
-      {/* Note */}
       <div style={{ background: "#f0ebff", border: "1px solid #c5b3e8", borderRadius: 10, padding: "12px 16px", fontSize: 13, color: "#6C3FC5", marginBottom: 16 }}>
         ℹ️ A carer is <strong>Fully Referenced</strong> only when both referees have completed and submitted their forms.
       </div>
@@ -358,7 +339,6 @@ export default function ReferencesPanel({ agency, applications }) {
           <div style={s.cardTitle}>📬 Reference Requests</div>
           <button style={s.btn} onClick={() => setShowSend(true)}>+ Send Request</button>
         </div>
-
         {loading ? (
           <div style={s.empty}>Loading...</div>
         ) : Object.keys(grouped).length === 0 ? (
@@ -381,11 +361,11 @@ export default function ReferencesPanel({ agency, applications }) {
 
       {/* Send modal */}
       {showSend && (
-        <div style={s.modal} onClick={() => setShowSend(false)}>
-          <div style={{ ...s.modalBox, maxHeight: "80vh" }} onClick={e => e.stopPropagation()}>
+        <div style={s.modal} onClick={resetModal}>
+          <div style={s.modalBox} onClick={e => e.stopPropagation()}>
             <div style={s.modalHead}>
-              <div style={s.modalTitle}>Send Reference Request</div>
-              <button style={{ background: "none", border: "none", fontSize: 20, color: "#9b7fd4", cursor: "pointer" }} onClick={() => setShowSend(false)}>×</button>
+              <div style={s.modalTitle}>Send Reference Requests</div>
+              <button style={{ background: "none", border: "none", fontSize: 20, color: "#9b7fd4", cursor: "pointer" }} onClick={resetModal}>×</button>
             </div>
             <div style={s.modalBody}>
               {/* Mode toggle */}
@@ -399,29 +379,30 @@ export default function ReferencesPanel({ agency, applications }) {
 
               {sendMode === "carer" ? (
                 <>
-                  <div style={s.infoBox}>Select an approved carer and which referee to contact.</div>
+                  <div style={s.infoBox}>
+                    Select an approved carer — requests will automatically be sent to <strong>both referees</strong> they listed in their application.
+                  </div>
                   {approvedApps.length === 0 ? (
-                    <div style={{ color: "#cc0000", fontSize: 13, marginBottom: 16 }}>No approved carers yet. Use Manual Entry instead.</div>
+                    <div style={{ color: "#cc0000", fontSize: 13 }}>No approved carers yet. Use Manual Entry instead.</div>
                   ) : (
                     <>
                       <div style={{ marginBottom: 16 }}>
                         <label style={s.label}>Select Carer</label>
-                        <select style={s.select} value={selectedApp} onChange={e => { setSelectedApp(e.target.value); setSelectedRef(""); }}>
+                        <select style={s.select} value={selectedApp} onChange={e => setSelectedApp(e.target.value)}>
                           <option value="">Choose carer...</option>
                           {approvedApps.map(a => <option key={a.id} value={a.id}>{a.firstName} {a.lastName}</option>)}
                         </select>
                       </div>
-                      {chosenApp && (
-                        <div style={{ marginBottom: 20 }}>
-                          <label style={s.label}>Select Referee</label>
-                          {refs.length === 0 ? (
-                            <div style={{ color: "#cc0000", fontSize: 13 }}>No referee details on file. Use Manual Entry.</div>
-                          ) : (
-                            <select style={s.select} value={selectedRef} onChange={e => setSelectedRef(e.target.value)}>
-                              <option value="">Choose referee...</option>
-                              {refs.map((r, i) => <option key={i} value={i}>{r.name || "Referee " + (i + 1)} — {r.org || r.email || ""}</option>)}
-                            </select>
-                          )}
+                      {chosenApp && appRefs.length > 0 && (
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={s.label}>Referees on file</div>
+                          {appRefs.slice(0, 2).map((ref, i) => (
+                            <div key={i} style={{ ...s.refBox, marginBottom: 8 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e" }}>Referee {i + 1}: {ref.name || "—"}</div>
+                              <div style={{ fontSize: 12, color: "#9b7fd4", marginTop: 2 }}>{ref.email} {ref.org ? `· ${ref.org}` : ""}</div>
+                            </div>
+                          ))}
+                          {appRefs.length === 0 && <div style={{ color: "#cc0000", fontSize: 13 }}>No referee details on file. Use Manual Entry.</div>}
                         </div>
                       )}
                     </>
@@ -429,31 +410,37 @@ export default function ReferencesPanel({ agency, applications }) {
                 </>
               ) : (
                 <>
-                  <div style={s.infoBox}>Send to anyone — no account needed.</div>
-                  <div style={{ marginBottom: 14 }}>
+                  <div style={s.infoBox}>Fill in both referees and send in one click. Referee 2 is optional — you can send it later.</div>
+                  <div style={{ marginBottom: 16 }}>
                     <label style={s.label}>Applicant Name (who the reference is for)</label>
-                    <input type="text" style={{ ...s.select, marginBottom: 0 }} placeholder="e.g. John Smith" value={manualCarerName} onChange={e => setManualCarerName(e.target.value)} />
+                    <input type="text" style={s.input} placeholder="e.g. John Smith" value={manualCarerName} onChange={e => setManualCarerName(e.target.value)} />
                   </div>
-                  <div style={{ marginBottom: 14 }}>
-                    <label style={s.label}>Referee Name</label>
-                    <input type="text" style={{ ...s.select, marginBottom: 0 }} placeholder="e.g. Jane Doe" value={manualRefName} onChange={e => setManualRefName(e.target.value)} />
+
+                  <div style={s.refBox}>
+                    <div style={s.refBoxTitle}>👤 Referee 1 (required)</div>
+                    <div style={s.grid2}>
+                      <RefInput label="Name" value={referee1.name} onChange={v => setReferee1(r => ({ ...r, name: v }))} placeholder="Full name" />
+                      <RefInput label="Email" type="email" value={referee1.email} onChange={v => setReferee1(r => ({ ...r, email: v }))} placeholder="email@example.com" />
+                    </div>
+                    <RefInput label="Organisation (optional)" value={referee1.org} onChange={v => setReferee1(r => ({ ...r, org: v }))} placeholder="e.g. NHS, Sunrise Care Home..." />
                   </div>
-                  <div style={{ marginBottom: 14 }}>
-                    <label style={s.label}>Referee Email</label>
-                    <input type="email" style={{ ...s.select, marginBottom: 0 }} placeholder="referee@example.com" value={manualRefEmail} onChange={e => setManualRefEmail(e.target.value)} />
-                  </div>
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={s.label}>Referee Organisation (optional)</label>
-                    <input type="text" style={{ ...s.select, marginBottom: 0 }} placeholder="e.g. NHS, Sunrise Care Home..." value={manualRefOrg} onChange={e => setManualRefOrg(e.target.value)} />
+
+                  <div style={s.refBox}>
+                    <div style={s.refBoxTitle}>👤 Referee 2 <span style={{ color: "#9b7fd4", fontWeight: 400, textTransform: "none", fontSize: 11 }}>(optional — can be sent later)</span></div>
+                    <div style={s.grid2}>
+                      <RefInput label="Name" value={referee2.name} onChange={v => setReferee2(r => ({ ...r, name: v }))} placeholder="Full name" />
+                      <RefInput label="Email" type="email" value={referee2.email} onChange={v => setReferee2(r => ({ ...r, email: v }))} placeholder="email@example.com" />
+                    </div>
+                    <RefInput label="Organisation (optional)" value={referee2.org} onChange={v => setReferee2(r => ({ ...r, org: v }))} placeholder="e.g. NHS, Sunrise Care Home..." />
                   </div>
                 </>
               )}
 
               <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                <button style={{ ...s.btn, flex: 1, padding: 12, opacity: sending ? 0.5 : 1 }} disabled={sending} onClick={sendRequest}>
-                  {sending ? "Sending..." : "Send Reference Request →"}
+                <button style={{ ...s.btn, flex: 1, padding: 12, opacity: sending ? 0.5 : 1 }} disabled={sending} onClick={handleSend}>
+                  {sending ? "Sending..." : "Send Reference Request(s) →"}
                 </button>
-                <button style={{ ...s.btnOutline, padding: 12 }} onClick={() => setShowSend(false)}>Cancel</button>
+                <button style={{ ...s.btnOutline, padding: 12 }} onClick={resetModal}>Cancel</button>
               </div>
             </div>
           </div>
