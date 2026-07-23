@@ -250,37 +250,31 @@ function Step3({ data, set }) {
         </div>
       </div>
       <div style={s.field}>
-        <label style={s.label}>Upload Proof of Address 1 <span style={{ color: "#cc0000" }}>*</span></label>
-        <div
-          style={{ ...s.uploadBox, borderColor: data.poa1URL ? "#6C3FC5" : "#cc0000", borderWidth: 2 }}
-          onClick={() => document.getElementById('poa1-upload').click()}>
+        <label style={s.label}>Upload Proof of Address 1</label>
+        <div style={s.uploadBox} onClick={() => document.getElementById('poa1-upload').click()}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>🏠</div>
-          <div style={{ color: data.poa1URL ? "#6C3FC5" : "#cc0000", fontWeight: 500, fontSize: 14 }}>
+          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>
             {data.poa1Uploading ? "Uploading..." : data.poa1Name ? `✓ ${data.poa1Name}` : "Click to upload proof of address 1"}
           </div>
           <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>PDF, JPG or PNG — max 5MB</div>
           <input id="poa1-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => handleFile(e, "poa1")} />
         </div>
-        {!data.poa1URL && !data.poa1Uploading && <div style={{ color: "#cc0000", fontSize: 12, marginTop: 6 }}>⚠️ Proof of address 1 is required</div>}
       </div>
       <div style={s.field}>
-        <label style={s.label}>Upload Proof of Address 2 <span style={{ color: "#cc0000" }}>*</span></label>
-        <div
-          style={{ ...s.uploadBox, borderColor: data.poa2URL ? "#6C3FC5" : "#cc0000", borderWidth: 2 }}
-          onClick={() => document.getElementById('poa2-upload').click()}>
+        <label style={s.label}>Upload Proof of Address 2</label>
+        <div style={s.uploadBox} onClick={() => document.getElementById('poa2-upload').click()}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>🏠</div>
-          <div style={{ color: data.poa2URL ? "#6C3FC5" : "#cc0000", fontWeight: 500, fontSize: 14 }}>
+          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>
             {data.poa2Uploading ? "Uploading..." : data.poa2Name ? `✓ ${data.poa2Name}` : "Click to upload proof of address 2"}
           </div>
           <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>PDF, JPG or PNG — max 5MB</div>
           <input id="poa2-upload" type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => handleFile(e, "poa2")} />
         </div>
-        {!data.poa2URL && !data.poa2Uploading && <div style={{ color: "#cc0000", fontSize: 12, marginTop: 6 }}>⚠️ Proof of address 2 is required</div>}
       </div>
 
       <div style={s.field}>
-        <label style={s.label}>Proof of Address — Document Type 1 <span style={{ color: "#cc0000" }}>*</span></label>
-        <select style={{ ...s.select, borderColor: data.proofAddress1 ? "#c5b3e8" : "#cc0000" }} value={data.proofAddress1} onChange={e => set({ ...data, proofAddress1: e.target.value })}>
+        <label style={s.label}>Proof of Address — Document 1</label>
+        <select style={s.select} value={data.proofAddress1} onChange={e => set({ ...data, proofAddress1: e.target.value })}>
           <option value="">Select document type...</option>
           <option>Bank Statement (last 3 months)</option>
           <option>Utility Bill (last 3 months)</option>
@@ -290,16 +284,15 @@ function Step3({ data, set }) {
         </select>
       </div>
       <div style={s.field}>
-        <label style={s.label}>Proof of Address — Document Type 2 <span style={{ color: "#cc0000" }}>*</span></label>
-        <select style={{ ...s.select, borderColor: data.proofAddress2 && data.proofAddress2 !== data.proofAddress1 ? "#c5b3e8" : "#cc0000" }} value={data.proofAddress2} onChange={e => set({ ...data, proofAddress2: e.target.value })}>
+        <label style={s.label}>Proof of Address — Document 2</label>
+        <select style={s.select} value={data.proofAddress2} onChange={e => set({ ...data, proofAddress2: e.target.value })}>
           <option value="">Select document type...</option>
-          {["Bank Statement (last 3 months)", "Utility Bill (last 3 months)", "Council Tax Letter", "HMRC Letter", "GP Letter"]
-            .filter(opt => opt !== data.proofAddress1)
-            .map(opt => <option key={opt}>{opt}</option>)}
+          <option>Bank Statement (last 3 months)</option>
+          <option>Utility Bill (last 3 months)</option>
+          <option>Council Tax Letter</option>
+          <option>HMRC Letter</option>
+          <option>GP Letter</option>
         </select>
-        {data.proofAddress1 && data.proofAddress2 && data.proofAddress2 === data.proofAddress1 && (
-          <div style={{ color: "#cc0000", fontSize: 12, marginTop: 6 }}>⚠️ Document 2 must be a different type to Document 1</div>
-        )}
       </div>
       <div style={s.field}>
         <label style={s.label}>Employment Continuity Check <span style={{ color: "#cc0000" }}>*</span></label>
@@ -621,11 +614,8 @@ export default function App({ user, onLogout, agencySlug }) {
       if (p3.docs.length === 0) errs.push("Please select at least one document you can provide");
       if (!p3.passportURL) errs.push("Please upload your passport (mandatory)");
       if (!p3.rtwDocURL) errs.push("Please upload your right to work document (mandatory)");
-      if (!p3.poa1URL) errs.push("Please upload your first proof of address (mandatory)");
-      if (!p3.poa2URL) errs.push("Please upload your second proof of address (mandatory)");
-      if (!p3.proofAddress1) errs.push("Please select your first proof of address document type");
-      if (!p3.proofAddress2) errs.push("Please select your second proof of address document type");
-      if (p3.proofAddress1 && p3.proofAddress2 && p3.proofAddress1 === p3.proofAddress2) errs.push("Your two proof of address documents must be different types");
+      if (!p3.proofAddress1) errs.push("Please select your first proof of address document");
+      if (!p3.proofAddress2) errs.push("Please select your second proof of address document");
       if (!p3.employmentGaps) errs.push("Please complete the employment continuity check (10 year history required)");
       if (p3.employmentGaps && !p3.gapsExplanation?.trim()) errs.push("Please provide your 10-year employment history details");
     }
@@ -752,6 +742,17 @@ export default function App({ user, onLogout, agencySlug }) {
       rejected: { bg: "#fff0f0", color: "#cc0000", border: "#ffb3b3", label: "❌ Unsuccessful" },
     };
     const sc = statusColors[existingApp.status] || statusColors.pending;
+
+    const handleResubmit = async () => {
+      if (!window.confirm("This will clear your previous application and let you start a new one. Continue?")) return;
+      try {
+        // Delete old application and draft so they can resubmit fresh
+        await deleteDoc(doc(db, "applications", existingApp.id));
+        if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid));
+      } catch (e) { console.error(e); }
+      setExistingApp(null);
+    };
+
     return (
       <div style={{ minHeight: "100vh", background: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "'DM Sans', sans-serif" }}>
         <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -767,7 +768,7 @@ export default function App({ user, onLogout, agencySlug }) {
             <div style={{ color: sc.color, fontWeight: 700, fontSize: 18, marginBottom: 4 }}>{sc.label}</div>
             <div style={{ color: sc.color, fontSize: 13 }}>
               {existingApp.status === "approved" && "Congratulations! The agency will be in touch shortly with next steps."}
-              {existingApp.status === "rejected" && "Thank you for applying. Unfortunately your application was not successful at this time."}
+              {existingApp.status === "rejected" && "Thank you for applying. Unfortunately your application was not successful at this time. You may resubmit a new application below."}
               {existingApp.status === "pending" && "Your application is being reviewed. We'll notify you by email of any updates."}
             </div>
           </div>
@@ -778,6 +779,12 @@ export default function App({ user, onLogout, agencySlug }) {
             <div style={{ fontSize: 13, color: "#1a1a2e", marginTop: 4 }}><strong>Applied to:</strong> {agencySlug}</div>
             <div style={{ fontSize: 13, color: "#1a1a2e", marginTop: 4 }}><strong>Applied on:</strong> {existingApp.appliedAt || "—"}</div>
           </div>
+
+          {existingApp.status === "rejected" && (
+            <button onClick={handleResubmit} style={{ width: "100%", padding: "13px", background: "#6C3FC5", border: "none", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", marginBottom: 12 }}>
+              📝 Resubmit New Application
+            </button>
+          )}
 
           <button onClick={onLogout} style={{ width: "100%", padding: "13px", background: "transparent", border: "1px solid #c5b3e8", borderRadius: 8, color: "#9b7fd4", fontSize: 14, cursor: "pointer" }}>
             Sign Out
