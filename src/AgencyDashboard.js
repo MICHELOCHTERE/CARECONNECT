@@ -74,9 +74,11 @@ function DetailItem({ label, value }) {
 function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
   if (!app) return null;
   const downloadPDF = () => {
-    const field = (label, value) => `<div class="field"><div class="label">${label}</div><div class="value">${value || '—'}</div></div>`;
-    const section = (title, fields) => `<div class="section"><h2>${title}</h2><div class="grid">${fields}</div></div>`;
-    const tags = (arr) => arr?.length ? arr.map(t => `<span class="tag">${t}</span>`).join('') : '—';
+    const field = (label, value) => value ? `<div class="field"><div class="label">${label}</div><div class="value">${value}</div></div>` : '';
+    const fieldFull = (label, value) => value ? `<div class="field full"><div class="label">${label}</div><div class="value">${value}</div></div>` : '';
+    const tags = (arr) => arr?.length ? arr.map(t => `<span class="tag">${t}</span>`).join('') : null;
+    const tagsFull = (label, arr) => arr?.length ? `<div class="field full"><div class="label">${label}</div><div class="tags">${tags(arr)}</div></div>` : '';
+    const section = (title, fields) => { const content = fields.filter(Boolean).join(''); return content.trim() ? `<div class="section"><h2>${title}</h2><div class="grid">${content}</div></div>` : ''; };
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${app.firstName} ${app.lastName} — Application</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -99,7 +101,7 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
       .value { font-size: 12px; color: #1a1a2e; }
       .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
       .tag { background: #f0ebff; border: 1px solid #e8e0f5; border-radius: 999px; padding: 2px 8px; font-size: 11px; color: #6C3FC5; }
-      .doc-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #e8e0f5; font-size: 12px; }
+      .doc-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #e8e0f5; font-size: 12px; }
       .doc-row:last-child { border-bottom: none; }
       .doc-link { color: #6C3FC5; font-size: 11px; }
       .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e8e0f5; display: flex; justify-content: space-between; font-size: 10px; color: #9b7fd4; }
@@ -116,47 +118,79 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
           <div style="margin-top:8px"><span class="status status-${app.status || 'pending'}">${app.status || 'pending'}</span></div>
         </div>
       </div>
-      ${section('👤 Personal Details', `
-        ${field('First Name', app.firstName)} ${field('Last Name', app.lastName)}
-        ${field('Date of Birth', app.dob)} ${field('Gender', app.gender)}
-        ${field('Nationality', app.nationality)} ${field('Religion', app.religion)}
-        ${field('NI Number', app.niNumber)} ${field('Email', app.email)}
-        ${field('Phone', app.phone)} ${field('Postcode', app.postcode)}
-        ${field('Driving Licence', app.driving)} ${field('Languages', app.languages?.join(', '))}
-      `)}
-      ${section('🆘 Emergency Contact', `
-        ${field('Name', app.emergencyName)} ${field('Relationship', app.emergencyRelation)} ${field('Phone', app.emergencyPhone)}
-      `)}
-      ${section('💼 Experience & Qualifications', `
-        ${field('Years of Experience', app.years)}
-        <div class="field full"><div class="label">Care Settings</div><div class="tags">${tags(app.settings)}</div></div>
-        <div class="field full"><div class="label">Client Groups</div><div class="tags">${tags(app.clients)}</div></div>
-        <div class="field full"><div class="label">Qualifications</div><div class="tags">${tags(app.quals)}</div></div>
-      `)}
-      ${section('🛡️ DBS & Right to Work', `
-        ${field('Right to Work', app.rightToWork)} ${field('RTW Status', app.rtwStatus)}
-        ${field('Has DBS', app.hasDbs)} ${field('DBS Date', app.dbsDate)}
-        ${field('Update Service', app.updateService)} ${field('Convictions', app.conviction)}
-        ${field('Proof of Address 1', app.proofAddress1)} ${field('Proof of Address 2', app.proofAddress2)}
-        ${field('Employment Continuity Check', app.employmentGaps)}
-        <div class="field full"><div class="label">RTW Documents Provided</div><div class="tags">${tags(app.docs)}</div></div>
-        <div class="field full"><div class="label">History Details</div><div class="value">${app.gapsExplanation || '—'}</div></div>
-      `)}
-      ${section('💰 Bank Details', `
-        ${field('Account Holder', app.bankName)} ${field('Sort Code', app.sortCode)} ${field('Account Number', app.accountNumber)}
-      `)}
+
+      ${section('👤 Personal Details', [
+        field('First Name', app.firstName),
+        field('Last Name', app.lastName),
+        field('Date of Birth', app.dob),
+        field('Gender', app.gender),
+        field('Nationality', app.nationality),
+        app.religion ? field('Religion', app.religion) : '',
+        field('NI Number', app.niNumber),
+        field('Email', app.email),
+        field('Phone', app.phone),
+        field('Postcode', app.postcode),
+        app.driving ? field('Driving Licence', app.driving) : '',
+        app.languages?.length ? fieldFull('Languages Spoken', app.languages.join(', ')) : '',
+      ])}
+
+      ${section('🆘 Emergency Contact', [
+        field('Name', app.emergencyName),
+        field('Relationship', app.emergencyRelation),
+        field('Phone', app.emergencyPhone),
+      ])}
+
+      ${section('💼 Experience & Qualifications', [
+        field('Years of Experience', app.years),
+        app.settings?.length ? tagsFull('Care Settings', app.settings) : '',
+        app.clients?.length ? tagsFull('Client Groups', app.clients) : '',
+        app.quals?.length ? tagsFull('Qualifications', app.quals) : '',
+      ])}
+
+      ${section('🛡️ DBS & Right to Work', [
+        field('Right to Work', app.rightToWork),
+        app.rtwStatus ? field('RTW Status', app.rtwStatus) : '',
+        field('Has DBS Certificate', app.hasDbs),
+        app.dbsDate ? field('DBS Issue Date', app.dbsDate) : '',
+        app.updateService ? field('DBS Update Service', app.updateService) : '',
+        field('Criminal Convictions', app.conviction),
+        field('Proof of Address 1', app.proofAddress1),
+        field('Proof of Address 2', app.proofAddress2),
+        field('Employment Continuity Check', app.employmentGaps),
+        app.docs?.length ? tagsFull('RTW Documents Provided', app.docs) : '',
+        app.gapsExplanation ? fieldFull('Employment History Details', app.gapsExplanation) : '',
+      ])}
+
+      ${app.bankName || app.sortCode || app.accountNumber ? section('💰 Bank Details', [
+        field('Account Holder', app.bankName),
+        field('Sort Code', app.sortCode),
+        field('Account Number', app.accountNumber),
+      ]) : ''}
+
       <div class="section"><h2>📎 Uploaded Documents</h2>
         <div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;">
-          ${app.cvURL ? `<div class="doc-row">📄 CV &nbsp;<a class="doc-link" href="${app.cvURL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#9b7fd4">📄 CV — not uploaded</div>'}
+          ${app.cvURL ? `<div class="doc-row">📄 CV &nbsp;<a class="doc-link" href="${app.cvURL}" target="_blank">View</a></div>` : ''}
           ${app.passportURL ? `<div class="doc-row">🛂 Passport &nbsp;<a class="doc-link" href="${app.passportURL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🛂 Passport — not uploaded</div>'}
-          ${app.rtwDocURL ? `<div class="doc-row">📋 RTW Doc &nbsp;<a class="doc-link" href="${app.rtwDocURL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">📋 RTW Doc — not uploaded</div>'}
-          ${app.poa1URL ? `<div class="doc-row">🏠 Address 1 &nbsp;<a class="doc-link" href="${app.poa1URL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#9b7fd4">🏠 Address 1 — not uploaded</div>'}
-          ${app.poa2URL ? `<div class="doc-row">🏠 Address 2 &nbsp;<a class="doc-link" href="${app.poa2URL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#9b7fd4">🏠 Address 2 — not uploaded</div>'}
+          ${app.rtwDocURL ? `<div class="doc-row">📋 RTW Document &nbsp;<a class="doc-link" href="${app.rtwDocURL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">📋 RTW Document — not uploaded</div>'}
+          ${app.poa1URL ? `<div class="doc-row">🏠 Proof of Address 1 (${app.proofAddress1 || ''}) &nbsp;<a class="doc-link" href="${app.poa1URL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🏠 Proof of Address 1 — not uploaded</div>'}
+          ${app.poa2URL ? `<div class="doc-row">🏠 Proof of Address 2 (${app.proofAddress2 || ''}) &nbsp;<a class="doc-link" href="${app.poa2URL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🏠 Proof of Address 2 — not uploaded</div>'}
+          ${app.dbsDocURL ? `<div class="doc-row">🔒 DBS Certificate &nbsp;<a class="doc-link" href="${app.dbsDocURL}" target="_blank">View</a></div>` : ''}
         </div>
       </div>
-      <div class="section"><h2>📋 References</h2>
-        ${(app.refs || []).map((r, i) => `<div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;margin-bottom:8px"><div style="font-weight:700;color:#6C3FC5;margin-bottom:6px">Reference ${i+1}</div><div class="grid">${field('Name', r.name)}${field('Job Title', r.title)}${field('Organisation', r.org)}${field('Email', r.email)}${field('Relationship', r.relation)}</div></div>`).join('')}
-      </div>
+
+      ${(app.refs || []).length ? `<div class="section"><h2>📋 References</h2>
+        ${(app.refs || []).map((r, i) => {
+          const refFields = [
+            field('Name', r.name),
+            field('Job Title', r.title),
+            field('Organisation', r.org),
+            field('Email', r.email),
+            field('Relationship', r.relation),
+          ].filter(Boolean).join('');
+          return `<div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;margin-bottom:8px"><div style="font-weight:700;color:#6C3FC5;margin-bottom:6px">Reference ${i+1}</div><div class="grid">${refFields}</div></div>`;
+        }).join('')}
+      </div>` : ''}
+
       <div class="footer">
         <span>${agency?.agencyName || 'Quikcare'} — Powered by Quikcare Ltd · Co. No. 17206901</span>
         <span>Generated: ${new Date().toLocaleDateString('en-GB')} &nbsp;|&nbsp; ID: ${app.id || '—'}</span>
