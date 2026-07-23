@@ -10,6 +10,7 @@ const steps = [
   { id: 4, label: "DBS Check", icon: "🔒" },
   { id: 5, label: "Availability", icon: "📅" },
   { id: 6, label: "References", icon: "⭐" },
+  { id: 7, label: "Declaration", icon: "✍️" },
 ];
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -500,6 +501,66 @@ function Step6({ data, set }) {
   );
 }
 
+function Step7({ data, set, firstName, lastName }) {
+  const today = new Date().toLocaleDateString("en-GB");
+  return (
+    <div>
+      <div style={{ background: "#f0ebff", border: "1px solid #c5b3e8", borderRadius: 12, padding: "16px 20px", marginBottom: 20 }}>
+        <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, color: "#6C3FC5", marginBottom: 8 }}>📋 Applicant Declaration</div>
+        <p style={{ fontSize: 13, color: "#1a1a2e", lineHeight: 1.8, margin: 0 }}>
+          I declare that the information given in this application is, to the best of my knowledge, true and complete.
+          I understand that any false or misleading information may result in the withdrawal of any offer of employment,
+          or dismissal if already in post. I consent to Quikcare Ltd and the recruiting agency collecting and processing
+          my personal data for employment assessment purposes in accordance with UK GDPR. I understand my data will be
+          held securely and I have the right to request deletion by contacting{" "}
+          <a href="mailto:privacy@quikcare.co.uk" style={{ color: "#6C3FC5" }}>privacy@quikcare.co.uk</a>.{" "}
+          <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: "#6C3FC5" }}>Read Privacy Policy →</a>
+        </p>
+      </div>
+
+      <div style={{ background: "#fff8e8", border: "1px solid #f0c060", borderRadius: 12, padding: "14px 18px", marginBottom: 20 }}>
+        <div style={{ color: "#7a5000", fontSize: 12, fontWeight: 600, marginBottom: 4 }}>⚠️ Important</div>
+        <div style={{ color: "#7a5000", fontSize: 13, lineHeight: 1.6 }}>
+          By signing below you are confirming that all information provided throughout this application is accurate and truthful.
+          Providing false information is a serious matter and may result in legal consequences.
+        </div>
+      </div>
+
+      <div style={s.field}>
+        <label style={{ ...s.label, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", textTransform: "none", fontSize: 13, fontWeight: 400, letterSpacing: 0 }}>
+          <input
+            type="checkbox"
+            checked={data.agreed || false}
+            onChange={e => set({ ...data, agreed: e.target.checked })}
+            style={{ width: 18, height: 18, accentColor: "#6C3FC5", flexShrink: 0, cursor: "pointer" }}
+          />
+          <span style={{ color: "#1a1a2e", lineHeight: 1.6 }}>
+            <strong>I have read and agree</strong> to the declaration above and confirm all information in this application is true and accurate.
+          </span>
+        </label>
+        {!data.agreed && <div style={{ color: "#cc0000", fontSize: 12, marginTop: 6, marginLeft: 26 }}>⚠️ You must agree to the declaration before submitting</div>}
+      </div>
+
+      <div style={s.field}>
+        <label style={s.label}>Full Name (Typed Signature) <span style={{ color: "#cc0000" }}>*</span></label>
+        <input
+          type="text"
+          style={{ ...s.input, fontStyle: "italic", fontSize: 16, letterSpacing: "0.03em", borderColor: data.signature ? "#6C3FC5" : "#cc0000" }}
+          placeholder={`${firstName || "Your"} ${lastName || "Name"}`}
+          value={data.signature || ""}
+          onChange={e => set({ ...data, signature: e.target.value })}
+        />
+        <div style={{ fontSize: 11, color: "#9b7fd4", marginTop: 6 }}>Type your full legal name as your signature</div>
+      </div>
+
+      <div style={s.field}>
+        <label style={s.label}>Date</label>
+        <input type="text" style={{ ...s.input, background: "#f0ebff", color: "#6C3FC5" }} value={today} readOnly />
+      </div>
+    </div>
+  );
+}
+
 export default function App({ user, onLogout, agencySlug }) {
   const [current, setCurrent] = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -511,6 +572,7 @@ export default function App({ user, onLogout, agencySlug }) {
   const [p4, setP4] = useState({ hasDbs: "", dbsDate: "", updateService: "", conviction: "", dbsDocName: "", dbsDocURL: "" });
   const [p5, setP5] = useState({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
   const [p6, setP6] = useState({ refs: [{}, {}] });
+  const [p7, setP7] = useState({ agreed: false, signature: "" });
   const [consent, setConsent] = useState(false);
 
   const [saveStatus, setSaveStatus] = useState("");
@@ -632,10 +694,13 @@ export default function App({ user, onLogout, agencySlug }) {
     }
     if (step === 6) {
       if (!p6.refs[0]?.name?.trim()) errs.push("Reference 1: Full name is required");
-      if (current === steps.length && !consent) errs.push("You must agree to the data protection consent before submitting.");
       if (!p6.refs[0]?.email?.trim()) errs.push("Reference 1: Email is required");
       if (!p6.refs[1]?.name?.trim()) errs.push("Reference 2: Full name is required");
       if (!p6.refs[1]?.email?.trim()) errs.push("Reference 2: Email is required");
+    }
+    if (step === 7) {
+      if (!p7.agreed) errs.push("You must agree to the declaration before submitting");
+      if (!p7.signature?.trim()) errs.push("Please type your full name as your signature");
     }
     return errs;
   };
@@ -650,7 +715,7 @@ export default function App({ user, onLogout, agencySlug }) {
     setErrors([]);
     await saveProgress({ p1, p2, p3, p4, p5, p6 });
     if (current === steps.length) {
-      if (!consent) { setErrors(["You must agree to the data protection consent before submitting."]); return; }
+      if (!p7.agreed) { setErrors(["You must agree to the declaration before submitting."]); return; }
       handleSubmit();
     }
     else setCurrent(current + 1);
@@ -662,6 +727,9 @@ export default function App({ user, onLogout, agencySlug }) {
       await addDoc(collection(db, "applications"), {
         ...p1, ...p2, ...p3, ...p4, ...p5,
         refs: p6.refs,
+        declarationAgreed: true,
+        signature: p7.signature,
+        signedAt: new Date().toLocaleDateString("en-GB"),
         status: "pending",
         userId: user?.uid,
         userEmail: user?.email,
@@ -742,17 +810,6 @@ export default function App({ user, onLogout, agencySlug }) {
       rejected: { bg: "#fff0f0", color: "#cc0000", border: "#ffb3b3", label: "❌ Unsuccessful" },
     };
     const sc = statusColors[existingApp.status] || statusColors.pending;
-
-    const handleResubmit = async () => {
-      if (!window.confirm("This will clear your previous application and let you start a new one. Continue?")) return;
-      try {
-        // Delete old application and draft so they can resubmit fresh
-        await deleteDoc(doc(db, "applications", existingApp.id));
-        if (user?.uid) await deleteDoc(doc(db, "drafts", user.uid));
-      } catch (e) { console.error(e); }
-      setExistingApp(null);
-    };
-
     return (
       <div style={{ minHeight: "100vh", background: "#f8f5ff", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "'DM Sans', sans-serif" }}>
         <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -768,7 +825,7 @@ export default function App({ user, onLogout, agencySlug }) {
             <div style={{ color: sc.color, fontWeight: 700, fontSize: 18, marginBottom: 4 }}>{sc.label}</div>
             <div style={{ color: sc.color, fontSize: 13 }}>
               {existingApp.status === "approved" && "Congratulations! The agency will be in touch shortly with next steps."}
-              {existingApp.status === "rejected" && "Thank you for applying. Unfortunately your application was not successful at this time. You may resubmit a new application below."}
+              {existingApp.status === "rejected" && "Thank you for applying. Unfortunately your application was not successful at this time."}
               {existingApp.status === "pending" && "Your application is being reviewed. We'll notify you by email of any updates."}
             </div>
           </div>
@@ -779,12 +836,6 @@ export default function App({ user, onLogout, agencySlug }) {
             <div style={{ fontSize: 13, color: "#1a1a2e", marginTop: 4 }}><strong>Applied to:</strong> {agencySlug}</div>
             <div style={{ fontSize: 13, color: "#1a1a2e", marginTop: 4 }}><strong>Applied on:</strong> {existingApp.appliedAt || "—"}</div>
           </div>
-
-          {existingApp.status === "rejected" && (
-            <button onClick={handleResubmit} style={{ width: "100%", padding: "13px", background: "#6C3FC5", border: "none", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", marginBottom: 12 }}>
-              📝 Resubmit New Application
-            </button>
-          )}
 
           <button onClick={onLogout} style={{ width: "100%", padding: "13px", background: "transparent", border: "1px solid #c5b3e8", borderRadius: 8, color: "#9b7fd4", fontSize: 14, cursor: "pointer" }}>
             Sign Out
@@ -815,6 +866,7 @@ export default function App({ user, onLogout, agencySlug }) {
             setP4({ hasDbs: "", dbsDate: "", updateService: "", conviction: "", dbsDocName: "", dbsDocURL: "" });
             setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
             setP6({ refs: [{}, {}] });
+            setP7({ agreed: false, signature: "" });
             setConsent(false);
             setSubmitted(false);
             setCurrent(1);
@@ -867,24 +919,8 @@ export default function App({ user, onLogout, agencySlug }) {
           {current === 4 && <Step4 data={p4} set={setP4} />}
           {current === 5 && <Step5 data={p5} set={setP5} />}
           {current === 6 && <Step6 data={p6} set={setP6} />}
+          {current === 7 && <Step7 data={p7} set={setP7} firstName={p1.firstName} lastName={p1.lastName} />}
         </div>
-
-        {current === steps.length && (
-          <div style={{ background: "#f0ebff", border: `1px solid ${consent ? "#6C3FC5" : "#cc0000"}`, borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
-            <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={e => setConsent(e.target.checked)}
-                style={{ marginTop: 3, width: 18, height: 18, accentColor: "#6C3FC5", flexShrink: 0, cursor: "pointer" }}
-              />
-              <span style={{ fontSize: 13, color: "#1a1a2e", lineHeight: 1.7 }}>
-                <strong>Data Protection Consent</strong> — I consent to Quikcare Ltd and the recruiting agency collecting and processing my personal data for employment assessment purposes in accordance with UK GDPR. I understand my data will be held securely and I have the right to request deletion by contacting <a href="mailto:privacy@quikcare.co.uk" style={{ color: "#6C3FC5" }}>privacy@quikcare.co.uk</a>. I confirm all information provided is accurate. <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: "#6C3FC5" }}>Read Privacy Policy →</a>
-              </span>
-            </label>
-            {!consent && <p style={{ color: "#cc0000", fontSize: 12, marginTop: 8, marginLeft: 30 }}>⚠️ You must agree to this before submitting</p>}
-          </div>
-        )}
 
         <div style={s.navRow}>
           <button style={{ ...s.btnBack, opacity: current === 1 ? 0.3 : 1 }} disabled={current === 1} onClick={() => { setErrors([]); setCurrent(current - 1); }}>← Back</button>
