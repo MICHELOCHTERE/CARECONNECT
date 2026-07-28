@@ -573,7 +573,6 @@ export default function App({ user, onLogout, agencySlug }) {
   const [p5, setP5] = useState({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
   const [p6, setP6] = useState({ refs: [{}, {}] });
   const [p7, setP7] = useState({ agreed: false, signature: "" });
-  const [consent, setConsent] = useState(false);
 
   const [saveStatus, setSaveStatus] = useState("");
   const [existingApp, setExistingApp] = useState(null);
