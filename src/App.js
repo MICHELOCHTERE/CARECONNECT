@@ -867,7 +867,6 @@ export default function App({ user, onLogout, agencySlug }) {
             setP5({ availability: [], bankName: "", sortCode: "", accountNumber: "" });
             setP6({ refs: [{}, {}] });
             setP7({ agreed: false, signature: "" });
-            setConsent(false);
             setSubmitted(false);
             setCurrent(1);
           }}>Start New Application</button>
