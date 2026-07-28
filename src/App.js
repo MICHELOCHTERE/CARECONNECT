@@ -617,7 +617,8 @@ export default function App({ user, onLogout, agencySlug }) {
           if (data.p4) setP4(data.p4);
           if (data.p5) setP5(data.p5);
           if (data.p6) setP6(data.p6);
-          if (data.current) setCurrent(data.current);
+          if (data.p7) setP7(data.p7);
+          if (data.current) setCurrent(Math.min(data.current, steps.length));
           setSaveStatus("✅ Welcome back! Your progress has been restored.");
           setTimeout(() => setSaveStatus(""), 4000);
         }
@@ -713,7 +714,7 @@ export default function App({ user, onLogout, agencySlug }) {
       return;
     }
     setErrors([]);
-    await saveProgress({ p1, p2, p3, p4, p5, p6 });
+    await saveProgress({ p1, p2, p3, p4, p5, p6, p7 });
     if (current === steps.length) {
       if (!p7.agreed) { setErrors(["You must agree to the declaration before submitting."]); return; }
       handleSubmit();
