@@ -8,6 +8,7 @@ import AgencyDashboard from './AgencyDashboard';
 import LandingPage from './LandingPage';
 import Demo from './Demo';
 import PrivacyPolicy from './PrivacyPolicy';
+import Contact from './Contact';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -228,6 +229,11 @@ function Router() {
   // Privacy Policy — public
   if (path === '/privacy') {
     return <PrivacyPolicy />;
+  }
+
+  // Contact — public
+  if (path === '/contact') {
+    return <Contact />;
   }
 
   // Landing page
