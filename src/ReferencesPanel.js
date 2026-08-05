@@ -117,11 +117,6 @@ function DetailModal({ req, onClose }) {
           {r.status === "pending" ? (
             <>
               <div style={s.infoBox}>Reference link sent to <strong>{r.refereeEmail}</strong>. Waiting for response.</div>
-              <div style={s.label}>Reference Link</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <div style={{ flex: 1, background: "#f8f5ff", border: "1px solid #e8e0f5", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#6C3FC5", wordBreak: "break-all" }}>{window.location.origin}/reference/{r.token}</div>
-                <button style={s.btn} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/reference/${r.token}`)}>Copy</button>
-              </div>
             </>
           ) : (
             <>
@@ -160,7 +155,7 @@ function DetailModal({ req, onClose }) {
   );
 }
 
-function CarerReferenceRow({ carerName, refs, onViewRef }) {
+function CarerReferenceRow({ carerName, refs, onViewRef, onResend }) {
   const [expanded, setExpanded] = useState(false);
   const completed = refs.filter(r => r.status === "completed").length;
   const total = refs.length;
@@ -194,7 +189,7 @@ function CarerReferenceRow({ carerName, refs, onViewRef }) {
                   <button style={{ ...s.btnSm, background: "#4a7a5a" }} onClick={() => downloadReferencePDF(ref)}>⬇ PDF</button>
                 </>
               ) : (
-                <button style={s.btnSmOutline} onClick={() => navigator.clipboard.writeText(`${window.location.origin}/reference/${ref.token}`)}>Copy Link</button>
+                <button style={{ ...s.btnSmOutline, color: "#6C3FC5", borderColor: "#6C3FC5" }} onClick={() => onResend(ref)}>🔁 Resend</button>
               )}
             </div>
           </td>
@@ -210,6 +205,7 @@ const emptyRef = () => ({ name: "", email: "", org: "" });
 export default function ReferencesPanel({ agency, applications }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [resending, setResending] = useState(null);
   const [showSend, setShowSend] = useState(false);
   const [sendMode, setSendMode] = useState("carer");
   // From application mode
@@ -244,6 +240,30 @@ export default function ReferencesPanel({ agency, applications }) {
   const totalCarers = Object.keys(grouped).length;
   const fullyReferenced = Object.values(grouped).filter(refs => refs.filter(r => r.status === "completed").length >= 2).length;
   const pendingCount = requests.filter(r => r.status === "pending").length;
+
+  const handleResend = async (ref) => {
+    if (resending) return;
+    setResending(ref.id);
+    try {
+      const link = `${window.location.origin}/reference/${ref.token}`;
+      await fetch("/api/send-reference", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          refereeName: ref.refereeName,
+          refereeEmail: ref.refereeEmail,
+          carerName: ref.carerName,
+          agencyName: agency.agencyName,
+          referenceLink: link,
+        }),
+      });
+      alert(`✅ Reference request resent to ${ref.refereeEmail}!`);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to resend. Please try copying the link manually.");
+    }
+    setResending(null);
+  };
 
   const sendEmail = async (refereeName, refereeEmail, carerName, link) => {
     try {
@@ -352,7 +372,7 @@ export default function ReferencesPanel({ agency, applications }) {
             </thead>
             <tbody>
               {Object.entries(grouped).map(([carerName, refs]) => (
-                <CarerReferenceRow key={carerName} carerName={carerName} refs={refs} onViewRef={setViewReq} />
+                <CarerReferenceRow key={carerName} carerName={carerName} refs={refs} onViewRef={setViewReq} onResend={handleResend} />
               ))}
             </tbody>
           </table>
