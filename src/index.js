@@ -9,6 +9,8 @@ import LandingPage from './LandingPage';
 import Demo from './Demo';
 import PrivacyPolicy from './PrivacyPolicy';
 import Contact from './Contact';
+import TrainingMatrix from './TrainingMatrix';
+import ReferenceForm from './ReferenceForm';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -105,6 +107,11 @@ function Router() {
     });
     return () => unsub();
   }, []);
+
+  // Reference form — public, no auth needed — BEFORE auth check
+  if (path.startsWith('/reference/')) {
+    return <ReferenceForm />;
+  }
 
   // Super admin route
   if (path === '/admin') {
@@ -219,6 +226,12 @@ function Router() {
         </div>
       </div>
     );
+  }
+
+  // Training Matrix — agency only
+  if (path === '/training') {
+    if (!user || !agencyProfile) { go('/agency/login'); return null; }
+    return <TrainingMatrix agency={agencyProfile} onBack={() => { go('/agency/dashboard'); }} />;
   }
 
   // Demo page
