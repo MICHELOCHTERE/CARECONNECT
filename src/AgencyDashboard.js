@@ -105,9 +105,18 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
       .doc-row:last-child { border-bottom: none; }
       .doc-link { color: #6C3FC5; font-size: 11px; }
       .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e8e0f5; display: flex; justify-content: space-between; font-size: 10px; color: #9b7fd4; }
-      @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+      * { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+      @media print { 
+        body { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
+        .no-print { display: none !important; }
+      }
     </style></head>
-    <body><div class="page">
+    <body>
+    <div class="no-print" style="background:#fff8e8;border:1px solid #f0c060;border-radius:8px;padding:12px 16px;margin:16px;font-family:Arial,sans-serif;font-size:13px;color:#7a5000;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:18px;">🖨️</span>
+      <span><strong>For colour printing:</strong> In the print dialog click <strong>"More settings"</strong> → enable <strong>"Background graphics"</strong> → then print or save as PDF.</span>
+    </div>
+    <div class="page">
       <div class="header">
         <div class="header-left">
           <h1>${app.firstName || ''} ${app.lastName || ''}</h1>
@@ -195,7 +204,7 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
         <span>${agency?.agencyName || 'Quikcare'} — Powered by Quikcare Ltd · Co. No. 17206901</span>
         <span>Generated: ${new Date().toLocaleDateString('en-GB')} &nbsp;|&nbsp; ID: ${app.id || '—'}</span>
       </div>
-    </div></body></html>`;
+    </div></div></body></html>`;
     const win = window.open('', '_blank');
     win.document.write(html);
     win.document.close();
