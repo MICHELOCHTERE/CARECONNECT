@@ -240,15 +240,16 @@ function Step3({ data, set }) {
       )}
       <div style={s.field}><label style={s.label}>Documents you can provide</label><CheckboxGroup options={["Passport", "Birth Certificate", "National ID Card", "Biometric Residence Permit", "Share Code"]} values={data.docs} onChange={v => set({ ...data, docs: v })} /></div>
       <div style={s.field}>
-        <label style={s.label}>Upload CV (optional)</label>
-        <div style={s.uploadBox} onClick={() => document.getElementById('cv-upload').click()}>
+        <label style={s.label}>Upload CV <span style={{ color: "#cc0000" }}>*</span></label>
+        <div style={{ ...s.uploadBox, borderColor: data.cvURL ? "#6C3FC5" : "#cc0000", borderWidth: 2 }} onClick={() => document.getElementById('cv-upload').click()}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>📄</div>
-          <div style={{ color: "#6C3FC5", fontWeight: 500, fontSize: 14 }}>
+          <div style={{ color: data.cvURL ? "#6C3FC5" : "#cc0000", fontWeight: 500, fontSize: 14 }}>
             {data.cvUploading ? "Uploading..." : data.cvName ? `✓ ${data.cvName}` : "Click to upload your CV"}
           </div>
           <div style={{ color: "#9b7fd4", fontSize: 12, marginTop: 4 }}>PDF, DOC or DOCX — max 5MB</div>
           <input id="cv-upload" type="file" accept=".pdf,.doc,.docx" style={{ display: "none" }} onChange={e => handleFile(e, "cv")} />
         </div>
+        {!data.cvURL && !data.cvUploading && <div style={{ color: "#cc0000", fontSize: 12, marginTop: 6 }}>⚠️ CV is required</div>}
       </div>
       <div style={s.field}>
         <label style={s.label}>Upload Proof of Address 1</label>
@@ -674,6 +675,7 @@ export default function App({ user, onLogout, agencySlug }) {
     if (step === 3) {
       if (!p3.rightToWork) errs.push("Please confirm your right to work status");
       if (p3.docs.length === 0) errs.push("Please select at least one document you can provide");
+      if (!p3.cvURL) errs.push("Please upload your CV (mandatory)");
       if (!p3.passportURL) errs.push("Please upload your passport (mandatory)");
       if (!p3.rtwDocURL) errs.push("Please upload your right to work document (mandatory)");
       if (!p3.poa1URL) errs.push("Please upload your first proof of address document (mandatory)");
