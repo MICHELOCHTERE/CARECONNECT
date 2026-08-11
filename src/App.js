@@ -676,8 +676,11 @@ export default function App({ user, onLogout, agencySlug }) {
       if (p3.docs.length === 0) errs.push("Please select at least one document you can provide");
       if (!p3.passportURL) errs.push("Please upload your passport (mandatory)");
       if (!p3.rtwDocURL) errs.push("Please upload your right to work document (mandatory)");
-      if (!p3.proofAddress1) errs.push("Please select your first proof of address document");
-      if (!p3.proofAddress2) errs.push("Please select your second proof of address document");
+      if (!p3.poa1URL) errs.push("Please upload your first proof of address document (mandatory)");
+      if (!p3.poa2URL) errs.push("Please upload your second proof of address document (mandatory)");
+      if (!p3.proofAddress1) errs.push("Please select your first proof of address document type");
+      if (!p3.proofAddress2) errs.push("Please select your second proof of address document type");
+      if (p3.proofAddress1 && p3.proofAddress2 && p3.proofAddress1 === p3.proofAddress2) errs.push("Your two proof of address documents must be different types");
       if (!p3.employmentGaps) errs.push("Please complete the employment continuity check (10 year history required)");
       if (p3.employmentGaps && !p3.gapsExplanation?.trim()) errs.push("Please provide your 10-year employment history details");
     }

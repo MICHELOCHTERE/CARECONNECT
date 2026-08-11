@@ -198,6 +198,23 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
           ].filter(Boolean).join('');
           return `<div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;margin-bottom:8px"><div style="font-weight:700;color:#6C3FC5;margin-bottom:6px">Reference ${i+1}</div><div class="grid">${refFields}</div></div>`;
         }).join('')}
+      </div>` : ''}\
+
+      ${app.signature ? `<div class="section"><h2>✍️ Declaration & Signature</h2>
+        <div class="grid">
+          <div class="field full" style="background:#f0ebff;border:1px solid #c5b3e8;">
+            <div class="label">Declaration</div>
+            <div class="value" style="font-size:12px;line-height:1.7;color:#4a4a6a;">I declare that the information given in this application is, to the best of my knowledge, true and complete. I understand that any false or misleading information may result in the withdrawal of any offer of employment, or dismissal if already in post.</div>
+          </div>
+          <div class="field">
+            <div class="label">Signature</div>
+            <div class="value" style="font-style:italic;font-size:16px;font-family:Georgia,serif;">${app.signature}</div>
+          </div>
+          <div class="field">
+            <div class="label">Date Signed</div>
+            <div class="value">${app.signedAt || '—'}</div>
+          </div>
+        </div>
       </div>` : ''}
 
       <div class="footer">
