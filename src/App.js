@@ -145,6 +145,10 @@ export default function App({ user, agencySlug, onLogout }) {
   const [submitted, setSubmitted] = useState(false);
   const [, setExistingApp] = useState(null);
   const [agencyName, setAgencyName] = useState("");
+  const [postcodeQuery, setPostcodeQuery] = useState("");
+  const [addressList, setAddressList] = useState([]);
+  const [postcodeLoading, setPostcodeLoading] = useState(false);
+  const [postcodeError, setPostcodeError] = useState("");
 
   // Step 1 - Personal Details
   const [p1, setP1] = useState({ firstName: "", middleName: "", lastName: "", dob: "", gender: "", nationality: "", religion: "", email: "", phone: "", address1: "", address2: "", city: "", county: "", postcode: "", emergency1Name: "", emergency1Rel: "", emergency1Phone: "", emergency2Name: "", emergency2Rel: "", emergency2Phone: "" });
@@ -261,6 +265,52 @@ export default function App({ user, agencySlug, onLogout }) {
   const u8 = (f, v) => setP8(prev => ({ ...prev, [f]: v }));
   const u10 = (f, v) => setP10(prev => ({ ...prev, [f]: v }));
   const u11 = (f, v) => setP11(prev => ({ ...prev, [f]: v }));
+
+  const lookupPostcode = async () => {
+    const pc = postcodeQuery.trim().replace(/\s+/g, "");
+    if (!pc) return;
+    setPostcodeLoading(true);
+    setPostcodeError("");
+    setAddressList([]);
+    try {
+      const key = process.env.REACT_APP_GETADDRESS_KEY;
+      const res = await fetch(`https://api.getaddress.io/find/${encodeURIComponent(pc)}?api-key=${key}&expand=true`);
+      if (!res.ok) {
+        if (res.status === 404) setPostcodeError("Postcode not found. Please check and try again.");
+        else if (res.status === 401) setPostcodeError("Address lookup unavailable. Please enter your address manually.");
+        else setPostcodeError("Lookup failed. Please enter your address manually.");
+        setPostcodeLoading(false);
+        return;
+      }
+      const data = await res.json();
+      const addresses = (data.addresses || []).map(a => ({
+        line1: a.line_1 || "",
+        line2: [a.line_2, a.line_3].filter(Boolean).join(", "),
+        city: a.town_or_city || "",
+        county: a.county || "",
+        postcode: data.postcode || pc.toUpperCase(),
+        formatted: [a.line_1, a.line_2, a.line_3, a.town_or_city, a.county].filter(Boolean).join(", "),
+      }));
+      if (addresses.length === 0) {
+        setPostcodeError("No addresses found for this postcode.");
+      } else {
+        setAddressList(addresses);
+      }
+    } catch (e) {
+      setPostcodeError("Lookup failed. Please enter your address manually.");
+    }
+    setPostcodeLoading(false);
+  };
+
+  const selectAddress = (addr) => {
+    u1("address1", addr.line1);
+    u1("address2", addr.line2);
+    u1("city", addr.city);
+    u1("county", addr.county);
+    u1("postcode", addr.postcode);
+    setAddressList([]);
+    setPostcodeQuery(addr.postcode);
+  };
 
   const err = (msg) => { setError(msg); return false; };
 
@@ -460,7 +510,46 @@ export default function App({ user, agencySlug, onLogout }) {
               <div style={s.field}><label style={s.label}>Email Address <span style={{ color: "#cc0000" }}>*</span></label><input style={s.input} type="email" value={p1.email} onChange={e => u1("email", e.target.value)} /></div>
               <div style={s.field}><label style={s.label}>Phone Number <span style={{ color: "#cc0000" }}>*</span></label><input style={s.input} type="tel" value={p1.phone} onChange={e => u1("phone", e.target.value)} /></div>
             </div>
-            <div style={s.field}><label style={s.label}>Address Line 1 <span style={{ color: "#cc0000" }}>*</span></label><input style={s.input} value={p1.address1} onChange={e => u1("address1", e.target.value)} /></div>
+            {/* Postcode Lookup */}
+            <div style={s.field}>
+              <label style={s.label}>Postcode Lookup</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  style={{ ...s.input, flex: 1 }}
+                  value={postcodeQuery}
+                  onChange={e => { setPostcodeQuery(e.target.value); setAddressList([]); setPostcodeError(""); }}
+                  onKeyDown={e => e.key === "Enter" && lookupPostcode()}
+                  placeholder="e.g. SW1A 1AA"
+                />
+                <button
+                  type="button"
+                  onClick={lookupPostcode}
+                  disabled={postcodeLoading}
+                  style={{ ...s.btn, padding: "11px 20px", whiteSpace: "nowrap", opacity: postcodeLoading ? 0.6 : 1 }}
+                >
+                  {postcodeLoading ? "Searching…" : "Find Address"}
+                </button>
+              </div>
+              {postcodeError && <div style={{ color: "#cc0000", fontSize: 12, marginTop: 4 }}>{postcodeError}</div>}
+              {addressList.length > 0 && (
+                <div style={{ marginTop: 6 }}>
+                  <select
+                    style={{ ...s.select, background: "#fff" }}
+                    defaultValue=""
+                    onChange={e => {
+                      const idx = parseInt(e.target.value, 10);
+                      if (!isNaN(idx)) selectAddress(addressList[idx]);
+                    }}
+                  >
+                    <option value="">— Select your address ({addressList.length} found) —</option>
+                    {addressList.map((a, i) => (
+                      <option key={i} value={i}>{a.formatted}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+            <div style={s.field}><label style={s.label}>Address Line 1 <span style={{ color: "#cc0000" }}>*</span></label><input style={s.input} value={p1.address1} onChange={e => u1("address1", e.target.value)} placeholder="House number and street" /></div>
             <div style={s.field}><label style={s.label}>Address Line 2</label><input style={s.input} value={p1.address2} onChange={e => u1("address2", e.target.value)} /></div>
             <div style={s.row3}>
               <div style={s.field}><label style={s.label}>City <span style={{ color: "#cc0000" }}>*</span></label><input style={s.input} value={p1.city} onChange={e => u1("city", e.target.value)} /></div>
