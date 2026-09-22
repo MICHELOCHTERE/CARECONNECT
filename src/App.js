@@ -283,14 +283,32 @@ export default function App({ user, agencySlug, onLogout }) {
         return;
       }
       const data = await res.json();
-      const addresses = (data.addresses || []).map(a => ({
-        line1: a.line_1 || "",
-        line2: [a.line_2, a.line_3].filter(Boolean).join(", "),
-        city: a.town_or_city || "",
-        county: a.county || "",
-        postcode: data.postcode || pc.toUpperCase(),
-        formatted: [a.line_1, a.line_2, a.line_3, a.town_or_city, a.county].filter(Boolean).join(", "),
-      }));
+      console.log("GetAddress response:", JSON.stringify(data).slice(0, 500));
+      // GetAddress.io expand=true returns objects; without expand it returns strings like "line1, line2, , town, county, postcode, country"
+      const rawAddresses = data.addresses || [];
+      const addresses = rawAddresses.map(a => {
+        if (typeof a === "string") {
+          // Non-expanded format: "Line1, Line2, Line3, Town, County, Postcode, Country"
+          const parts = a.split(",").map(p => p.trim());
+          return {
+            line1: parts[0] || "",
+            line2: [parts[1], parts[2]].filter(Boolean).join(", "),
+            city: parts[3] || "",
+            county: parts[4] || "",
+            postcode: data.postcode || pc.toUpperCase(),
+            formatted: [parts[0], parts[1], parts[2], parts[3], parts[4]].filter(Boolean).join(", "),
+          };
+        }
+        // Expanded format: object with named fields
+        return {
+          line1: a.line_1 || a.formatted_address?.[0] || "",
+          line2: [a.line_2, a.line_3, a.line_4].filter(Boolean).join(", ") || a.formatted_address?.[1] || "",
+          city: a.town_or_city || a.locality || "",
+          county: a.county || "",
+          postcode: data.postcode || pc.toUpperCase(),
+          formatted: [a.line_1, a.line_2, a.line_3, a.town_or_city, a.county].filter(Boolean).join(", "),
+        };
+      });
       if (addresses.length === 0) {
         setPostcodeError("No addresses found for this postcode.");
       } else {
