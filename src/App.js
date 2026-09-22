@@ -271,62 +271,64 @@ export default function App({ user, agencySlug, onLogout }) {
   const u10 = (f, v) => setP10(prev => ({ ...prev, [f]: v }));
   const u11 = (f, v) => setP11(prev => ({ ...prev, [f]: v }));
 
+  const err = (msg) => { setError(msg); return false; };
+
   const validateStep = () => {
     setError("");
     if (step === 1) {
       if (!p1.firstName || !p1.lastName || !p1.dob || !p1.gender || !p1.nationality || !p1.email || !p1.phone || !p1.address1 || !p1.city || !p1.postcode)
-        return setError("Please complete all required fields."), false;
+        return err("Please complete all required fields.");
       if (!p1.emergency1Name || !p1.emergency1Phone)
-        return setError("Please provide at least one emergency contact."), false;
+        return err("Please provide at least one emergency contact.");
     }
     if (step === 3) {
       if (p3.qualifications.length === 0)
-        return setError("Please select at least one qualification (or 'No formal qualifications')."), false;
+        return err("Please select at least one qualification (or 'No formal qualifications').");
     }
     if (step === 4) {
       if (!p4[0].employer || !p4[0].jobTitle || !p4[0].from)
-        return setError("Please complete at least your most recent employment."), false;
+        return err("Please complete at least your most recent employment.");
     }
     if (step === 5) {
-      if (p5.careSettings.length === 0) return setError("Please select at least one care setting."), false;
-      if (p5.clientGroups.length === 0) return setError("Please select at least one client group."), false;
-      if (!p5.experience) return setError("Please describe your experience."), false;
+      if (p5.careSettings.length === 0) return err("Please select at least one care setting.");
+      if (p5.clientGroups.length === 0) return err("Please select at least one client group.");
+      if (!p5.experience) return err("Please describe your experience.");
     }
     if (step === 7) {
-      if (!p7.rtwStatus) return setError("Please select your right to work status."), false;
-      if (p7.rtwDocs.length === 0) return setError("Please select at least one right to work document type."), false;
-      if (!p7.niNumber) return setError("Please enter your National Insurance number."), false;
+      if (!p7.rtwStatus) return err("Please select your right to work status.");
+      if (p7.rtwDocs.length === 0) return err("Please select at least one right to work document type.");
+      if (!p7.niNumber) return err("Please enter your National Insurance number.");
       const hasCV = f7cv || urls.cv;
       const hasPassport = f7passport || urls.passport;
       const hasRTW = f7rtw || urls.rtw;
       const hasPOA1 = f7poa1 || urls.poa1;
       const hasPOA2 = f7poa2 || urls.poa2;
-      if (!hasCV) return setError("Please upload your CV."), false;
-      if (!hasPassport) return setError("Please upload your passport photo page."), false;
-      if (!hasRTW) return setError("Please upload your right to work document."), false;
-      if (!hasPOA1) return setError("Please upload your first proof of address document."), false;
-      if (!hasPOA2) return setError("Please upload your second proof of address document."), false;
-      if (!f7poa1Type && !urls.poa1) return setError("Please select the type for your first proof of address."), false;
-      if (!f7poa2Type && !urls.poa2) return setError("Please select the type for your second proof of address."), false;
+      if (!hasCV) return err("Please upload your CV.");
+      if (!hasPassport) return err("Please upload your passport photo page.");
+      if (!hasRTW) return err("Please upload your right to work document.");
+      if (!hasPOA1) return err("Please upload your first proof of address document.");
+      if (!hasPOA2) return err("Please upload your second proof of address document.");
+      if (!f7poa1Type && !urls.poa1) return err("Please select the type for your first proof of address.");
+      if (!f7poa2Type && !urls.poa2) return err("Please select the type for your second proof of address.");
       if (f7poa1Type && f7poa2Type && f7poa1Type === f7poa2Type)
-        return setError("Please upload two different types of proof of address documents."), false;
+        return err("Please upload two different types of proof of address documents.");
     }
     if (step === 8) {
-      if (!p8.dbsType) return setError("Please select your DBS certificate type."), false;
-      if (!p8.convictions) return setError("Please answer the criminal conviction question."), false;
+      if (!p8.dbsType) return err("Please select your DBS certificate type.");
+      if (!p8.convictions) return err("Please answer the criminal conviction question.");
       const hasDBS = f8dbs || urls.dbs;
-      if (!hasDBS) return setError("Please upload your DBS certificate."), false;
+      if (!hasDBS) return err("Please upload your DBS certificate.");
     }
     if (step === 9) {
       if (!p9[0].name || !p9[0].email || !p9[0].org)
-        return setError("Please complete details for at least your first referee."), false;
+        return err("Please complete details for at least your first referee.");
       if (!p9[1].name || !p9[1].email || !p9[1].org)
-        return setError("Please complete details for your second referee."), false;
+        return err("Please complete details for your second referee.");
     }
     if (step === 11) {
-      if (!p11.agreed) return setError("You must agree to the declaration to submit."), false;
-      if (!p11.signature) return setError("Please enter your full name as a signature."), false;
-      if (!p11.signDate) return setError("Please enter today's date."), false;
+      if (!p11.agreed) return err("You must agree to the declaration to submit.");
+      if (!p11.signature) return err("Please enter your full name as a signature.");
+      if (!p11.signDate) return err("Please enter today's date.");
     }
     return true;
   };
