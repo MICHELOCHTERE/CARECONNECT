@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { db, storage, auth } from "./firebase";
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db, storage } from "./firebase";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { onAuthStateChanged } from "firebase/auth";
 
 const CARE_SETTINGS = ["Residential Care Home","Nursing Home","Domiciliary / Home Care","Supported Living","Day Care Centre","Respite Care","Hospital / Clinical Setting","Mental Health Setting","Learning Disabilities Setting","Palliative / End of Life Care","Rehabilitation Unit","Community Care"];
 const CLIENT_GROUPS = ["Older Adults (65+)","Adults with Physical Disabilities","Adults with Learning Disabilities","Adults with Mental Health Conditions","Adults with Dementia / Alzheimer's","Children & Young People","Adults with Autism","Adults with Acquired Brain Injury","Adults with Sensory Impairments","Individuals with Substance Misuse Issues","Individuals with Complex Needs","End of Life / Palliative Clients"];
@@ -144,7 +143,7 @@ export default function App({ user, agencySlug, onLogout }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [existingApp, setExistingApp] = useState(null);
+  const [, setExistingApp] = useState(null);
   const [agencyName, setAgencyName] = useState("");
 
   // Step 1 - Personal Details
@@ -249,14 +248,6 @@ export default function App({ user, agencySlug, onLogout }) {
     const r = ref(storage, path);
     await uploadBytes(r, file);
     return await getDownloadURL(r);
-  };
-
-  const handleFileP7 = (field, file) => {
-    if (field === "cv") setF7cv(file);
-    if (field === "passport") setF7passport(file);
-    if (field === "rtw") setF7rtw(file);
-    if (field === "poa1") setF7poa1(file);
-    if (field === "poa2") setF7poa2(file);
   };
 
   const handleFileP8 = (file) => setF8dbs(file);
