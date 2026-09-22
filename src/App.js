@@ -275,12 +275,8 @@ export default function App({ user, agencySlug, onLogout }) {
     setPostcodeError("");
     setAddressList([]);
     try {
-      const url = `https://api.getaddress.io/find/${encodeURIComponent(pc)}?expand=true`;
-      const res = await fetch(url, {
-        headers: {
-          "Authorization": "Token dtoken_hEDzcyiWMr2Joa0KqmP5UFbmLkvQwrNXbDesEb-GikFT7_4wAVCoWI1eyhADhPZynvKrSYEvJvnKP1x2rcdJH6205X3oSxg_rOwqLZqzUTwB4tZKiyn4vIXFI7VQGrGAYXEU79KCoIFPE0SaPYILRiUJbt_U7bseAzgXgQxIIY3uk1Hkh0JEQd8CXRfsMy6P5C6p00irBZSQNpvQD6YQ"
-        }
-      });
+      const url = `/api/postcode?postcode=${encodeURIComponent(pc)}`;
+      const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 404) setPostcodeError("Postcode not found. Please check and try again.");
         else if (res.status === 401) setPostcodeError("Address lookup unavailable. Please enter your address manually.");
