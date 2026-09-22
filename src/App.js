@@ -274,7 +274,15 @@ export default function App({ user, agencySlug, onLogout }) {
     setAddressList([]);
     try {
       const key = process.env.REACT_APP_GETADDRESS_KEY;
-      const res = await fetch(`https://api.getaddress.io/find/${encodeURIComponent(pc)}?api-key=${key}&expand=true`);
+      console.log("API key present:", !!key, "| key value:", key);
+      if (!key) {
+        setPostcodeError("Address lookup not configured. Please enter your address manually.");
+        setPostcodeLoading(false);
+        return;
+      }
+      const url = `https://api.getaddress.io/find/${encodeURIComponent(pc)}?api-key=${key}&expand=true`;
+      console.log("Fetching:", url);
+      const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 404) setPostcodeError("Postcode not found. Please check and try again.");
         else if (res.status === 401) setPostcodeError("Address lookup unavailable. Please enter your address manually.");
