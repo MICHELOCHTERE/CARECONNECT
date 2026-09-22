@@ -267,22 +267,20 @@ export default function App({ user, agencySlug, onLogout }) {
   const u11 = (f, v) => setP11(prev => ({ ...prev, [f]: v }));
 
   const lookupPostcode = async () => {
-    const pc = postcodeQuery.trim().replace(/\s+/g, "");
+    // Normalise: uppercase, collapse multiple spaces, ensure single space before last 3 chars
+    const raw = postcodeQuery.trim().toUpperCase().replace(/\s+/g, "");
+    const pc = raw.length > 3 ? raw.slice(0, raw.length - 3) + " " + raw.slice(-3) : raw;
     if (!pc) return;
     setPostcodeLoading(true);
     setPostcodeError("");
     setAddressList([]);
     try {
-      const key = process.env.REACT_APP_GETADDRESS_KEY;
-      console.log("API key present:", !!key, "| key value:", key);
-      if (!key) {
-        setPostcodeError("Address lookup not configured. Please enter your address manually.");
-        setPostcodeLoading(false);
-        return;
-      }
-      const url = `https://api.getaddress.io/find/${encodeURIComponent(pc)}?api-key=${key}&expand=true`;
-      console.log("Fetching:", url);
-      const res = await fetch(url);
+      const url = `https://api.getaddress.io/find/${encodeURIComponent(pc)}?expand=true`;
+      const res = await fetch(url, {
+        headers: {
+          "Authorization": "Token dtoken_hEDzcyiWMr2Joa0KqmP5UFbmLkvQwrNXbDesEb-GikFT7_4wAVCoWI1eyhADhPZynvKrSYEvJvnKP1x2rcdJH6205X3oSxg_rOwqLZqzUTwB4tZKiyn4vIXFI7VQGrGAYXEU79KCoIFPE0SaPYILRiUJbt_U7bseAzgXgQxIIY3uk1Hkh0JEQd8CXRfsMy6P5C6p00irBZSQNpvQD6YQ"
+        }
+      });
       if (!res.ok) {
         if (res.status === 404) setPostcodeError("Postcode not found. Please check and try again.");
         else if (res.status === 401) setPostcodeError("Address lookup unavailable. Please enter your address manually.");
@@ -291,7 +289,6 @@ export default function App({ user, agencySlug, onLogout }) {
         return;
       }
       const data = await res.json();
-      console.log("GetAddress response:", JSON.stringify(data).slice(0, 500));
       // GetAddress.io expand=true returns objects; without expand it returns strings like "line1, line2, , town, county, postcode, country"
       const rawAddresses = data.addresses || [];
       const addresses = rawAddresses.map(a => {
