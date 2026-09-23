@@ -267,7 +267,6 @@ export default function App({ user, agencySlug, onLogout }) {
   const u11 = (f, v) => setP11(prev => ({ ...prev, [f]: v }));
 
   const lookupPostcode = async () => {
-    // Normalise: uppercase, collapse multiple spaces, ensure single space before last 3 chars
     const raw = postcodeQuery.trim().toUpperCase().replace(/\s+/g, "");
     const pc = raw.length > 3 ? raw.slice(0, raw.length - 3) + " " + raw.slice(-3) : raw;
     if (!pc) return;
@@ -279,42 +278,16 @@ export default function App({ user, agencySlug, onLogout }) {
       const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 404) setPostcodeError("Postcode not found. Please check and try again.");
-        else if (res.status === 401) setPostcodeError("Address lookup unavailable. Please enter your address manually.");
         else setPostcodeError("Lookup failed. Please enter your address manually.");
         setPostcodeLoading(false);
         return;
       }
       const data = await res.json();
-      // GetAddress.io expand=true returns objects; without expand it returns strings like "line1, line2, , town, county, postcode, country"
-      const rawAddresses = data.addresses || [];
-      const addresses = rawAddresses.map(a => {
-        if (typeof a === "string") {
-          // Non-expanded format: "Line1, Line2, Line3, Town, County, Postcode, Country"
-          const parts = a.split(",").map(p => p.trim());
-          return {
-            line1: parts[0] || "",
-            line2: [parts[1], parts[2]].filter(Boolean).join(", "),
-            city: parts[3] || "",
-            county: parts[4] || "",
-            postcode: data.postcode || pc.toUpperCase(),
-            formatted: [parts[0], parts[1], parts[2], parts[3], parts[4]].filter(Boolean).join(", "),
-          };
-        }
-        // Expanded format: object with named fields
-        return {
-          line1: a.line_1 || a.formatted_address?.[0] || "",
-          line2: [a.line_2, a.line_3, a.line_4].filter(Boolean).join(", ") || a.formatted_address?.[1] || "",
-          city: a.town_or_city || a.locality || "",
-          county: a.county || "",
-          postcode: data.postcode || pc.toUpperCase(),
-          formatted: [a.line_1, a.line_2, a.line_3, a.town_or_city, a.county].filter(Boolean).join(", "),
-        };
-      });
-      if (addresses.length === 0) {
-        setPostcodeError("No addresses found for this postcode.");
-      } else {
-        setAddressList(addresses);
-      }
+      u1("city", data.city || data.district || "");
+      u1("county", data.county || "");
+      u1("postcode", data.postcode || pc);
+      setPostcodeQuery(data.postcode || pc);
+      setPostcodeError("");
     } catch (e) {
       setPostcodeError("Lookup failed. Please enter your address manually.");
     }
@@ -322,13 +295,13 @@ export default function App({ user, agencySlug, onLogout }) {
   };
 
   const selectAddress = (addr) => {
-    u1("address1", addr.line1);
-    u1("address2", addr.line2);
-    u1("city", addr.city);
-    u1("county", addr.county);
-    u1("postcode", addr.postcode);
+    u1("address1", addr.line1 || "");
+    u1("address2", addr.line2 || "");
+    u1("city", addr.city || "");
+    u1("county", addr.county || "");
+    u1("postcode", addr.postcode || "");
     setAddressList([]);
-    setPostcodeQuery(addr.postcode);
+    setPostcodeQuery(addr.postcode || "");
   };
 
   const err = (msg) => { setError(msg); return false; };
@@ -550,23 +523,9 @@ export default function App({ user, agencySlug, onLogout }) {
                 </button>
               </div>
               {postcodeError && <div style={{ color: "#cc0000", fontSize: 12, marginTop: 4 }}>{postcodeError}</div>}
-              {addressList.length > 0 && (
-                <div style={{ marginTop: 6 }}>
-                  <select
-                    style={{ ...s.select, background: "#fff" }}
-                    defaultValue=""
-                    onChange={e => {
-                      const idx = parseInt(e.target.value, 10);
-                      if (!isNaN(idx)) selectAddress(addressList[idx]);
-                    }}
-                  >
-                    <option value="">— Select your address ({addressList.length} found) —</option>
-                    {addressList.map((a, i) => (
-                      <option key={i} value={i}>{a.formatted}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+            {!postcodeError && !postcodeLoading && p1.city && (
+  <div style={{ color: "#1a7a3a", fontSize: 12, marginTop: 4 }}>✓ City, county and postcode filled in — please enter your street address below.</div>
+)}
             </div>
             <div style={s.field}><label style={s.label}>Address Line 1 <span style={{ color: "#cc0000" }}>*</span></label><input style={s.input} value={p1.address1} onChange={e => u1("address1", e.target.value)} placeholder="House number and street" /></div>
             <div style={s.field}><label style={s.label}>Address Line 2</label><input style={s.input} value={p1.address2} onChange={e => u1("address2", e.target.value)} /></div>
