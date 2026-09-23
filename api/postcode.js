@@ -2,26 +2,24 @@ export default async function handler(req, res) {
   const { postcode } = req.query;
   if (!postcode) return res.status(400).json({ error: "Postcode required" });
 
-  const key = process.env.GETADDRESS_KEY;
-  console.log("GETADDRESS_KEY present:", !!key);
-  console.log("Postcode:", postcode);
-
-  if (!key) {
-    return res.status(500).json({ error: "API key not configured" });
-  }
-
   try {
-    const url = `https://api.getaddress.io/find/${encodeURIComponent(postcode)}?api-key=${key}&expand=true`;
-    console.log("Calling:", url);
+    const url = `https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`;
     const response = await fetch(url);
-    console.log("GetAddress status:", response.status);
-    const text = await response.text();
-    console.log("GetAddress raw response:", text.slice(0, 300));
-    if (!response.ok) return res.status(response.status).json({ error: `GetAddress returned ${response.status}`, body: text });
-    const data = JSON.parse(text);
-    res.status(200).json(data);
+    const data = await response.json();
+
+    if (!response.ok || data.status !== 200) {
+      return res.status(404).json({ error: "Postcode not found" });
+    }
+
+    const r = data.result;
+    res.status(200).json({
+      postcode: r.postcode,
+      town: r.parish || r.admin_ward || "",
+      city: r.admin_district || "",
+      county: r.admin_county || r.region || "",
+      district: r.admin_district || "",
+    });
   } catch (e) {
-    console.error("Fetch error:", e.message);
     res.status(500).json({ error: "Lookup failed", detail: e.message });
   }
 }
