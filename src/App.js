@@ -311,8 +311,12 @@ export default function App({ user, agencySlug, onLogout }) {
         return err("Please select at least one qualification (or 'No formal qualifications').");
     }
     if (step === 4) {
-      if (!p4[0].employer || !p4[0].jobTitle || !p4[0].from)
+            if (!p4[0].employer || !p4[0].jobTitle || !p4[0].from)
         return err("Please complete at least your most recent employment.");
+      if (!p4[0].duties)
+        return err("Please describe your duties and responsibilities for your most recent role.");
+      if (!p4[0].leaving && p4[0].to)
+        return err("Please provide a reason for leaving your most recent role.");
     }
     if (step === 5) {
       if (p5.careSettings.length === 0) return err("Please select at least one care setting.");
