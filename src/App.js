@@ -146,7 +146,7 @@ export default function App({ user, agencySlug, onLogout }) {
   const [, setExistingApp] = useState(null);
   const [agencyName, setAgencyName] = useState("");
   const [postcodeQuery, setPostcodeQuery] = useState("");
-  const [addressList, setAddressList] = useState([]);
+  const [, setAddressList] = useState([]);
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const [postcodeError, setPostcodeError] = useState("");
 
@@ -294,15 +294,7 @@ export default function App({ user, agencySlug, onLogout }) {
     setPostcodeLoading(false);
   };
 
-  const selectAddress = (addr) => {
-    u1("address1", addr.line1 || "");
-    u1("address2", addr.line2 || "");
-    u1("city", addr.city || "");
-    u1("county", addr.county || "");
-    u1("postcode", addr.postcode || "");
-    setAddressList([]);
-    setPostcodeQuery(addr.postcode || "");
-  };
+
 
   const err = (msg) => { setError(msg); return false; };
 
