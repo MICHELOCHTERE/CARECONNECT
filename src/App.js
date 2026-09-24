@@ -342,12 +342,14 @@ export default function App({ user, agencySlug, onLogout }) {
       if (f7poa1Type && f7poa2Type && f7poa1Type === f7poa2Type)
         return err("Please upload two different types of proof of address documents.");
     }
-    if (step === 8) {
-      if (!p8.dbsType) return err("Please select your DBS certificate type.");
-      if (!p8.convictions) return err("Please answer the criminal conviction question.");
-      const hasDBS = f8dbs || urls.dbs;
-      if (!hasDBS) return err("Please upload your DBS certificate.");
-    }
+   if (step === 8) {
+  if (!p8.dbsType) return err("Please select your DBS certificate type.");
+  if (!p8.convictions) return err("Please answer the criminal conviction question.");
+  if (p8.dbsType !== "I do not have a DBS certificate") {
+    const hasDBS = f8dbs || urls.dbs;
+    if (!hasDBS) return err("Please upload your DBS certificate.");
+  }
+}
     if (step === 9) {
       if (!p9[0].name || !p9[0].email || !p9[0].org)
         return err("Please complete details for at least your first referee.");
