@@ -351,11 +351,11 @@ export default function App({ user, agencySlug, onLogout }) {
   }
 }
     if (step === 9) {
-      if (!p9[0].name || !p9[0].email || !p9[0].org)
-        return err("Please complete details for at least your first referee.");
-      if (!p9[1].name || !p9[1].email || !p9[1].org)
-        return err("Please complete details for your second referee.");
-    }
+  if (!p9[0].name || !p9[0].email || !p9[0].org)
+    return err("Please complete details for your first referee.");
+  if (!p9[1].name || !p9[1].email || !p9[1].org)
+    return err("Please complete details for your second referee.");
+}
     if (step === 11) {
       if (!p11.agreed) return err("You must agree to the declaration to submit.");
       if (!p11.signature) return err("Please enter your full name as a signature.");
