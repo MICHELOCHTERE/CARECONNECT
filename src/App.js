@@ -359,6 +359,16 @@ export default function App({ user, agencySlug, onLogout }) {
       if (!p11.signature) return err("Please enter your full name as a signature.");
       if (!p11.signDate) return err("Please enter today's date.");
     }
+        if (step === 10) {
+      if (!p10.bankName) return err("Please enter your bank or building society name.");
+      if (!p10.accountName) return err("Please enter the account holder name.");
+      if (!p10.sortCode) return err("Please enter your sort code.");
+      if (!/^\d{2}-?\d{2}-?\d{2}$/.test(p10.sortCode.replace(/\s/g, "")))
+        return err("Please enter a valid sort code (e.g. 12-34-56).");
+      if (!p10.accountNumber) return err("Please enter your account number.");
+      if (!/^\d{8}$/.test(p10.accountNumber.replace(/\s/g, "")))
+        return err("Account number must be exactly 8 digits.");
+    }
     return true;
   };
 
