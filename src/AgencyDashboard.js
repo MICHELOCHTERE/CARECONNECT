@@ -4,6 +4,53 @@ import { db } from "./firebase";
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
 import ReferencesPanel from "./ReferencesPanel";
 
+function normalize(d) {
+  if (d.firstName) return d;
+  const p1 = d.p1 || {};
+  const p2 = d.p2 || {};
+  const p5 = d.p5 || {};
+  const p6 = d.p6 || {};
+  const p8 = d.p8 || {};
+  const p9 = d.p9 || [];
+  const p10 = d.p10 || {};
+  const p11 = d.p11 || {};
+  return {
+    ...d,
+    firstName: p1.firstName || "",
+    lastName: p1.lastName || "",
+    email: p1.email || "",
+    phone: p1.phone || "",
+    dob: p1.dob || "",
+    gender: p1.gender || "",
+    nationality: p1.nationality || "",
+    niNumber: p1.niNumber || "",
+    postcode: p1.postcode || "",
+    driving: p1.driving || "",
+    languages: p1.languages || [],
+    emergencyName: p1.emergencyName || "",
+    emergencyRelation: p1.emergencyRelation || "",
+    emergencyPhone: p1.emergencyPhone || "",
+    years: p2.years || "",
+    settings: p2.settings || [],
+    clients: p2.clients || [],
+    quals: p2.quals || [],
+    hours: p2.hours || [],
+    rightToWork: p5.rightToWork || "",
+    rtwStatus: p5.rtwStatus || "",
+    docs: p5.docs || [],
+    proofAddress1: p6.proofAddress1 || "",
+    proofAddress2: p6.proofAddress2 || "",
+    hasDbs: p8.dbsType || "",
+    conviction: p8.convictions || "",
+    refs: Array.isArray(p9) ? p9 : [],
+    bankName: p10.accountName || "",
+    sortCode: p10.sortCode || "",
+    accountNumber: p10.accountNumber || "",
+    signature: p11.signature || "",
+    appliedAt: d.submittedAt?.toDate ? d.submittedAt.toDate().toLocaleDateString("en-GB") : (d.appliedAt || ""),
+  };
+}
+
 const STATUS_COLORS = {
   pending: { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
   approved: { bg: "#e8f5eb", text: "#1a7a3a", border: "#a3d9b1" },
@@ -334,7 +381,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
   useEffect(() => {
     const q = query(collection(db, "applications"), where("agencySlug", "==", agency.slug), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (snap) => {
-      setApplications(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setApplications(snap.docs.map(d => normalize({ id: d.id, ...d.data() })));
       setLoading(false);
     }, (err) => {
       console.error("Error loading applications:", err);
