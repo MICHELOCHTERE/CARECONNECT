@@ -1,70 +1,120 @@
-// AgencyDashboard v2.2 - Full normalize() with urls + employment history + PDF fix
+// AgencyDashboard v2.3 - normalize() fully aligned with App.js field names
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
 import ReferencesPanel from "./ReferencesPanel";
 
 function normalize(d) {
-  if (d.firstName) return d; // old format, already flat
-  const p1 = d.p1 || {};
-  const p2 = d.p2 || {};
-  const p3 = d.p3 || {};
-  const p4 = Array.isArray(d.p4) ? d.p4 : [];
-  const p5 = d.p5 || {};
-  const p6 = d.p6 || {};
-  const p7 = d.p7 || {};
-  const p8 = d.p8 || {};
-  const p9 = d.p9 || [];
+  if (d.firstName) return d; // old flat format — pass through unchanged
+  // App.js saves: p1(personal) p2(equal ops) p3(education) p4[](employment)
+  //               p5(experience) p6(health/avail) p7(RTW+docs) p8(DBS)
+  //               p9[](references) p10(bank) p11(declaration) urls(file URLs)
+  const p1  = d.p1  || {};
+  const p2  = d.p2  || {};
+  const p3  = d.p3  || {};
+  const p4  = Array.isArray(d.p4) ? d.p4 : [];
+  const p5  = d.p5  || {};
+  const p6  = d.p6  || {};
+  const p7  = d.p7  || {};
+  const p8  = d.p8  || {};
+  const p9  = Array.isArray(d.p9) ? d.p9 : [];
   const p10 = d.p10 || {};
   const p11 = d.p11 || {};
   const urls = d.urls || {};
   return {
     ...d,
-    firstName: p1.firstName || "",
-    lastName: p1.lastName || "",
-    email: p1.email || "",
-    phone: p1.phone || "",
-    dob: p1.dob || "",
-    gender: p1.gender || "",
-    nationality: p1.nationality || "",
-    niNumber: p1.niNumber || "",
-    postcode: p1.postcode || "",
-    driving: p1.driving || "",
-    languages: p1.languages || [],
-    emergencyName: p1.emergencyName || "",
-    emergencyRelation: p1.emergencyRelation || "",
-    emergencyPhone: p1.emergencyPhone || "",
-    years: p2.years || "",
-    settings: p2.settings || [],
-    clients: p2.clients || [],
-    quals: p2.quals || [],
-    hours: p2.hours || [],
-    employmentGaps: p3.employmentGaps || "",
-    gapsExplanation: p3.gapsExplanation || "",
-    employmentHistory: p4,
-    rightToWork: p5.rightToWork || "",
-    rtwStatus: p5.rtwStatus || "",
-    docs: p5.docs || [],
-    proofAddress1: p6.proofAddress1 || "",
-    proofAddress2: p6.proofAddress2 || "",
-    religion: p7.religion || "",
-    updateService: p7.updateService || p8.updateService || "",
-    dbsDate: p7.dbsDate || p8.dbsDate || "",
-    hasDbs: p8.dbsType || "",
-    conviction: p8.convictions || "",
-    refs: Array.isArray(p9) ? p9 : [],
-    bankName: p10.accountName || "",
-    sortCode: p10.sortCode || "",
+    // ── Step 1: Personal Details ──────────────────────────────
+    firstName:         p1.firstName    || "",
+    lastName:          p1.lastName     || "",
+    middleName:        p1.middleName   || "",
+    dob:               p1.dob          || "",
+    gender:            p1.gender       || "",
+    nationality:       p1.nationality  || "",
+    religion:          p1.religion     || "",
+    email:             p1.email        || "",
+    phone:             p1.phone        || "",
+    address1:          p1.address1     || "",
+    address2:          p1.address2     || "",
+    city:              p1.city         || "",
+    county:            p1.county       || "",
+    postcode:          p1.postcode     || "",
+    // Emergency contacts (App.js uses emergency1Name / emergency2Name)
+    emergencyName:     p1.emergency1Name  || "",
+    emergencyRelation: p1.emergency1Rel   || "",
+    emergencyPhone:    p1.emergency1Phone || "",
+    emergency2Name:    p1.emergency2Name  || "",
+    emergency2Rel:     p1.emergency2Rel   || "",
+    emergency2Phone:   p1.emergency2Phone || "",
+    // ── Step 2: Equal Opportunities ──────────────────────────
+    ethnicity:         p2.ethnicity        || "",
+    disability:        p2.disability       || "",
+    disabilityDetails: p2.disabilityDetails || "",
+    // ── Step 3: Education & Training ─────────────────────────
+    quals:             p3.qualifications || [],   // App.js: p3.qualifications
+    courses:           p3.courses        || "",
+    firstAidExpiry:    p3.firstAidExpiry || "",
+    memberships:       p3.memberships    || "",
+    // ── Step 4: Employment History ────────────────────────────
+    employmentHistory: p4,  // array of {employer, jobTitle, from, to, leaving, duties, gaps}
+    // ── Step 5: Experience & Care Standards ──────────────────
+    settings:          p5.careSettings   || [],   // App.js: p5.careSettings
+    clients:           p5.clientGroups   || [],   // App.js: p5.clientGroups
+    experience:        p5.experience     || "",
+    whyCare:           p5.whyCare        || "",
+    strengths:         p5.strengths      || "",
+    challenging:       p5.challenging    || "",
+    safeguarding:      p5.safeguarding   || "",
+    // ── Step 6: Health & Availability ────────────────────────
+    healthConditions:  p6.healthConditions || "",
+    adjustments:       p6.adjustments      || "",
+    transport:         p6.transport        || "",
+    availableStart:    p6.availableStart   || "",
+    interviewAvail:    p6.interviewAvail   || "",
+    // ── Step 7: Right to Work & Documents ────────────────────
+    rightToWork:       p7.rtwStatus || "",        // App.js: p7.rtwStatus
+    rtwStatus:         p7.rtwStatus || "",
+    docs:              p7.rtwDocs   || [],         // App.js: p7.rtwDocs
+    niNumber:          p7.niNumber  || "",         // App.js: p7.niNumber
+    shareCode:         p7.shareCode || "",
+    visaExpiry:        p7.visaExpiry || "",
+    // ── Step 8: DBS & Criminal ───────────────────────────────
+    hasDbs:            p8.dbsType            || "",
+    dbsNumber:         p8.dbsNumber          || "",
+    dbsDate:           p8.dbsDate            || "",
+    updateService:     p8.dbsUpdateService   || "",  // App.js: p8.dbsUpdateService
+    updateServiceNum:  p8.updateServiceNumber || "",
+    conviction:        p8.convictions         || "",  // App.js: p8.convictions
+    convictionDetails: p8.convictionDetails   || "",
+    // ── Step 9: References ────────────────────────────────────
+    // App.js saves: {name, position, org, relationship, email, phone, address}
+    // PDF/modal uses: r.title (→ position) and r.relation (→ relationship)
+    refs: p9.map(r => ({
+      ...r,
+      title:    r.title    || r.position     || "",
+      relation: r.relation || r.relationship || "",
+    })),
+    // ── Step 10: Bank Details ─────────────────────────────────
+    // App.js: p10.bankName = bank name, p10.accountName = account holder
+    bankName:      p10.accountName || "",  // displayed as "Account Holder"
+    bankInstitute: p10.bankName    || "",  // the actual bank/building society
+    sortCode:      p10.sortCode    || "",
     accountNumber: p10.accountNumber || "",
+    // ── Step 11: Declaration ──────────────────────────────────
     signature: p11.signature || "",
-    signedAt: p11.signedAt || "",
-    cvURL: urls.cv || urls.cvURL || "",
-    passportURL: urls.passport || urls.passportURL || "",
-    rtwDocURL: urls.rtw || urls.rtwDocURL || "",
-    poa1URL: urls.poa1 || urls.poa1URL || "",
-    poa2URL: urls.poa2 || urls.poa2URL || "",
-    dbsDocURL: urls.dbs || urls.dbsDocURL || "",
-    appliedAt: d.submittedAt?.toDate ? d.submittedAt.toDate().toLocaleDateString("en-GB") : (d.appliedAt || ""),
+    signedAt:  p11.signDate  || "",        // App.js: p11.signDate
+    // ── Document URLs ─────────────────────────────────────────
+    cvURL:       urls.cv      || "",
+    passportURL: urls.passport || "",
+    rtwDocURL:   urls.rtw     || "",
+    poa1URL:     urls.poa1    || "",
+    poa2URL:     urls.poa2    || "",
+    dbsDocURL:   urls.dbs     || "",
+    poa1Type:    urls.poa1Type || "",
+    poa2Type:    urls.poa2Type || "",
+    // ── Applied date ──────────────────────────────────────────
+    appliedAt: d.submittedAt?.toDate
+      ? d.submittedAt.toDate().toLocaleDateString("en-GB")
+      : (d.appliedAt || ""),
   };
 }
 
@@ -211,45 +261,69 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
         field('Name', app.emergencyName),
         field('Relationship', app.emergencyRelation),
         field('Phone', app.emergencyPhone),
+        app.emergency2Name ? field('Name (2nd)', app.emergency2Name) : '',
+        app.emergency2Rel  ? field('Relationship (2nd)', app.emergency2Rel) : '',
+        app.emergency2Phone ? field('Phone (2nd)', app.emergency2Phone) : '',
       ])}
 
-      ${section('💼 Experience & Qualifications', [
-        field('Years of Experience', app.years),
+      ${section('🎓 Education & Training', [
+        app.quals?.length ? tagsFull('Qualifications & Certifications', app.quals) : '',
+        app.courses ? fieldFull('Other Courses / Training', app.courses) : '',
+        app.firstAidExpiry ? field('First Aid Expiry', app.firstAidExpiry) : '',
+        app.memberships ? field('Professional Memberships', app.memberships) : '',
+      ])}
+
+      ${section('💼 Experience & Care Standards', [
         app.settings?.length ? tagsFull('Care Settings', app.settings) : '',
         app.clients?.length ? tagsFull('Client Groups', app.clients) : '',
-        app.quals?.length ? tagsFull('Qualifications', app.quals) : '',
+        app.experience ? fieldFull('Care Experience', app.experience) : '',
+        app.whyCare ? fieldFull('Why Care?', app.whyCare) : '',
+        app.strengths ? fieldFull('Key Strengths', app.strengths) : '',
       ])}
 
       ${app.employmentHistory?.length ? `<div class="section"><h2>🏢 Employment History</h2>
         ${app.employmentHistory.map((job, i) => {
           const jobFields = [
-            field('Employer', job.employer || job.company),
-            field('Job Title', job.jobTitle || job.title || job.role),
-            field('Start Date', job.startDate || job.from),
-            field('End Date', job.endDate || job.to || (job.current ? 'Present' : '')),
-            field('Reason for Leaving', job.reasonLeaving || job.reason),
-            job.duties ? fieldFull('Duties', job.duties) : '',
+            field('Employer', job.employer),
+            field('Job Title', job.jobTitle),
+            field('From', job.from),
+            field('To', job.to || 'Present'),
+            field('Reason for Leaving', job.leaving),
+            job.duties ? fieldFull('Duties & Responsibilities', job.duties) : '',
+            job.gaps  ? fieldFull('Employment Gaps', job.gaps) : '',
           ].filter(Boolean).join('');
           return `<div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;margin-bottom:8px"><div style="font-weight:700;color:#6C3FC5;margin-bottom:6px">Job ${i+1}</div><div class="grid">${jobFields}</div></div>`;
         }).join('')}
         ${app.employmentGaps ? `<div style="background:#fff8e8;border:1px solid #f0c060;border-radius:8px;padding:10px 14px;margin-top:8px"><div class="label">Employment Gaps / Additional Notes</div><div class="value">${app.employmentGaps}</div></div>` : ''}
       </div>` : ''}
 
-      ${section('🛡️ DBS & Right to Work', [
-        field('Right to Work', app.rightToWork),
-        app.rtwStatus ? field('RTW Status', app.rtwStatus) : '',
-        field('Has DBS Certificate', app.hasDbs),
-        app.dbsDate ? field('DBS Issue Date', app.dbsDate) : '',
-        app.updateService ? field('DBS Update Service', app.updateService) : '',
-        field('Criminal Convictions', app.conviction),
-        field('Proof of Address 1', app.proofAddress1),
-        field('Proof of Address 2', app.proofAddress2),
-        field('Employment Continuity Check', app.employmentGaps),
-        app.docs?.length ? tagsFull('RTW Documents Provided', app.docs) : '',
-        app.gapsExplanation ? fieldFull('Employment History Details', app.gapsExplanation) : '',
+      ${section('🏥 Health & Availability', [
+        app.healthConditions ? fieldFull('Health Conditions / Disabilities', app.healthConditions) : '',
+        app.adjustments ? fieldFull('Reasonable Adjustments', app.adjustments) : '',
+        app.transport ? field('Transport', app.transport) : '',
+        app.availableStart ? field('Available to Start', app.availableStart) : '',
+        app.interviewAvail ? field('Interview Availability', app.interviewAvail) : '',
       ])}
 
-      ${app.bankName || app.sortCode || app.accountNumber ? section('💰 Bank Details', [
+      ${section('🛡️ Right to Work & DBS', [
+        field('Right to Work Status', app.rightToWork),
+        app.niNumber ? field('NI Number', app.niNumber) : '',
+        app.docs?.length ? tagsFull('RTW Documents Held', app.docs) : '',
+        app.shareCode ? field('Share Code', app.shareCode) : '',
+        app.visaExpiry ? field('Visa Expiry', app.visaExpiry) : '',
+        field('DBS Certificate Type', app.hasDbs),
+        app.dbsNumber ? field('DBS Certificate Number', app.dbsNumber) : '',
+        app.dbsDate ? field('DBS Issue Date', app.dbsDate) : '',
+        app.updateService ? field('DBS Update Service', app.updateService) : '',
+        app.updateServiceNum ? field('Update Service Number', app.updateServiceNum) : '',
+        field('Criminal Convictions', app.conviction),
+        app.convictionDetails ? fieldFull('Conviction Details', app.convictionDetails) : '',
+        app.poa1URL ? field('Proof of Address 1', app.poa1Type || 'Uploaded') : '',
+        app.poa2URL ? field('Proof of Address 2', app.poa2Type || 'Uploaded') : '',
+      ])}
+
+      ${app.bankName || app.bankInstitute || app.sortCode ? section('💰 Bank Details', [
+        app.bankInstitute ? field('Bank / Building Society', app.bankInstitute) : '',
         field('Account Holder', app.bankName),
         field('Sort Code', app.sortCode),
         field('Account Number', app.accountNumber),
@@ -291,7 +365,7 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
           </div>
           <div class="field">
             <div class="label">Date Signed</div>
-            <div class="value">${app.signedAt || '—'}</div>
+            <div class="value">${app.signedAt || app.appliedAt || '—'}</div>
           </div>
         </div>
       </div>` : ''}
@@ -336,16 +410,20 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
           <div style={s.section}>
             <div style={s.sectionTitle}>💼 Experience</div>
             <div style={s.detailGrid}>
-              <DetailItem label="Years Experience" value={app.years} />
-              <DetailItem label="Preferred Hours" value={app.hours?.join(", ")} />
+              <DetailItem label="NI Number" value={app.niNumber} />
+              <DetailItem label="Transport" value={app.transport} />
             </div>
-            <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Qualifications</div><div style={s.tagRow}>{app.quals?.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>
+            {app.settings?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Care Settings</div><div style={s.tagRow}>{app.settings.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
+            {app.clients?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Client Groups</div><div style={s.tagRow}>{app.clients.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
+            {app.quals?.length > 0 && <div style={{ marginTop: 10 }}><div style={s.detailLabel}>Qualifications</div><div style={s.tagRow}>{app.quals.map(t => <span key={t} style={s.tag}>{t}</span>)}</div></div>}
           </div>
           <div style={s.section}>
             <div style={s.sectionTitle}>📋 Right to Work</div>
             <div style={s.detailGrid}>
-              <DetailItem label="Status" value={app.rtwStatus} />
-              <DetailItem label="Documents" value={app.docs?.join(", ")} />
+              <DetailItem label="Status" value={app.rightToWork} />
+              <DetailItem label="DBS Type" value={app.hasDbs} />
+              <DetailItem label="Convictions" value={app.conviction} />
+              <DetailItem label="Documents Held" value={app.docs?.join(", ")} />
             </div>
           </div>
           {(app.cvURL || app.poa1URL || app.poa2URL || app.rtwDocURL) && (
