@@ -332,7 +332,7 @@ export default function AgencyDashboard({ agency, onLogout }) {
   const applyLink = `quikcare.co.uk/apply/${agency.slug}`;
 
   useEffect(() => {
-    const q = query(collection(db, "applications"), where("agencySlug", "==", agency.slug), orderBy("submittedAt", "desc"));
+    const q = query(collection(db, "applications"), where("agencySlug", "==", agency.slug), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (snap) => {
       setApplications(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setLoading(false);
