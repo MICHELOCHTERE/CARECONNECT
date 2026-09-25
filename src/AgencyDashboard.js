@@ -1,19 +1,23 @@
-// AgencyDashboard v2.1 - Updated share section
+// AgencyDashboard v2.2 - Full normalize() with urls + employment history + PDF fix
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
 import ReferencesPanel from "./ReferencesPanel";
 
 function normalize(d) {
-  if (d.firstName) return d;
+  if (d.firstName) return d; // old format, already flat
   const p1 = d.p1 || {};
   const p2 = d.p2 || {};
+  const p3 = d.p3 || {};
+  const p4 = Array.isArray(d.p4) ? d.p4 : [];
   const p5 = d.p5 || {};
   const p6 = d.p6 || {};
+  const p7 = d.p7 || {};
   const p8 = d.p8 || {};
   const p9 = d.p9 || [];
   const p10 = d.p10 || {};
   const p11 = d.p11 || {};
+  const urls = d.urls || {};
   return {
     ...d,
     firstName: p1.firstName || "",
@@ -35,11 +39,17 @@ function normalize(d) {
     clients: p2.clients || [],
     quals: p2.quals || [],
     hours: p2.hours || [],
+    employmentGaps: p3.employmentGaps || "",
+    gapsExplanation: p3.gapsExplanation || "",
+    employmentHistory: p4,
     rightToWork: p5.rightToWork || "",
     rtwStatus: p5.rtwStatus || "",
     docs: p5.docs || [],
     proofAddress1: p6.proofAddress1 || "",
     proofAddress2: p6.proofAddress2 || "",
+    religion: p7.religion || "",
+    updateService: p7.updateService || p8.updateService || "",
+    dbsDate: p7.dbsDate || p8.dbsDate || "",
     hasDbs: p8.dbsType || "",
     conviction: p8.convictions || "",
     refs: Array.isArray(p9) ? p9 : [],
@@ -47,6 +57,13 @@ function normalize(d) {
     sortCode: p10.sortCode || "",
     accountNumber: p10.accountNumber || "",
     signature: p11.signature || "",
+    signedAt: p11.signedAt || "",
+    cvURL: urls.cv || urls.cvURL || "",
+    passportURL: urls.passport || urls.passportURL || "",
+    rtwDocURL: urls.rtw || urls.rtwDocURL || "",
+    poa1URL: urls.poa1 || urls.poa1URL || "",
+    poa2URL: urls.poa2 || urls.poa2URL || "",
+    dbsDocURL: urls.dbs || urls.dbsDocURL || "",
     appliedAt: d.submittedAt?.toDate ? d.submittedAt.toDate().toLocaleDateString("en-GB") : (d.appliedAt || ""),
   };
 }
@@ -202,6 +219,21 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
         app.clients?.length ? tagsFull('Client Groups', app.clients) : '',
         app.quals?.length ? tagsFull('Qualifications', app.quals) : '',
       ])}
+
+      ${app.employmentHistory?.length ? `<div class="section"><h2>🏢 Employment History</h2>
+        ${app.employmentHistory.map((job, i) => {
+          const jobFields = [
+            field('Employer', job.employer || job.company),
+            field('Job Title', job.jobTitle || job.title || job.role),
+            field('Start Date', job.startDate || job.from),
+            field('End Date', job.endDate || job.to || (job.current ? 'Present' : '')),
+            field('Reason for Leaving', job.reasonLeaving || job.reason),
+            job.duties ? fieldFull('Duties', job.duties) : '',
+          ].filter(Boolean).join('');
+          return `<div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;margin-bottom:8px"><div style="font-weight:700;color:#6C3FC5;margin-bottom:6px">Job ${i+1}</div><div class="grid">${jobFields}</div></div>`;
+        }).join('')}
+        ${app.employmentGaps ? `<div style="background:#fff8e8;border:1px solid #f0c060;border-radius:8px;padding:10px 14px;margin-top:8px"><div class="label">Employment Gaps / Additional Notes</div><div class="value">${app.employmentGaps}</div></div>` : ''}
+      </div>` : ''}
 
       ${section('🛡️ DBS & Right to Work', [
         field('Right to Work', app.rightToWork),
