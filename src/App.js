@@ -423,6 +423,7 @@ export default function App({ user, agencySlug, onLogout }) {
         urls,
         submittedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
       }, { merge: true });
       setSubmitted(true);
     } catch (e) {
