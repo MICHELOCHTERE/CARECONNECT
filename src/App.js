@@ -146,7 +146,7 @@ export default function App({ user, agencySlug, onLogout }) {
   const [, setExistingApp] = useState(null);
   const [agencyName, setAgencyName] = useState("");
   const [postcodeQuery, setPostcodeQuery] = useState("");
-  const [addressList, setAddressList] = useState([]);
+  const [, setAddressList] = useState([]);
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const [postcodeError, setPostcodeError] = useState("");
 
@@ -267,7 +267,6 @@ export default function App({ user, agencySlug, onLogout }) {
   const u11 = (f, v) => setP11(prev => ({ ...prev, [f]: v }));
 
   const lookupPostcode = async () => {
-    // Normalise: uppercase, collapse multiple spaces, ensure single space before last 3 chars
     const raw = postcodeQuery.trim().toUpperCase().replace(/\s+/g, "");
     const pc = raw.length > 3 ? raw.slice(0, raw.length - 3) + " " + raw.slice(-3) : raw;
     if (!pc) return;
@@ -279,57 +278,23 @@ export default function App({ user, agencySlug, onLogout }) {
       const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 404) setPostcodeError("Postcode not found. Please check and try again.");
-        else if (res.status === 401) setPostcodeError("Address lookup unavailable. Please enter your address manually.");
         else setPostcodeError("Lookup failed. Please enter your address manually.");
         setPostcodeLoading(false);
         return;
       }
       const data = await res.json();
-      // GetAddress.io expand=true returns objects; without expand it returns strings like "line1, line2, , town, county, postcode, country"
-      const rawAddresses = data.addresses || [];
-      const addresses = rawAddresses.map(a => {
-        if (typeof a === "string") {
-          // Non-expanded format: "Line1, Line2, Line3, Town, County, Postcode, Country"
-          const parts = a.split(",").map(p => p.trim());
-          return {
-            line1: parts[0] || "",
-            line2: [parts[1], parts[2]].filter(Boolean).join(", "),
-            city: parts[3] || "",
-            county: parts[4] || "",
-            postcode: data.postcode || pc.toUpperCase(),
-            formatted: [parts[0], parts[1], parts[2], parts[3], parts[4]].filter(Boolean).join(", "),
-          };
-        }
-        // Expanded format: object with named fields
-        return {
-          line1: a.line_1 || a.formatted_address?.[0] || "",
-          line2: [a.line_2, a.line_3, a.line_4].filter(Boolean).join(", ") || a.formatted_address?.[1] || "",
-          city: a.town_or_city || a.locality || "",
-          county: a.county || "",
-          postcode: data.postcode || pc.toUpperCase(),
-          formatted: [a.line_1, a.line_2, a.line_3, a.town_or_city, a.county].filter(Boolean).join(", "),
-        };
-      });
-      if (addresses.length === 0) {
-        setPostcodeError("No addresses found for this postcode.");
-      } else {
-        setAddressList(addresses);
-      }
+      u1("city", data.city || data.district || "");
+      u1("county", data.county || "");
+      u1("postcode", data.postcode || pc);
+      setPostcodeQuery(data.postcode || pc);
+      setPostcodeError("");
     } catch (e) {
       setPostcodeError("Lookup failed. Please enter your address manually.");
     }
     setPostcodeLoading(false);
   };
 
-  const selectAddress = (addr) => {
-    u1("address1", addr.line1);
-    u1("address2", addr.line2);
-    u1("city", addr.city);
-    u1("county", addr.county);
-    u1("postcode", addr.postcode);
-    setAddressList([]);
-    setPostcodeQuery(addr.postcode);
-  };
+
 
   const err = (msg) => { setError(msg); return false; };
 
@@ -346,8 +311,12 @@ export default function App({ user, agencySlug, onLogout }) {
         return err("Please select at least one qualification (or 'No formal qualifications').");
     }
     if (step === 4) {
-      if (!p4[0].employer || !p4[0].jobTitle || !p4[0].from)
+            if (!p4[0].employer || !p4[0].jobTitle || !p4[0].from)
         return err("Please complete at least your most recent employment.");
+      if (!p4[0].duties)
+        return err("Please describe your duties and responsibilities for your most recent role.");
+      if (!p4[0].leaving && p4[0].to)
+        return err("Please provide a reason for leaving your most recent role.");
     }
     if (step === 5) {
       if (p5.careSettings.length === 0) return err("Please select at least one care setting.");
@@ -373,22 +342,34 @@ export default function App({ user, agencySlug, onLogout }) {
       if (f7poa1Type && f7poa2Type && f7poa1Type === f7poa2Type)
         return err("Please upload two different types of proof of address documents.");
     }
-    if (step === 8) {
-      if (!p8.dbsType) return err("Please select your DBS certificate type.");
-      if (!p8.convictions) return err("Please answer the criminal conviction question.");
-      const hasDBS = f8dbs || urls.dbs;
-      if (!hasDBS) return err("Please upload your DBS certificate.");
-    }
+   if (step === 8) {
+  if (!p8.dbsType) return err("Please select your DBS certificate type.");
+  if (!p8.convictions) return err("Please answer the criminal conviction question.");
+  if (p8.dbsType !== "I do not have a DBS certificate") {
+    const hasDBS = f8dbs || urls.dbs;
+    if (!hasDBS) return err("Please upload your DBS certificate.");
+  }
+}
     if (step === 9) {
-      if (!p9[0].name || !p9[0].email || !p9[0].org)
-        return err("Please complete details for at least your first referee.");
-      if (!p9[1].name || !p9[1].email || !p9[1].org)
-        return err("Please complete details for your second referee.");
-    }
+  if (!p9[0].name || !p9[0].email || !p9[0].org)
+    return err("Please complete details for your first referee.");
+  if (!p9[1].name || !p9[1].email || !p9[1].org)
+    return err("Please complete details for your second referee.");
+}
     if (step === 11) {
       if (!p11.agreed) return err("You must agree to the declaration to submit.");
       if (!p11.signature) return err("Please enter your full name as a signature.");
       if (!p11.signDate) return err("Please enter today's date.");
+    }
+        if (step === 10) {
+      if (!p10.bankName) return err("Please enter your bank or building society name.");
+      if (!p10.accountName) return err("Please enter the account holder name.");
+      if (!p10.sortCode) return err("Please enter your sort code.");
+      if (!/^\d{2}-?\d{2}-?\d{2}$/.test(p10.sortCode.replace(/\s/g, "")))
+        return err("Please enter a valid sort code (e.g. 12-34-56).");
+      if (!p10.accountNumber) return err("Please enter your account number.");
+      if (!/^\d{8}$/.test(p10.accountNumber.replace(/\s/g, "")))
+        return err("Account number must be exactly 8 digits.");
     }
     return true;
   };
@@ -442,6 +423,7 @@ export default function App({ user, agencySlug, onLogout }) {
         urls,
         submittedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
       }, { merge: true });
       setSubmitted(true);
     } catch (e) {
@@ -550,23 +532,9 @@ export default function App({ user, agencySlug, onLogout }) {
                 </button>
               </div>
               {postcodeError && <div style={{ color: "#cc0000", fontSize: 12, marginTop: 4 }}>{postcodeError}</div>}
-              {addressList.length > 0 && (
-                <div style={{ marginTop: 6 }}>
-                  <select
-                    style={{ ...s.select, background: "#fff" }}
-                    defaultValue=""
-                    onChange={e => {
-                      const idx = parseInt(e.target.value, 10);
-                      if (!isNaN(idx)) selectAddress(addressList[idx]);
-                    }}
-                  >
-                    <option value="">— Select your address ({addressList.length} found) —</option>
-                    {addressList.map((a, i) => (
-                      <option key={i} value={i}>{a.formatted}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+            {!postcodeError && !postcodeLoading && p1.city && (
+  <div style={{ color: "#1a7a3a", fontSize: 12, marginTop: 4 }}>✓ City, county and postcode filled in — please enter your street address below.</div>
+)}
             </div>
             <div style={s.field}><label style={s.label}>Address Line 1 <span style={{ color: "#cc0000" }}>*</span></label><input style={s.input} value={p1.address1} onChange={e => u1("address1", e.target.value)} placeholder="House number and street" /></div>
             <div style={s.field}><label style={s.label}>Address Line 2</label><input style={s.input} value={p1.address2} onChange={e => u1("address2", e.target.value)} /></div>
