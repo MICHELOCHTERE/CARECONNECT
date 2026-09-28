@@ -518,7 +518,7 @@ function ComplianceChecker({ app, onBack, onSave }) {
       setDecision(app._compliance.decision || "");
       setDecisionNote(app._compliance.decisionNote || "");
     }
-  }, [app.id]);
+  }, [app.id, app._compliance]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setCheck = (id, val) => setChecks(prev => ({ ...prev, [id]: val }));
   const setNote  = (id, val) => setNotes(prev => ({ ...prev, [id]: val }));
@@ -730,7 +730,7 @@ function CompliancePanel({ agency, applications }) {
       setComplianceData(result);
     };
     loadCompliance();
-  }, [applications.map(a => a.id).join(",")]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveCompliance = async (appId, data) => {
     const ref = doc(db, "applications", appId, "compliance", "record");
