@@ -789,6 +789,7 @@ function ComplianceChecker({ app, onBack, onSave }) {
               <div key={key} style={{ padding: "10px 14px", borderBottom: "1px solid #f0ebff", borderRight: "1px solid #f0ebff" }}>
                 <div style={{ fontSize: 10, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "flex", justifyContent: "space-between" }}>
                   <span>{label}</span>
+                  {isOverridden && <span style={{ color: "#6C3FC5", fontSize: 9 }}>✏️ edited</span>}
                 </div>
                 <input
                   value={val}
@@ -797,7 +798,7 @@ function ComplianceChecker({ app, onBack, onSave }) {
                   style={{
                     width: "100%", border: "none", outline: "none", background: "transparent",
                     fontSize: 12, color: val ? "#1a1a2e" : "#bbb",
-                    borderBottom: "1px dashed #e0e0e0",
+                    borderBottom: `1px dashed ${isOverridden ? "#6C3FC5" : "#e0e0e0"}`,
                     paddingBottom: 2,
                   }}
                 />
