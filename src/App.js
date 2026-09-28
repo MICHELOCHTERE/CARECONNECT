@@ -92,7 +92,7 @@ function EmpBlock({ emp, idx, onChange, onRemove }) {
   return (
     <div style={s.empBlock}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <span style={{ fontWeight: 600, color: "#6C3FC5", fontSize: 14 }}>Employment {idx + 1}</span>
+        <span style={{ fontWeight: 600, color: "#6C3FC5", fontSize: 14 }}>Role {idx + 1}</span>
         {idx > 0 && <button onClick={onRemove} style={{ background: "none", border: "none", color: "#cc0000", cursor: "pointer", fontSize: 12 }}>Remove</button>}
       </div>
       <div style={s.row}>
@@ -686,8 +686,8 @@ export default function App({ user, agencySlug, onLogout }) {
         {/* STEP 4 - Employment History */}
         {step === 4 && (
           <div style={s.card}>
-            <div style={s.sectionTitle}>Employment History</div>
-            <div style={s.sectionSub}>Please provide a continuous 10-year employment history, starting with your most recent position.</div>
+            <div style={s.sectionTitle}>Employment Continuity Check</div>
+            <div style={s.sectionSub}>Please provide a complete and continuous 10-year employment record, starting with your most recent position.</div>
             <div style={{ background: "#fff8e8", border: "1px solid #f0c060", borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#7a5000" }}>
               <strong>⚠️ 10-year continuity required</strong> — Your history must go back to at least <strong>{new Date(new Date().getFullYear() - 10, new Date().getMonth(), 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</strong>. Include all employment, education, voluntary work, or career breaks. Any gap of more than 1 month <strong>must be explained</strong> in the "gaps" field of the role that follows it.
             </div>
