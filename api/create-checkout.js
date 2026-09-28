@@ -37,9 +37,6 @@ export default async function handler(req, res) {
       },
       success_url: `https://quikcare.co.uk/agency/register?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
       cancel_url: `https://quikcare.co.uk/#pricing`,
-      payment_intent_data: {
-        setup_future_usage: "off_session",
-      },
     });
 
     return res.status(200).json({ url: session.url });
