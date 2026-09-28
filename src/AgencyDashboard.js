@@ -509,6 +509,11 @@ function ComplianceChecker({ app, onBack, onSave }) {
   const [decisionNote, setDecisionNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved]   = useState(false);
+  // Manual overrides for pre-filled application fields
+  const [overrides, setOverrides] = useState({});
+  const setOverride = (key, val) => setOverrides(prev => ({ ...prev, [key]: val }));
+  // Merge: override takes priority over application data
+  const field = (key, appVal) => overrides[key] !== undefined ? overrides[key] : (appVal || "");
 
   // Load saved compliance data on mount
   useEffect(() => {
@@ -518,6 +523,7 @@ function ComplianceChecker({ app, onBack, onSave }) {
       setNotes(comp.notes   || {});
       setDecision(comp.decision || "");
       setDecisionNote(comp.decisionNote || "");
+      setOverrides(comp.overrides || {});
     }
   }, [app.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -605,18 +611,22 @@ function ComplianceChecker({ app, onBack, onSave }) {
         <h2>📋 Application Details</h2>
         <div class="infoGrid">
           ${[
-            ["Right to Work", app.rightToWork],
-            ["NI Number", app.niNumber],
-            ["Nationality", app.nationality],
-            ["DBS Type", app.hasDbs],
-            ["DBS Number", app.dbsNumber],
-            ["DBS Issue Date", app.dbsDate],
-            ["DBS Update Service", app.updateService],
-            ["Criminal Convictions", app.conviction],
-            ["References Provided", (app.refs || []).length + " reference(s)"],
-            ["Employment History", (app.employmentHistory || []).length + " role(s)"],
-            ["Qualifications", (app.quals || []).join(", ") || "None"],
-            ["Health Declaration", app.healthConditions || "None declared"],
+            ["Right to Work",      field("rightToWork",      app.rightToWork)],
+            ["NI Number",          field("niNumber",         app.niNumber)],
+            ["Nationality",        field("nationality",      app.nationality)],
+            ["Share Code",         field("shareCode",        app.shareCode)],
+            ["Visa Expiry",        field("visaExpiry",       app.visaExpiry)],
+            ["DBS Type",           field("hasDbs",           app.hasDbs)],
+            ["DBS Number",         field("dbsNumber",        app.dbsNumber)],
+            ["DBS Issue Date",     field("dbsDate",          app.dbsDate)],
+            ["DBS Update Service", field("updateService",    app.updateService)],
+            ["Update Service No.", field("updateServiceNum", app.updateServiceNum)],
+            ["Criminal Convictions", field("conviction",     app.conviction)],
+            ["References Provided",  (app.refs || []).length + " reference(s)"],
+            ["Employment History",   (app.employmentHistory || []).length + " role(s)"],
+            ["Qualifications",     field("qualifications",   (app.quals || []).join(", ")) || "None"],
+            ["First Aid Expiry",   field("firstAidExpiry",   app.firstAidExpiry)],
+            ["Health Declaration", field("healthConditions", app.healthConditions) || "None declared"],
           ].map(([l, v]) => `<div class="infoCell"><div class="infoLabel">${l}</div><div class="infoVal">${v || "—"}</div></div>`).join("")}
         </div>
       </div>
@@ -667,7 +677,7 @@ function ComplianceChecker({ app, onBack, onSave }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const data = { checks, notes, decision, decisionNote, updatedAt: new Date().toISOString() };
+      const data = { checks, notes, decision, decisionNote, overrides, updatedAt: new Date().toISOString() };
       await onSave(app.id, data);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -749,29 +759,51 @@ function ComplianceChecker({ app, onBack, onSave }) {
         </div>
       </div>
 
-      {/* Pre-filled info from application */}
+      {/* Pre-filled info from application — all fields editable */}
       <div style={cs.card}>
-        <div style={cs.cardHead}>📋 Pre-filled from Application</div>
+        <div style={{ ...cs.cardHead, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>📋 Application Details</span>
+          <span style={{ fontSize: 11, fontWeight: 400, color: "#9b7fd4" }}>Pre-filled from form · click any field to edit</span>
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 0 }}>
           {[
-            ["Right to Work", app.rightToWork],
-            ["DBS Type", app.hasDbs],
-            ["DBS Number", app.dbsNumber],
-            ["DBS Date", app.dbsDate],
-            ["Update Service", app.updateService],
-            ["Convictions", app.conviction],
-            ["NI Number", app.niNumber],
-            ["Nationality", app.nationality],
-            ["References", app.refs?.length ? `${app.refs.length} provided` : "None"],
-            ["Employment History", app.employmentHistory?.length ? `${app.employmentHistory.length} roles` : "None"],
-            ["Qualifications", app.quals?.length ? app.quals.join(", ") : "None"],
-            ["Health Declaration", app.healthConditions || "None declared"],
-          ].map(([label, val]) => (
-            <div key={label} style={{ padding: "10px 16px", borderBottom: "1px solid #f0ebff", borderRight: "1px solid #f0ebff" }}>
-              <div style={{ fontSize: 10, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>{label}</div>
-              <div style={{ fontSize: 12, color: "#1a1a2e" }}>{val || "—"}</div>
-            </div>
-          ))}
+            ["rightToWork",      "Right to Work",       app.rightToWork],
+            ["hasDbs",           "DBS Type",            app.hasDbs],
+            ["dbsNumber",        "DBS Number",          app.dbsNumber],
+            ["dbsDate",          "DBS Issue Date",      app.dbsDate],
+            ["updateService",    "DBS Update Service",  app.updateService],
+            ["updateServiceNum", "Update Service No.",  app.updateServiceNum],
+            ["conviction",       "Convictions",         app.conviction],
+            ["niNumber",         "NI Number",           app.niNumber],
+            ["nationality",      "Nationality",         app.nationality],
+            ["shareCode",        "Share Code",          app.shareCode],
+            ["visaExpiry",       "Visa Expiry",         app.visaExpiry],
+            ["qualifications",   "Qualifications",      app.quals?.join(", ")],
+            ["healthConditions", "Health Declaration",  app.healthConditions],
+            ["firstAidExpiry",   "First Aid Expiry",    app.firstAidExpiry],
+            ["memberships",      "Prof. Memberships",   app.memberships],
+          ].map(([key, label, appVal]) => {
+            const val = field(key, appVal);
+            const isOverridden = overrides[key] !== undefined && overrides[key] !== (appVal || "");
+            return (
+              <div key={key} style={{ padding: "10px 14px", borderBottom: "1px solid #f0ebff", borderRight: "1px solid #f0ebff" }}>
+                <div style={{ fontSize: 10, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "flex", justifyContent: "space-between" }}>
+                  <span>{label}</span>
+                </div>
+                <input
+                  value={val}
+                  onChange={e => setOverride(key, e.target.value)}
+                  placeholder={appVal ? "" : "Enter manually..."}
+                  style={{
+                    width: "100%", border: "none", outline: "none", background: "transparent",
+                    fontSize: 12, color: val ? "#1a1a2e" : "#bbb",
+                    borderBottom: "1px dashed #e0e0e0",
+                    paddingBottom: 2,
+                  }}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 
