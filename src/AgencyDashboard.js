@@ -1,7 +1,7 @@
 // AgencyDashboard v2.3 - normalize() fully aligned with App.js field names
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
-import { collection, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, orderBy, query, where } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
 import ReferencesPanel from "./ReferencesPanel";
 
 function normalize(d) {
@@ -512,13 +512,14 @@ function ComplianceChecker({ app, onBack, onSave }) {
 
   // Load saved compliance data on mount
   useEffect(() => {
-    if (app._compliance) {
-      setChecks(app._compliance.checks || {});
-      setNotes(app._compliance.notes   || {});
-      setDecision(app._compliance.decision || "");
-      setDecisionNote(app._compliance.decisionNote || "");
+    const comp = app.compliance || app._compliance;
+    if (comp) {
+      setChecks(comp.checks || {});
+      setNotes(comp.notes   || {});
+      setDecision(comp.decision || "");
+      setDecisionNote(comp.decisionNote || "");
     }
-  }, [app.id, app._compliance]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [app.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setCheck = (id, val) => setChecks(prev => ({ ...prev, [id]: val }));
   const setNote  = (id, val) => setNotes(prev => ({ ...prev, [id]: val }));
@@ -526,13 +527,156 @@ function ComplianceChecker({ app, onBack, onSave }) {
   const completedCount = CHECK_DEFS.filter(c => checks[c.id] === "verified" || checks[c.id] === "na").length;
   const issueCount     = CHECK_DEFS.filter(c => checks[c.id] === "issue").length;
 
+  const downloadCompliancePDF = () => {
+    const statusIcon = (s) => ({ verified: "✅ Verified", pending: "⏳ Pending", issue: "⚠️ Issue", na: "— N/A" }[s] || "⏳ Pending");
+    const statusColor = (s) => ({ verified: "#1a7a3a", pending: "#6C3FC5", issue: "#cc0000", na: "#888" }[s] || "#6C3FC5");
+    const statusBg = (s) => ({ verified: "#e8f5eb", pending: "#f5f0ff", issue: "#fff0f0", na: "#f8f8f8" }[s] || "#f5f0ff");
+    const decisionLabel = { cleared: "✅ Cleared to Start", conditional: "⚠️ Conditional Start", notcleared: "❌ Not Cleared" };
+    const decisionColor = { cleared: "#1a7a3a", conditional: "#7a5000", notcleared: "#cc0000" };
+    const decisionBg    = { cleared: "#e8f5eb",  conditional: "#fff8e8",  notcleared: "#fff0f0" };
+
+    const checkRows = CHECK_DEFS.map(c => {
+      const st = checks[c.id] || "pending";
+      const note = notes[c.id] || "";
+      return `
+        <tr>
+          <td style="padding:10px 14px;border-bottom:1px solid #f0ebff;font-size:13px;">${c.icon} ${c.label}</td>
+          <td style="padding:10px 14px;border-bottom:1px solid #f0ebff;">
+            <span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:${statusBg(st)};color:${statusColor(st)}">${statusIcon(st)}</span>
+          </td>
+          <td style="padding:10px 14px;border-bottom:1px solid #f0ebff;font-size:12px;color:#555;">${note || ""}</td>
+        </tr>`;
+    }).join("");
+
+    const empRows = (app.employmentHistory || []).map((job, i) => `
+      <div style="background:#f8f5ff;border-radius:6px;padding:10px 14px;margin-bottom:8px;">
+        <div style="font-weight:700;font-size:13px;color:#1a1a2e;">${job.jobTitle} — ${job.employer}</div>
+        <div style="font-size:12px;color:#9b7fd4;margin-top:2px;">${job.from || ""} → ${job.to || "Present"}${job.leaving ? " · Left: " + job.leaving : ""}</div>
+        ${job.gaps ? `<div style="margin-top:4px;font-size:12px;background:#fff8e8;border:1px solid #f0c060;border-radius:4px;padding:4px 8px;color:#7a5000;">Gap: ${job.gaps}</div>` : ""}
+      </div>`).join("");
+
+    const refRows = (app.refs || []).map((r, i) => `
+      <div style="background:#f8f5ff;border-radius:6px;padding:10px 14px;margin-bottom:8px;">
+        <div style="font-weight:700;font-size:13px;">${r.name} — ${r.title || r.position || ""}</div>
+        <div style="font-size:12px;color:#9b7fd4;">${r.org || ""} · ${r.email || ""} · ${r.relation || r.relationship || ""}</div>
+      </div>`).join("");
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Compliance Report — ${app.firstName} ${app.lastName}</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, sans-serif; color: #1a1a2e; font-size: 13px; line-height: 1.5; }
+      .page { padding: 32px 40px; max-width: 900px; margin: 0 auto; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #6C3FC5; padding-bottom: 16px; margin-bottom: 24px; }
+      .logo { font-size: 20px; font-weight: 700; color: #6C3FC5; }
+      h1 { font-size: 22px; color: #6C3FC5; margin-bottom: 4px; }
+      h2 { font-size: 11px; color: #6C3FC5; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #e8e0f5; padding-bottom: 6px; margin-bottom: 12px; font-weight: 700; }
+      .section { margin-bottom: 24px; page-break-inside: avoid; }
+      .infoGrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+      .infoCell { background: #f8f5ff; border-radius: 6px; padding: 8px 12px; }
+      .infoLabel { font-size: 9px; color: #9b7fd4; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+      .infoVal { font-size: 12px; color: #1a1a2e; }
+      table { width: 100%; border-collapse: collapse; }
+      th { text-align: left; padding: 8px 14px; font-size: 10px; color: #9b7fd4; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 2px solid #e8e0f5; }
+      .decision { border-radius: 8px; padding: 14px 18px; margin-bottom: 8px; }
+      .sigRow { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+      .sigBox { border-top: 1px solid #1a1a2e; padding-top: 8px; font-size: 11px; color: #9b7fd4; }
+      .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e8e0f5; display: flex; justify-content: space-between; font-size: 10px; color: #9b7fd4; }
+      * { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
+      @media print { .no-print { display: none !important; } }
+    </style></head><body>
+    <div class="no-print" style="background:#fff8e8;border:1px solid #f0c060;border-radius:8px;padding:12px 16px;margin:16px;font-size:13px;color:#7a5000;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:18px;">🖨️</span>
+      <span><strong>For colour printing:</strong> In the print dialog click <strong>"More settings"</strong> → enable <strong>"Background graphics"</strong> → then print or save as PDF.</span>
+    </div>
+    <div class="page">
+      <div class="header">
+        <div>
+          <h1>${app.firstName} ${app.lastName}</h1>
+          <p style="color:#9b7fd4;font-size:12px;">Pre-Employment Compliance Report &nbsp;·&nbsp; Applied: ${app.appliedAt || "—"} &nbsp;·&nbsp; ${app.email || ""}</p>
+        </div>
+        <div style="text-align:right">
+          <div class="logo">Quikcare</div>
+          <div style="font-size:11px;color:#9b7fd4;margin-top:4px;">CQC Regulation 19 &amp; Schedule 3</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>📋 Application Details</h2>
+        <div class="infoGrid">
+          ${[
+            ["Right to Work", app.rightToWork],
+            ["NI Number", app.niNumber],
+            ["Nationality", app.nationality],
+            ["DBS Type", app.hasDbs],
+            ["DBS Number", app.dbsNumber],
+            ["DBS Issue Date", app.dbsDate],
+            ["DBS Update Service", app.updateService],
+            ["Criminal Convictions", app.conviction],
+            ["References Provided", (app.refs || []).length + " reference(s)"],
+            ["Employment History", (app.employmentHistory || []).length + " role(s)"],
+            ["Qualifications", (app.quals || []).join(", ") || "None"],
+            ["Health Declaration", app.healthConditions || "None declared"],
+          ].map(([l, v]) => `<div class="infoCell"><div class="infoLabel">${l}</div><div class="infoVal">${v || "—"}</div></div>`).join("")}
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>✅ Pre-Employment Checks</h2>
+        <table>
+          <thead><tr><th>Check</th><th>Status</th><th>Notes</th></tr></thead>
+          <tbody>${checkRows}</tbody>
+        </table>
+      </div>
+
+      ${empRows ? `<div class="section"><h2>🏢 Employment History</h2>${empRows}</div>` : ""}
+      ${refRows ? `<div class="section"><h2>⭐ References</h2>${refRows}</div>` : ""}
+
+      <div class="section">
+        <h2>⚖️ Compliance Decision</h2>
+        ${decision ? `
+          <div class="decision" style="background:${decisionBg[decision]};border:1px solid ${decisionColor[decision]}33;">
+            <div style="font-size:16px;font-weight:700;color:${decisionColor[decision]};margin-bottom:6px;">${decisionLabel[decision]}</div>
+            ${decisionNote ? `<div style="font-size:13px;color:#333;line-height:1.6;">${decisionNote}</div>` : ""}
+          </div>` : `<div style="color:#cc0000;font-size:13px;padding:12px;background:#fff0f0;border-radius:6px;">No decision recorded yet</div>`}
+      </div>
+
+      <div class="section">
+        <h2>✍️ Authorisation</h2>
+        <div class="sigRow">
+          <div class="sigBox">Completed by (print name)</div>
+          <div class="sigBox">Signature &amp; Date</div>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:#9b7fd4;">
+          I confirm that the above pre-employment checks have been completed in accordance with CQC Regulation 19 and Schedule 3 of the Health and Social Care Act 2008 (Regulated Activities) Regulations 2014.
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>Quikcare Ltd · Co. No. 17206901 · CQC Reg. 19 &amp; Schedule 3 Compliance</span>
+        <span>Generated: ${new Date().toLocaleDateString("en-GB")} &nbsp;·&nbsp; ID: ${app.id || "—"}</span>
+      </div>
+    </div></body></html>`;
+
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  };
+
   const handleSave = async () => {
     setSaving(true);
-    const data = { checks, notes, decision, decisionNote, updatedAt: new Date().toISOString() };
-    await onSave(app.id, data);
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      const data = { checks, notes, decision, decisionNote, updatedAt: new Date().toISOString() };
+      await onSave(app.id, data);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Compliance save error:", err);
+      alert("Save failed: " + (err.message || "Unknown error"));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const cs = {
@@ -702,9 +846,15 @@ function ComplianceChecker({ app, onBack, onSave }) {
             {decision === "cleared" ? "✅ Cleared" : decision === "conditional" ? "⚠️ Conditional" : "❌ Not Cleared"}
           </span>}
         </div>
-        <button style={cs.saveBtn} onClick={handleSave} disabled={saving}>
-          {saving ? "Saving..." : saved ? "✓ Saved!" : "💾 Save Compliance Record"}
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button style={{ padding: "12px 16px", borderRadius: 8, border: "1px solid #c5b3e8", background: "#f0ebff", color: "#6C3FC5", fontSize: 14, cursor: "pointer" }}
+            onClick={downloadCompliancePDF}>
+            📄 Download Report
+          </button>
+          <button style={cs.saveBtn} onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : saved ? "✓ Saved!" : "💾 Save"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -715,26 +865,18 @@ function CompliancePanel({ agency, applications }) {
   const [complianceData, setComplianceData] = useState({});
   const [search, setSearch] = useState("");
 
-  // Load compliance records for all applications
+  // Compliance data is stored on the application doc itself under `compliance` field
+  // so we just read it from the already-loaded applications array
   useEffect(() => {
-    if (!applications.length) return;
-    const loadCompliance = async () => {
-      const result = {};
-      await Promise.all(applications.map(async (app) => {
-        try {
-          const ref = doc(db, "applications", app.id, "compliance", "record");
-          const snap = await getDoc(ref);
-          if (snap.exists()) result[app.id] = snap.data();
-        } catch (e) { /* ignore */ }
-      }));
-      setComplianceData(result);
-    };
-    loadCompliance();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const result = {};
+    applications.forEach(app => {
+      if (app.compliance) result[app.id] = app.compliance;
+    });
+    setComplianceData(result);
+  }, [applications]);
 
   const saveCompliance = async (appId, data) => {
-    const ref = doc(db, "applications", appId, "compliance", "record");
-    await setDoc(ref, data, { merge: true });
+    await updateDoc(doc(db, "applications", appId), { compliance: data });
     setComplianceData(prev => ({ ...prev, [appId]: data }));
   };
 
@@ -745,7 +887,7 @@ function CompliancePanel({ agency, applications }) {
 
   if (selected) {
     const comp = complianceData[selected.id] || {};
-    const appWithCompliance = { ...selected, _compliance: comp };
+    const appWithCompliance = { ...selected, compliance: comp };
     return (
       <div style={{ background: "#f8f5ff", minHeight: "100vh" }}>
         <ComplianceChecker app={appWithCompliance} onBack={() => setSelected(null)} onSave={saveCompliance} />
