@@ -106,8 +106,11 @@ function EmpBlock({ emp, idx, onChange, onRemove }) {
       <div style={s.field}><label style={s.label}>Reason for Leaving</label><input style={s.input} value={emp.leaving || ""} onChange={e => u("leaving", e.target.value)} placeholder="Redundancy / Career change / etc." /></div>
       <div style={s.field}><label style={s.label}>Duties & Responsibilities</label><textarea style={s.textarea} value={emp.duties || ""} onChange={e => u("duties", e.target.value)} placeholder="Brief description of duties" /></div>
       <div style={s.field}>
-        <label style={s.label}>Any gaps in employment since leaving? If yes, explain</label>
-        <textarea style={s.textarea} value={emp.gaps || ""} onChange={e => u("gaps", e.target.value)} rows={2} />
+        <label style={s.label}>Any gaps in employment before or after this role? <span style={{ color: "#cc0000" }}>*</span></label>
+        <div style={{ fontSize: 12, color: "#9b7fd4", marginBottom: 6 }}>
+          If there was a gap before this role or after leaving, explain what you were doing (e.g. caring responsibilities, studying, travelling, unemployed). All gaps must be accounted for.
+        </div>
+        <textarea style={s.textarea} value={emp.gaps || ""} onChange={e => u("gaps", e.target.value)} rows={2} placeholder="e.g. Career break — caring for a family member (Jan 2022 – Jun 2022)" />
       </div>
     </div>
   );
@@ -311,12 +314,76 @@ export default function App({ user, agencySlug, onLogout }) {
         return err("Please select at least one qualification (or 'No formal qualifications').");
     }
     if (step === 4) {
-            if (!p4[0].employer || !p4[0].jobTitle || !p4[0].from)
+      if (!p4[0].employer || !p4[0].jobTitle || !p4[0].from)
         return err("Please complete at least your most recent employment.");
       if (!p4[0].duties)
         return err("Please describe your duties and responsibilities for your most recent role.");
       if (!p4[0].leaving && p4[0].to)
         return err("Please provide a reason for leaving your most recent role.");
+
+      // ── 10-year continuity check ────────────────────────────────
+      const now = new Date();
+      const tenYearsAgo = new Date(now.getFullYear() - 10, now.getMonth(), 1);
+
+      const parseMonth = (str) => {
+        if (!str) return null;
+        const [y, m] = str.split("-").map(Number);
+        return new Date(y, m - 1, 1);
+      };
+
+      // Build sorted timeline from filled-in roles
+      const roles = p4
+        .filter(j => j.employer && j.from)
+        .map(j => ({
+          from:     parseMonth(j.from),
+          to:       j.to ? parseMonth(j.to) : now,
+          gaps:     (j.gaps || "").trim(),
+          employer: j.employer,
+        }))
+        .filter(j => j.from)
+        .sort((a, b) => a.from - b.from);
+
+      if (roles.length === 0)
+        return err("Please add at least one employment entry with a start date.");
+
+      // Must reach back 10 years
+      const earliest = roles[0].from;
+      if (earliest > tenYearsAgo) {
+        return err(
+          `Your employment history only goes back to ${earliest.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}. ` +
+          `Please add earlier employment, education, or voluntary activity to cover the full 10 years ` +
+          `(back to at least ${tenYearsAgo.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}).`
+        );
+      }
+
+      // Check for unexplained gaps between consecutive roles (> 1 month)
+      for (let i = 0; i < roles.length - 1; i++) {
+        const gapStart  = roles[i].to;
+        const gapEnd    = roles[i + 1].from;
+        const gapMonths = (gapEnd.getFullYear() - gapStart.getFullYear()) * 12 + (gapEnd.getMonth() - gapStart.getMonth());
+        if (gapMonths > 1 && !roles[i + 1].gaps) {
+          const gapStartStr = gapStart.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+          const gapEndStr   = gapEnd.toLocaleDateString("en-GB",   { month: "long", year: "numeric" });
+          return err(
+            `There is a gap of ${gapMonths} month${gapMonths !== 1 ? "s" : ""} between ${gapStartStr} and ${gapEndStr}. ` +
+            `Please explain this gap in the "Any gaps in employment" field for "${roles[i + 1].employer}".`
+          );
+        }
+      }
+
+      // Check for unexplained gap between last role and today
+      const last = roles[roles.length - 1];
+      if (last.to < now) {
+        const gapMonths = (now.getFullYear() - last.to.getFullYear()) * 12 + (now.getMonth() - last.to.getMonth());
+        if (gapMonths > 1 && !last.gaps) {
+          const toStr = last.to.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+          return err(
+            `There is a gap of ${gapMonths} month${gapMonths !== 1 ? "s" : ""} since your last role ended (${toStr}). ` +
+            `Please explain this in the "Any gaps in employment" field for "${last.employer}".`
+          );
+        }
+      }
+      // ────────────────────────────────────────────────────────────
     }
     if (step === 5) {
       if (p5.careSettings.length === 0) return err("Please select at least one care setting.");
@@ -620,7 +687,10 @@ export default function App({ user, agencySlug, onLogout }) {
         {step === 4 && (
           <div style={s.card}>
             <div style={s.sectionTitle}>Employment History</div>
-            <div style={s.sectionSub}>Please provide a continuous 10-year employment history, starting with your most recent position. Account for any gaps.</div>
+            <div style={s.sectionSub}>Please provide a continuous 10-year employment history, starting with your most recent position.</div>
+            <div style={{ background: "#fff8e8", border: "1px solid #f0c060", borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#7a5000" }}>
+              <strong>⚠️ 10-year continuity required</strong> — Your history must go back to at least <strong>{new Date(new Date().getFullYear() - 10, new Date().getMonth(), 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</strong>. Include all employment, education, voluntary work, or career breaks. Any gap of more than 1 month <strong>must be explained</strong> in the "gaps" field of the role that follows it.
+            </div>
             {p4.map((emp, i) => (
               <EmpBlock key={i} emp={emp} idx={i}
                 onChange={updated => setP4(prev => prev.map((e, j) => j === i ? updated : e))}
