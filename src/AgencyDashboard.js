@@ -1,7 +1,7 @@
 // AgencyDashboard v2.3 - normalize() fully aligned with App.js field names
 import { useState, useEffect, useMemo } from "react";
 import { db } from "./firebase";
-import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, orderBy, query, where } from "firebase/firestore";
 import ReferencesPanel from "./ReferencesPanel";
 
 function normalize(d) {
@@ -103,12 +103,13 @@ function normalize(d) {
     signature: p11.signature || "",
     signedAt:  p11.signDate  || "",        // App.js: p11.signDate
     // ── Document URLs ─────────────────────────────────────────
-    cvURL:       urls.cv      || "",
-    passportURL: urls.passport || "",
-    rtwDocURL:   urls.rtw     || "",
-    poa1URL:     urls.poa1    || "",
-    poa2URL:     urls.poa2    || "",
-    dbsDocURL:   urls.dbs     || "",
+    // App.js uploads to: urls.cv, urls.passport, urls.rtw, urls.poa1, urls.poa2, urls.dbs
+    cvURL:       urls.cv       || urls.cvURL       || "",
+    passportURL: urls.passport || urls.passportURL || "",
+    rtwDocURL:   urls.rtw      || urls.rtwDocURL   || urls.rtwDoc || "",
+    poa1URL:     urls.poa1     || urls.poa1URL     || "",
+    poa2URL:     urls.poa2     || urls.poa2URL     || "",
+    dbsDocURL:   urls.dbs      || urls.dbsURL      || urls.dbsDocURL || "",
     poa1Type:    urls.poa1Type || "",
     poa2Type:    urls.poa2Type || "",
     // ── Applied date ──────────────────────────────────────────
@@ -119,11 +120,17 @@ function normalize(d) {
 }
 
 const STATUS_COLORS = {
-  pending: { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
-  approved: { bg: "#e8f5eb", text: "#1a7a3a", border: "#a3d9b1" },
-  rejected: { bg: "#fff0f0", text: "#cc0000", border: "#ffb3b3" },
+  pending:   { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
+  submitted: { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8" },
+  approved:  { bg: "#e8f5eb", text: "#1a7a3a", border: "#a3d9b1" },
+  rejected:  { bg: "#fff0f0", text: "#cc0000", border: "#ffb3b3" },
 };
-const STATUS_LABELS = { pending: "⏳ Pending", approved: "✅ Approved", rejected: "❌ Rejected" };
+const STATUS_LABELS = {
+  pending:   "⏳ Pending",
+  submitted: "⏳ Pending",
+  approved:  "✅ Approved",
+  rejected:  "❌ Rejected",
+};
 
 const s = {
   app: { minHeight: "100vh", background: "#f8f5ff", color: "#1a1a2e", fontFamily: "'DM Sans', sans-serif" },
@@ -465,6 +472,371 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
   );
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// COMPLIANCE PANEL — CQC Regulation 19 & Schedule 3 pre-employment checks
+// ──────────────────────────────────────────────────────────────────────────────
+const CHECK_DEFS = [
+  { id: "identity",   label: "Identity Verified",         icon: "🪪", section: "identity" },
+  { id: "rtw",        label: "Right to Work Confirmed",   icon: "✈️", section: "rtw" },
+  { id: "dbs",        label: "DBS Check Obtained",        icon: "🔒", section: "dbs" },
+  { id: "barred",     label: "Barred List Checked",       icon: "🚫", section: "dbs" },
+  { id: "empHistory", label: "Employment History Verified",icon: "🏢", section: "employment" },
+  { id: "gaps",       label: "Employment Gaps Explained", icon: "📅", section: "employment" },
+  { id: "ref1",       label: "Reference 1 Received",      icon: "⭐", section: "references" },
+  { id: "ref2",       label: "Reference 2 Received",      icon: "⭐", section: "references" },
+  { id: "quals",      label: "Qualifications Verified",   icon: "🎓", section: "quals" },
+  { id: "health",     label: "Health Declaration Obtained",icon: "🏥", section: "health" },
+  { id: "interview",  label: "Interview Conducted",       icon: "🗣️", section: "interview" },
+];
+
+const CHECK_STATUS_COLORS = {
+  verified:     { bg: "#e8f5eb", text: "#1a7a3a", border: "#a3d9b1", icon: "✅" },
+  pending:      { bg: "#f5f0ff", text: "#6C3FC5", border: "#c5b3e8", icon: "⏳" },
+  issue:        { bg: "#fff0f0", text: "#cc0000", border: "#ffb3b3", icon: "⚠️" },
+  na:           { bg: "#f8f8f8", text: "#888",    border: "#ddd",    icon: "—" },
+};
+
+const DECISION_COLORS = {
+  cleared:     { bg: "#e8f5eb", text: "#1a7a3a", border: "#a3d9b1" },
+  conditional: { bg: "#fff8e8", text: "#7a5000", border: "#f0c060" },
+  notcleared:  { bg: "#fff0f0", text: "#cc0000", border: "#ffb3b3" },
+};
+
+function ComplianceChecker({ app, onBack, onSave }) {
+  const [checks, setChecks] = useState({});
+  const [notes, setNotes]   = useState({});
+  const [decision, setDecision] = useState("");
+  const [decisionNote, setDecisionNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved]   = useState(false);
+
+  // Load saved compliance data on mount
+  useEffect(() => {
+    if (app._compliance) {
+      setChecks(app._compliance.checks || {});
+      setNotes(app._compliance.notes   || {});
+      setDecision(app._compliance.decision || "");
+      setDecisionNote(app._compliance.decisionNote || "");
+    }
+  }, [app.id]);
+
+  const setCheck = (id, val) => setChecks(prev => ({ ...prev, [id]: val }));
+  const setNote  = (id, val) => setNotes(prev => ({ ...prev, [id]: val }));
+
+  const completedCount = CHECK_DEFS.filter(c => checks[c.id] === "verified" || checks[c.id] === "na").length;
+  const issueCount     = CHECK_DEFS.filter(c => checks[c.id] === "issue").length;
+
+  const handleSave = async () => {
+    setSaving(true);
+    const data = { checks, notes, decision, decisionNote, updatedAt: new Date().toISOString() };
+    await onSave(app.id, data);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const cs = {
+    wrap:      { maxWidth: 860, margin: "0 auto", padding: "24px 16px" },
+    backBtn:   { background: "none", border: "none", color: "#9b7fd4", fontSize: 14, cursor: "pointer", marginBottom: 16, display: "flex", alignItems: "center", gap: 6 },
+    card:      { background: "#fff", border: "1px solid #e8e0f5", borderRadius: 12, marginBottom: 16, overflow: "hidden" },
+    cardHead:  { background: "#f8f5ff", padding: "12px 20px", fontWeight: 700, fontSize: 13, color: "#6C3FC5", borderBottom: "1px solid #e8e0f5" },
+    checkRow:  { display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 20px", borderBottom: "1px solid #f0ebff" },
+    checkIcon: { fontSize: 20, width: 28, flexShrink: 0, paddingTop: 2 },
+    checkLabel:{ flex: 1, fontSize: 14, color: "#1a1a2e", fontWeight: 500 },
+    statusBtns:{ display: "flex", gap: 6, flexShrink: 0 },
+    statusBtn: (active, color) => ({
+      padding: "4px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600, cursor: "pointer",
+      background: active ? color.bg : "#f8f8f8",
+      color: active ? color.text : "#aaa",
+      border: `1px solid ${active ? color.border : "#e0e0e0"}`,
+    }),
+    noteInput:  { width: "100%", marginTop: 8, padding: "6px 10px", borderRadius: 6, border: "1px solid #e8e0f5", fontSize: 12, color: "#1a1a2e", outline: "none", resize: "vertical", minHeight: 36 },
+    infoBox:    { background: "#f8f5ff", borderRadius: 8, padding: "10px 14px", marginTop: 4, fontSize: 12, color: "#6C3FC5" },
+    summaryBar: { display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "1px solid #e8e0f5", borderRadius: 12, padding: "16px 20px", marginBottom: 20 },
+    saveBtn:    { padding: "12px 28px", background: "#6C3FC5", border: "none", borderRadius: 8, color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer" },
+  };
+
+  const renderCheckRow = (check) => {
+    const status = checks[check.id] || "pending";
+    const note   = notes[check.id]  || "";
+    return (
+      <div key={check.id} style={{ borderBottom: "1px solid #f0ebff" }}>
+        <div style={cs.checkRow}>
+          <span style={cs.checkIcon}>{check.icon}</span>
+          <div style={cs.checkLabel}>{check.label}</div>
+          <div style={cs.statusBtns}>
+            {Object.entries(CHECK_STATUS_COLORS).map(([key, col]) => (
+              <button key={key} style={cs.statusBtn(status === key, col)}
+                onClick={() => setCheck(check.id, key)}>
+                {col.icon} {key === "na" ? "N/A" : key.charAt(0).toUpperCase() + key.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding: "0 20px 12px 60px" }}>
+          <textarea style={cs.noteInput} placeholder="Notes (optional)..." rows={1}
+            value={note} onChange={e => setNote(check.id, e.target.value)} />
+        </div>
+      </div>
+    );
+  };
+
+  const sections = {
+    identity:   { title: "🪪 Identity", checks: ["identity"] },
+    rtw:        { title: "✈️ Right to Work", checks: ["rtw"] },
+    dbs:        { title: "🔒 DBS & Barred List", checks: ["dbs", "barred"] },
+    employment: { title: "🏢 Employment History", checks: ["empHistory", "gaps"] },
+    references: { title: "⭐ References", checks: ["ref1", "ref2"] },
+    quals:      { title: "🎓 Qualifications", checks: ["quals"] },
+    health:     { title: "🏥 Health", checks: ["health"] },
+    interview:  { title: "🗣️ Interview", checks: ["interview"] },
+  };
+
+  return (
+    <div style={cs.wrap}>
+      <button style={cs.backBtn} onClick={onBack}>← Back to Compliance List</button>
+
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1a1a2e", marginBottom: 4 }}>
+          {app.firstName} {app.lastName}
+        </h2>
+        <div style={{ fontSize: 13, color: "#9b7fd4" }}>
+          {app.email} &nbsp;·&nbsp; Applied {app.appliedAt}
+        </div>
+      </div>
+
+      {/* Pre-filled info from application */}
+      <div style={cs.card}>
+        <div style={cs.cardHead}>📋 Pre-filled from Application</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 0 }}>
+          {[
+            ["Right to Work", app.rightToWork],
+            ["DBS Type", app.hasDbs],
+            ["DBS Number", app.dbsNumber],
+            ["DBS Date", app.dbsDate],
+            ["Update Service", app.updateService],
+            ["Convictions", app.conviction],
+            ["NI Number", app.niNumber],
+            ["Nationality", app.nationality],
+            ["References", app.refs?.length ? `${app.refs.length} provided` : "None"],
+            ["Employment History", app.employmentHistory?.length ? `${app.employmentHistory.length} roles` : "None"],
+            ["Qualifications", app.quals?.length ? app.quals.join(", ") : "None"],
+            ["Health Declaration", app.healthConditions || "None declared"],
+          ].map(([label, val]) => (
+            <div key={label} style={{ padding: "10px 16px", borderBottom: "1px solid #f0ebff", borderRight: "1px solid #f0ebff" }}>
+              <div style={{ fontSize: 10, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>{label}</div>
+              <div style={{ fontSize: 12, color: "#1a1a2e" }}>{val || "—"}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Checks by section */}
+      {Object.entries(sections).map(([secKey, sec]) => (
+        <div key={secKey} style={cs.card}>
+          <div style={cs.cardHead}>{sec.title}</div>
+          {sec.checks.map(id => renderCheckRow(CHECK_DEFS.find(c => c.id === id)))}
+        </div>
+      ))}
+
+      {/* Employment history detail */}
+      {app.employmentHistory?.length > 0 && (
+        <div style={cs.card}>
+          <div style={cs.cardHead}>🏢 Employment Timeline (from application)</div>
+          {app.employmentHistory.map((job, i) => (
+            <div key={i} style={{ padding: "12px 20px", borderBottom: "1px solid #f0ebff" }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: "#1a1a2e" }}>{job.jobTitle} — {job.employer}</div>
+              <div style={{ fontSize: 12, color: "#9b7fd4", marginTop: 2 }}>{job.from} → {job.to || "Present"}{job.leaving ? ` · Left: ${job.leaving}` : ""}</div>
+              {job.gaps && <div style={{ marginTop: 4, fontSize: 12, background: "#fff8e8", border: "1px solid #f0c060", borderRadius: 6, padding: "4px 10px", color: "#7a5000" }}>⚠️ Gap noted: {job.gaps}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* References detail */}
+      {app.refs?.length > 0 && (
+        <div style={cs.card}>
+          <div style={cs.cardHead}>⭐ References (from application)</div>
+          {app.refs.map((r, i) => (
+            <div key={i} style={{ padding: "12px 20px", borderBottom: "1px solid #f0ebff" }}>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name} — {r.title} at {r.org}</div>
+              <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.email} &nbsp;·&nbsp; {r.relation}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Decision */}
+      <div style={cs.card}>
+        <div style={cs.cardHead}>⚖️ Compliance Decision</div>
+        <div style={{ padding: 20 }}>
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            {[
+              { key: "cleared",     label: "✅ Cleared to Start" },
+              { key: "conditional", label: "⚠️ Conditional Start" },
+              { key: "notcleared", label: "❌ Not Cleared" },
+            ].map(d => (
+              <button key={d.key} onClick={() => setDecision(d.key)}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  background: decision === d.key ? DECISION_COLORS[d.key].bg : "#f8f8f8",
+                  color: decision === d.key ? DECISION_COLORS[d.key].text : "#aaa",
+                  border: `1px solid ${decision === d.key ? DECISION_COLORS[d.key].border : "#e0e0e0"}`,
+                }}>
+                {d.label}
+              </button>
+            ))}
+          </div>
+          <textarea style={{ ...cs.noteInput, minHeight: 80 }}
+            placeholder="Decision rationale / conditions / notes..."
+            value={decisionNote} onChange={e => setDecisionNote(e.target.value)} />
+        </div>
+      </div>
+
+      {/* Summary bar + save */}
+      <div style={cs.summaryBar}>
+        <div style={{ display: "flex", gap: 20, fontSize: 13, color: "#9b7fd4" }}>
+          <span>✅ {completedCount}/{CHECK_DEFS.length} checks done</span>
+          {issueCount > 0 && <span style={{ color: "#cc0000" }}>⚠️ {issueCount} issue{issueCount > 1 ? "s" : ""}</span>}
+          {decision && <span style={{ color: DECISION_COLORS[decision]?.text, fontWeight: 700 }}>
+            {decision === "cleared" ? "✅ Cleared" : decision === "conditional" ? "⚠️ Conditional" : "❌ Not Cleared"}
+          </span>}
+        </div>
+        <button style={cs.saveBtn} onClick={handleSave} disabled={saving}>
+          {saving ? "Saving..." : saved ? "✓ Saved!" : "💾 Save Compliance Record"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CompliancePanel({ agency, applications }) {
+  const [selected, setSelected] = useState(null);
+  const [complianceData, setComplianceData] = useState({});
+  const [search, setSearch] = useState("");
+
+  // Load compliance records for all applications
+  useEffect(() => {
+    if (!applications.length) return;
+    const loadCompliance = async () => {
+      const result = {};
+      await Promise.all(applications.map(async (app) => {
+        try {
+          const ref = doc(db, "applications", app.id, "compliance", "record");
+          const snap = await getDoc(ref);
+          if (snap.exists()) result[app.id] = snap.data();
+        } catch (e) { /* ignore */ }
+      }));
+      setComplianceData(result);
+    };
+    loadCompliance();
+  }, [applications.map(a => a.id).join(",")]);
+
+  const saveCompliance = async (appId, data) => {
+    const ref = doc(db, "applications", appId, "compliance", "record");
+    await setDoc(ref, data, { merge: true });
+    setComplianceData(prev => ({ ...prev, [appId]: data }));
+  };
+
+  const filtered = applications.filter(a => {
+    if (!search) return true;
+    return `${a.firstName} ${a.lastName} ${a.email}`.toLowerCase().includes(search.toLowerCase());
+  });
+
+  if (selected) {
+    const comp = complianceData[selected.id] || {};
+    const appWithCompliance = { ...selected, _compliance: comp };
+    return (
+      <div style={{ background: "#f8f5ff", minHeight: "100vh" }}>
+        <ComplianceChecker app={appWithCompliance} onBack={() => setSelected(null)} onSave={saveCompliance} />
+      </div>
+    );
+  }
+
+  const getComplianceProgress = (appId) => {
+    const comp = complianceData[appId];
+    if (!comp?.checks) return { done: 0, total: CHECK_DEFS.length, decision: null };
+    const done = CHECK_DEFS.filter(c => comp.checks[c.id] === "verified" || comp.checks[c.id] === "na").length;
+    return { done, total: CHECK_DEFS.length, decision: comp.decision };
+  };
+
+  return (
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px" }}>
+      <div style={{ marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#1a1a2e", marginBottom: 4 }}>✅ Compliance Tracker</h2>
+          <p style={{ fontSize: 13, color: "#9b7fd4" }}>CQC Regulation 19 &amp; Schedule 3 — Pre-employment checks</p>
+        </div>
+        <input
+          style={{ padding: "10px 16px", border: "1px solid #e8e0f5", borderRadius: 8, fontSize: 14, outline: "none", width: 260, background: "#fff" }}
+          placeholder="🔍 Search applicants..."
+          value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 20px", color: "#9b7fd4", fontSize: 14 }}>No applications to show</div>
+      ) : (
+        <div style={{ background: "#fff", border: "1px solid #e8e0f5", borderRadius: 12, overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "#f8f5ff" }}>
+                {["Applicant", "Applied", "Application Status", "Checks Complete", "Compliance Decision", ""].map(h => (
+                  <th key={h} style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, color: "#9b7fd4", textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid #e8e0f5", fontWeight: 600 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(app => {
+                const { done, total, decision } = getComplianceProgress(app.id);
+                const pct = Math.round((done / total) * 100);
+                return (
+                  <tr key={app.id} style={{ cursor: "pointer", transition: "background 0.15s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#f8f5ff"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    onClick={() => setSelected(app)}>
+                    <td style={{ padding: "14px 16px", fontSize: 14, borderBottom: "1px solid #f0ebff" }}>
+                      <div style={{ fontWeight: 600 }}>{app.firstName} {app.lastName}</div>
+                      <div style={{ fontSize: 12, color: "#9b7fd4", marginTop: 2 }}>{app.email}</div>
+                    </td>
+                    <td style={{ padding: "14px 16px", fontSize: 13, color: "#9b7fd4", borderBottom: "1px solid #f0ebff" }}>{app.appliedAt || "—"}</td>
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f0ebff" }}>
+                      <span style={{ display: "inline-block", padding: "4px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600,
+                        background: STATUS_COLORS[app.status]?.bg, color: STATUS_COLORS[app.status]?.text, border: `1px solid ${STATUS_COLORS[app.status]?.border}` }}>
+                        {STATUS_LABELS[app.status] || app.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f0ebff" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ flex: 1, height: 6, background: "#e8e0f5", borderRadius: 3, overflow: "hidden", minWidth: 80 }}>
+                          <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#1a7a3a" : "#6C3FC5", borderRadius: 3, transition: "width 0.3s" }} />
+                        </div>
+                        <span style={{ fontSize: 12, color: "#9b7fd4", whiteSpace: "nowrap" }}>{done}/{total}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f0ebff" }}>
+                      {decision ? (
+                        <span style={{ display: "inline-block", padding: "4px 10px", borderRadius: 999, fontSize: 11, fontWeight: 700,
+                          background: DECISION_COLORS[decision]?.bg, color: DECISION_COLORS[decision]?.text, border: `1px solid ${DECISION_COLORS[decision]?.border}` }}>
+                          {decision === "cleared" ? "✅ Cleared" : decision === "conditional" ? "⚠️ Conditional" : "❌ Not Cleared"}
+                        </span>
+                      ) : <span style={{ fontSize: 12, color: "#ccc" }}>Not started</span>}
+                    </td>
+                    <td style={{ padding: "14px 16px", borderBottom: "1px solid #f0ebff" }}>
+                      <button style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #c5b3e8", background: "#f0ebff", color: "#6C3FC5", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+                        {done > 0 ? "Continue →" : "Start →"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function exportCSV(applications) {
   const headers = ["Name", "Email", "Phone", "Postcode", "Applied", "Experience", "DBS", "Status"];
   const rows = applications.map(a => [`${a.firstName} ${a.lastName}`, a.email, a.phone, a.postcode, a.appliedAt, a.years, a.hasDbs, a.status]);
@@ -570,9 +942,11 @@ export default function AgencyDashboard({ agency, onLogout }) {
       <div style={s.tabRow}>
         <button style={s.tab(activeTab === "applications")} onClick={() => setActiveTab("applications")}>📁 Applications</button>
         <button style={s.tab(activeTab === "references")} onClick={() => setActiveTab("references")}>⭐ References</button>
+        <button style={s.tab(activeTab === "compliance")} onClick={() => setActiveTab("compliance")}>✅ Compliance</button>
       </div>
 
       {activeTab === "references" && <ReferencesPanel agency={agency} applications={applications} />}
+      {activeTab === "compliance" && <CompliancePanel agency={agency} applications={applications} />}
 
       {activeTab === "applications" && <>
       {error && (
