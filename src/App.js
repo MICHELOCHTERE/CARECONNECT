@@ -482,6 +482,7 @@ export default function App({ user, agencySlug, onLogout }) {
     if (!validateStep()) return;
     setSaving(true);
     try {
+      const appliedAt = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
       await setDoc(doc(db, "applications", user.uid + "_" + agencySlug), {
         userId: user.uid,
         agencySlug,
@@ -492,6 +493,29 @@ export default function App({ user, agencySlug, onLogout }) {
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
       }, { merge: true });
+
+      const carerName = `${p1.firstName} ${p1.lastName}`.trim();
+
+      // Send confirmation email to carer (non-fatal)
+      fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "carerConfirmation",
+          data: { carerName, carerEmail: p1.email, agencyName: agencyName || agencySlug, appliedAt },
+        }),
+      }).catch(e => console.error("Carer email failed:", e));
+
+      // Send notification email to agency (non-fatal)
+      fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "agencyNotification",
+          data: { carerName, carerEmail: p1.email, carerPhone: p1.phone, carerPostcode: p1.postcode, agencySlug, appliedAt },
+        }),
+      }).catch(e => console.error("Agency email failed:", e));
+
       setSubmitted(true);
     } catch (e) {
       setError("Submission failed. Please try again.");
