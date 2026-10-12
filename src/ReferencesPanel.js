@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
-import { collection, addDoc, onSnapshot, query, where, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 
 const s = {
   container: { maxWidth: 1100, margin: "0 auto", padding: "24px 16px" },
@@ -155,8 +155,10 @@ function DetailModal({ req, onClose }) {
   );
 }
 
-function CarerReferenceRow({ carerName, refs, onViewRef, onResend }) {
+function CarerReferenceRow({ carerName, refs, onViewRef, onResend, onEditEmail }) {
   const [expanded, setExpanded] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editEmail, setEditEmail] = useState("");
   const completed = refs.filter(r => r.status === "completed").length;
   const total = refs.length;
   const statusKey = total === 0 ? "none" : completed >= 2 ? "complete" : "partial";
@@ -182,16 +184,32 @@ function CarerReferenceRow({ carerName, refs, onViewRef, onResend }) {
           <td style={s.td}><div style={{ fontSize: 12, color: "#9b7fd4" }}>{ref.refereeOrg || "—"}</div></td>
           <td style={s.td}><span style={s.pill(STATUS_COLORS[ref.status] || STATUS_COLORS.pending)}>{(STATUS_COLORS[ref.status] || STATUS_COLORS.pending).label}</span></td>
           <td style={s.td}>
-            <div style={{ display: "flex", gap: 6 }}>
-              {ref.status === "completed" ? (
-                <>
-                  <button style={s.btnSm} onClick={() => onViewRef(ref)}>View</button>
-                  <button style={{ ...s.btnSm, background: "#4a7a5a" }} onClick={() => downloadReferencePDF(ref)}>⬇ PDF</button>
-                </>
-              ) : (
+            {ref.status === "completed" ? (
+              <div style={{ display: "flex", gap: 6 }}>
+                <button style={s.btnSm} onClick={() => onViewRef(ref)}>View</button>
+                <button style={{ ...s.btnSm, background: "#4a7a5a" }} onClick={() => downloadReferencePDF(ref)}>⬇ PDF</button>
+              </div>
+            ) : editingId === ref.id ? (
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={e => setEditEmail(e.target.value)}
+                  style={{ fontSize: 11, padding: "4px 8px", border: "1px solid #c5b3e8", borderRadius: 6, outline: "none", width: 160 }}
+                  autoFocus
+                />
+                <button style={s.btnSm} onClick={async () => {
+                  await onEditEmail(ref.id, editEmail);
+                  setEditingId(null);
+                }}>Save</button>
+                <button style={s.btnSmOutline} onClick={() => setEditingId(null)}>✕</button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 6 }}>
                 <button style={{ ...s.btnSmOutline, color: "#6C3FC5", borderColor: "#6C3FC5" }} onClick={() => onResend(ref)}>🔁 Resend</button>
-              )}
-            </div>
+                <button style={{ ...s.btnSmOutline, color: "#9b7fd4", borderColor: "#c5b3e8" }} onClick={() => { setEditingId(ref.id); setEditEmail(ref.refereeEmail); }} title="Edit email">✏️</button>
+              </div>
+            )}
           </td>
         </tr>
       ))}
@@ -240,6 +258,15 @@ export default function ReferencesPanel({ agency, applications }) {
   const totalCarers = Object.keys(grouped).length;
   const fullyReferenced = Object.values(grouped).filter(refs => refs.filter(r => r.status === "completed").length >= 2).length;
   const pendingCount = requests.filter(r => r.status === "pending").length;
+
+  const handleEditEmail = async (refId, newEmail) => {
+    try {
+      await updateDoc(doc(db, "referenceRequests", refId), { refereeEmail: newEmail });
+    } catch (e) {
+      console.error("Failed to update email:", e);
+      alert("Could not save email. Please try again.");
+    }
+  };
 
   const handleResend = async (ref) => {
     if (resending) return;
@@ -372,7 +399,7 @@ export default function ReferencesPanel({ agency, applications }) {
             </thead>
             <tbody>
               {Object.entries(grouped).map(([carerName, refs]) => (
-                <CarerReferenceRow key={carerName} carerName={carerName} refs={refs} onViewRef={setViewReq} onResend={handleResend} />
+                <CarerReferenceRow key={carerName} carerName={carerName} refs={refs} onViewRef={setViewReq} onResend={handleResend} onEditEmail={handleEditEmail} />
               ))}
             </tbody>
           </table>
