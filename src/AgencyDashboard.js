@@ -1,8 +1,25 @@
 // AgencyDashboard v2.3 - normalize() fully aligned with App.js field names
 import { useState, useEffect, useMemo } from "react";
-import { db } from "./firebase";
+import { db, storage } from "./firebase";
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query, where } from "firebase/firestore";
+import { ref, getDownloadURL } from "firebase/storage";
 import ReferencesPanel from "./ReferencesPanel";
+
+// Opens a Firebase Storage file in a new tab with a fresh signed URL
+async function openDoc(storedUrl, label) {
+  if (!storedUrl) return;
+  try {
+    // Extract the storage path from the stored URL
+    const pathMatch = storedUrl.match(/\/o\/(.+?)\?/);
+    if (!pathMatch) { window.open(storedUrl, "_blank"); return; }
+    const storagePath = decodeURIComponent(pathMatch[1]);
+    const freshUrl = await getDownloadURL(ref(storage, storagePath));
+    window.open(freshUrl, "_blank");
+  } catch (e) {
+    console.error("Failed to open doc:", e);
+    alert("Could not open " + (label || "document") + ". Please try again.");
+  }
+}
 
 function normalize(d) {
   if (d.firstName) return d; // old flat format — pass through unchanged
@@ -437,10 +454,12 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
             <div style={s.section}>
               <div style={s.sectionTitle}>📁 Uploaded Documents</div>
               <div style={s.tagRow}>
-                {app.cvURL && <a href={app.cvURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📄 CV</a>}
-                {app.poa1URL && <a href={app.poa1URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 1</a>}
-                {app.poa2URL && <a href={app.poa2URL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>🏠 Address 2</a>}
-                {app.rtwDocURL && <a href={app.rtwDocURL} target="_blank" rel="noreferrer" style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, textDecoration: "none" }}>📋 Right to Work</a>}
+                {app.cvURL && <button onClick={() => openDoc(app.cvURL, "CV")} style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, cursor: "pointer" }}>📄 CV</button>}
+                {app.passportURL && <button onClick={() => openDoc(app.passportURL, "Passport")} style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, cursor: "pointer" }}>🛂 Passport</button>}
+                {app.poa1URL && <button onClick={() => openDoc(app.poa1URL, "Proof of Address 1")} style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, cursor: "pointer" }}>🏠 Address 1</button>}
+                {app.poa2URL && <button onClick={() => openDoc(app.poa2URL, "Proof of Address 2")} style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, cursor: "pointer" }}>🏠 Address 2</button>}
+                {app.rtwDocURL && <button onClick={() => openDoc(app.rtwDocURL, "Right to Work")} style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, cursor: "pointer" }}>📋 Right to Work</button>}
+                {app.dbsDocURL && <button onClick={() => openDoc(app.dbsDocURL, "DBS Certificate")} style={{ padding: "6px 14px", borderRadius: 999, background: "#f0ebff", border: "1px solid #c5b3e8", color: "#6C3FC5", fontSize: 13, cursor: "pointer" }}>🔒 DBS</button>}
               </div>
             </div>
           )}
