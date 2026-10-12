@@ -210,8 +210,8 @@ function DetailItem({ label, value }) {
 }
 
 function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
-  if (!app) return null;
   const [editingRef, setEditingRef] = useState(null); // { index, email }
+  if (!app) return null;
 
   const saveRefEmail = async () => {
     if (!editingRef) return;
