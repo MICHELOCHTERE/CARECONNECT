@@ -211,7 +211,22 @@ function DetailItem({ label, value }) {
 
 function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
   if (!app) return null;
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
+    // Pre-fetch fresh signed URLs so PDF links don't 403
+    const getFresh = async (storedUrl) => {
+      if (!storedUrl) return null;
+      try {
+        const pathMatch = storedUrl.match(/\/o\/(.+?)\?/);
+        if (!pathMatch) return storedUrl;
+        const freshUrl = await getDownloadURL(ref(storage, decodeURIComponent(pathMatch[1])));
+        return freshUrl;
+      } catch { return null; }
+    };
+    const [freshCV, freshPassport, freshRTW, freshPoa1, freshPoa2, freshDBS] = await Promise.all([
+      getFresh(app.cvURL), getFresh(app.passportURL), getFresh(app.rtwDocURL),
+      getFresh(app.poa1URL), getFresh(app.poa2URL), getFresh(app.dbsDocURL),
+    ]);
+
     const field = (label, value) => value ? `<div class="field"><div class="label">${label}</div><div class="value">${value}</div></div>` : '';
     const fieldFull = (label, value) => value ? `<div class="field full"><div class="label">${label}</div><div class="value">${value}</div></div>` : '';
     const tags = (arr) => arr?.length ? arr.map(t => `<span class="tag">${t}</span>`).join('') : null;
@@ -355,12 +370,12 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
 
       <div class="section"><h2>📎 Uploaded Documents</h2>
         <div style="background:#f8f5ff;border-radius:8px;padding:12px 16px;">
-          ${app.cvURL ? `<div class="doc-row">📄 CV &nbsp;<a class="doc-link" href="${app.cvURL}" target="_blank">View</a></div>` : ''}
-          ${app.passportURL ? `<div class="doc-row">🛂 Passport &nbsp;<a class="doc-link" href="${app.passportURL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🛂 Passport — not uploaded</div>'}
-          ${app.rtwDocURL ? `<div class="doc-row">📋 RTW Document &nbsp;<a class="doc-link" href="${app.rtwDocURL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">📋 RTW Document — not uploaded</div>'}
-          ${app.poa1URL ? `<div class="doc-row">🏠 Proof of Address 1 (${app.proofAddress1 || ''}) &nbsp;<a class="doc-link" href="${app.poa1URL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🏠 Proof of Address 1 — not uploaded</div>'}
-          ${app.poa2URL ? `<div class="doc-row">🏠 Proof of Address 2 (${app.proofAddress2 || ''}) &nbsp;<a class="doc-link" href="${app.poa2URL}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🏠 Proof of Address 2 — not uploaded</div>'}
-          ${app.dbsDocURL ? `<div class="doc-row">🔒 DBS Certificate &nbsp;<a class="doc-link" href="${app.dbsDocURL}" target="_blank">View</a></div>` : ''}
+          ${freshCV ? `<div class="doc-row">📄 CV &nbsp;<a class="doc-link" href="${freshCV}" target="_blank">View</a></div>` : ''}
+          ${freshPassport ? `<div class="doc-row">🛂 Passport &nbsp;<a class="doc-link" href="${freshPassport}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🛂 Passport — not uploaded</div>'}
+          ${freshRTW ? `<div class="doc-row">📋 RTW Document &nbsp;<a class="doc-link" href="${freshRTW}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">📋 RTW Document — not uploaded</div>'}
+          ${freshPoa1 ? `<div class="doc-row">🏠 Proof of Address 1 (${app.proofAddress1 || ''}) &nbsp;<a class="doc-link" href="${freshPoa1}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🏠 Proof of Address 1 — not uploaded</div>'}
+          ${freshPoa2 ? `<div class="doc-row">🏠 Proof of Address 2 (${app.proofAddress2 || ''}) &nbsp;<a class="doc-link" href="${freshPoa2}" target="_blank">View</a></div>` : '<div class="doc-row" style="color:#cc0000">🏠 Proof of Address 2 — not uploaded</div>'}
+          ${freshDBS ? `<div class="doc-row">🔒 DBS Certificate &nbsp;<a class="doc-link" href="${freshDBS}" target="_blank">View</a></div>` : ''}
         </div>
       </div>
 
