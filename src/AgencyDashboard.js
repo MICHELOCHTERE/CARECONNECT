@@ -211,6 +211,23 @@ function DetailItem({ label, value }) {
 
 function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
   if (!app) return null;
+  const [editingRef, setEditingRef] = useState(null); // { index, email }
+
+  const saveRefEmail = async () => {
+    if (!editingRef) return;
+    try {
+      const updatedP9 = (app.p9 || app.refs || []).map((r, i) =>
+        i === editingRef.index ? { ...r, email: editingRef.email } : r
+      );
+      await updateDoc(doc(db, "applications", app.id), { p9: updatedP9, updatedAt: new Date() });
+      if (app.refs) app.refs[editingRef.index].email = editingRef.email;
+      setEditingRef(null);
+    } catch (e) {
+      console.error("Failed to update reference email:", e);
+      alert("Could not save. Please try again.");
+    }
+  };
+
   const downloadPDF = async () => {
     // Pre-fetch fresh signed URLs so PDF links don't 403
     const getFresh = async (storedUrl) => {
@@ -484,7 +501,28 @@ function Modal({ app, agency, onClose, onApprove, onReject, onDelete }) {
               <div key={i} style={{ ...s.detailItem, marginBottom: 8 }}>
                 <div style={{ fontSize: 13, color: "#1a1a2e", fontWeight: 600 }}>{r.name}</div>
                 <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.title} · {r.org}</div>
-                <div style={{ fontSize: 12, color: "#9b7fd4" }}>{r.email}</div>
+                {editingRef?.index === i ? (
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 4 }}>
+                    <input
+                      type="email"
+                      value={editingRef.email}
+                      onChange={e => setEditingRef({ ...editingRef, email: e.target.value })}
+                      style={{ flex: 1, fontSize: 12, padding: "4px 8px", border: "1px solid #c5b3e8", borderRadius: 6, outline: "none" }}
+                      autoFocus
+                    />
+                    <button onClick={saveRefEmail} style={{ fontSize: 11, padding: "4px 10px", background: "#6C3FC5", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>Save</button>
+                    <button onClick={() => setEditingRef(null)} style={{ fontSize: 11, padding: "4px 10px", background: "none", border: "1px solid #ccc", borderRadius: 6, cursor: "pointer" }}>Cancel</button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                    <span style={{ fontSize: 12, color: "#9b7fd4" }}>{r.email || "—"}</span>
+                    <button
+                      onClick={() => setEditingRef({ index: i, email: r.email || "" })}
+                      title="Edit email"
+                      style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "#c5b3e8", padding: 0 }}
+                    >✏️</button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
