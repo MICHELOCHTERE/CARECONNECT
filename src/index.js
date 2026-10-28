@@ -5,12 +5,9 @@ import AdminDashboard from './AdminDashboard';
 import AgencyRegister from './AgencyRegister';
 import AgencyLogin from './AgencyLogin';
 import AgencyDashboard from './AgencyDashboard';
+import DBSForm from './DBSForm';
 import LandingPage from './LandingPage';
 import Demo from './Demo';
-import PrivacyPolicy from './PrivacyPolicy';
-import Contact from './Contact';
-import TrainingMatrix from './TrainingMatrix';
-import ReferenceForm from './ReferenceForm';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -107,11 +104,6 @@ function Router() {
     });
     return () => unsub();
   }, []);
-
-  // Reference form — public, no auth needed — BEFORE auth check
-  if (path.startsWith('/reference/')) {
-    return <ReferenceForm />;
-  }
 
   // Super admin route
   if (path === '/admin') {
@@ -228,25 +220,15 @@ function Router() {
     );
   }
 
-  // Training Matrix — agency only
-  if (path === '/training') {
-    if (!user || !agencyProfile) { go('/agency/login'); return null; }
-    return <TrainingMatrix agency={agencyProfile} onBack={() => { go('/agency/dashboard'); }} />;
+  // DBS application form — public, no login needed
+  if (path.startsWith('/dbs/')) {
+    const dbsSlug = path.replace('/dbs/', '');
+    return <DBSForm agencySlug={dbsSlug} />;
   }
 
   // Demo page
   if (path === '/demo') {
     return <Demo />;
-  }
-
-  // Privacy Policy — public
-  if (path === '/privacy') {
-    return <PrivacyPolicy />;
-  }
-
-  // Contact — public
-  if (path === '/contact') {
-    return <Contact />;
   }
 
   // Landing page
@@ -290,11 +272,6 @@ function CarerLoginForm({ onAuth, agencySlug }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showReset, setShowReset] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetSent, setResetSent] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
-
   const handleSubmit = async () => {
     if (!email || !password) return setError('Please fill in all fields.');
     setLoading(true);
@@ -307,51 +284,11 @@ function CarerLoginForm({ onAuth, agencySlug }) {
     }
     setLoading(false);
   };
-
-  const handleReset = async () => {
-    if (!resetEmail) return;
-    setResetLoading(true);
-    try {
-      const { sendPasswordResetEmail } = await import('firebase/auth');
-      await sendPasswordResetEmail(auth, resetEmail);
-      setResetSent(true);
-    } catch (err) {
-      setError('Could not send reset email. Please check the address.');
-      setShowReset(false);
-    }
-    setResetLoading(false);
-  };
-
-  if (showReset) {
-    return (
-      <>
-        {resetSent ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📧</div>
-            <div style={{ color: '#1a7a3a', fontWeight: 700, marginBottom: 8 }}>Email sent!</div>
-            <div style={{ color: '#9b7fd4', fontSize: 13, marginBottom: 20 }}>Check your inbox for a password reset link.</div>
-            <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }} onClick={() => { setShowReset(false); setResetSent(false); }}>Back to login</button>
-          </div>
-        ) : (
-          <>
-            <div style={{ color: '#9b7fd4', fontSize: 13, marginBottom: 16 }}>Enter your email and we'll send you a reset link.</div>
-            <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={resetEmail} onChange={e => setResetEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleReset()} />
-            <button style={{ ...s.btn, opacity: resetLoading ? 0.6 : 1, marginBottom: 12 }} disabled={resetLoading} onClick={handleReset}>{resetLoading ? 'Sending...' : 'Send Reset Link'}</button>
-            <button style={{ color: '#9b7fd4', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, width: '100%' }} onClick={() => setShowReset(false)}>← Back to login</button>
-          </>
-        )}
-      </>
-    );
-  }
-
   return (
     <>
       {error && <div style={{ color: '#cc0000', fontSize: 13, marginBottom: 12 }}>{error}</div>}
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
       <input style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} type="password" placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
-      <div style={{ textAlign: 'right', marginBottom: 16, marginTop: -4 }}>
-        <button style={{ color: '#9b7fd4', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }} onClick={() => { setShowReset(true); setResetEmail(email); }}>Forgot password?</button>
-      </div>
       <button style={{ ...s.btn, opacity: loading ? 0.6 : 1 }} disabled={loading} onClick={handleSubmit}>{loading ? 'Logging in...' : 'Log In →'}</button>
       <div style={{ marginTop: 16, fontSize: 13, color: '#9b7fd4' }}>New here? <button style={{ color: '#6C3FC5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13 }} onClick={() => go(agencySlug ? `/register?agency=${agencySlug}` : '/register')}>Create account</button></div>
     </>
