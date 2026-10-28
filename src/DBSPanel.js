@@ -127,7 +127,6 @@ function downloadDBSPdf(app) {
 
 function DetailModal({ app, onClose, onStatusChange }) {
   if (!app) return null;
-  const sc = STATUS_COLORS[app.status] || STATUS_COLORS.received;
   return (
     <div style={s.modal} onClick={onClose}>
       <div style={s.modalBox} onClick={e => e.stopPropagation()}>
