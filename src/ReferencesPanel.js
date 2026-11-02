@@ -220,6 +220,16 @@ function CarerReferenceRow({ carerName, refs, onViewRef, onResend, onEditEmail }
 // ─── Empty referee form ───────────────────────────────────────────────
 const emptyRef = () => ({ name: "", email: "", org: "" });
 
+// Defined OUTSIDE the parent component so React never remounts it on re-render
+function RefInput({ label, value, onChange, type = "text", placeholder }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <label style={s.label}>{label}</label>
+      <input type={type} style={s.input} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} />
+    </div>
+  );
+}
+
 export default function ReferencesPanel({ agency, applications }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -357,13 +367,6 @@ export default function ReferencesPanel({ agency, applications }) {
     }
     setSending(false);
   };
-
-  const RefInput = ({ label, value, onChange, type = "text", placeholder }) => (
-    <div style={{ marginBottom: 12 }}>
-      <label style={s.label}>{label}</label>
-      <input type={type} style={s.input} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} />
-    </div>
-  );
 
   return (
     <div style={s.container}>
